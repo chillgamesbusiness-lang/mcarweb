@@ -1,0 +1,120 @@
+'use server'
+
+import { redirect } from 'next/navigation'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+
+export async function submitInspection(formData: FormData) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
+
+  const leadId = formData.get('lead_id') as string
+  const recommendedOffer = formData.get('recommended_offer')
+  const notes = formData.get('notes') as string
+
+  // 1. Verify lead is assigned to this inspector (via session client = RLS)
+  const { data: lead, error: leadError } = await supabase
+    .from('leads')
+    .select('id, status, pending_photo_urls')
+    .eq('id', leadId)
+    .eq('assigned_inspector_id', user.id)
+    .single()
+
+  if (leadError || !lead) {
+    throw new Error('Lead not found or not assigned to you')
+  }
+
+  const serviceClient = createServiceClient()
+
+  // 2. Idempotency: if inspection already submitted, redirect cleanly
+  const { data: existingInspection } = await serviceClient
+    .from('inspections')
+    .select('id, submitted_at')
+    .eq('lead_id', leadId)
+    .maybeSingle()
+
+  if (existingInspection?.submitted_at) {
+    redirect('/inspector')
+  }
+
+  // 3. Build checklist_json from all checklist_* form fields
+  const checklistJson: Record<string, string> = {}
+  for (const [key, value] of formData.entries()) {
+    if (key.startsWith('checklist_') && value) {
+      const jsonKey = key.replace('checklist_', '')
+      checklistJson[jsonKey] = value as string
+    }
+  }
+
+  // 4. Get pending photos from lead
+  const pendingPhotos: string[] = (lead as Record<string, unknown>).pending_photo_urls as string[] ?? []
+  const previousStatus = lead.status
+
+  // 5. Insert or update inspection
+  let dbError
+  if (existingInspection) {
+    const { error } = await serviceClient
+      .from('inspections')
+      .update({
+        checklist_json: checklistJson,
+        recommended_offer: recommendedOffer ? Number(recommendedOffer) : null,
+        notes: notes || null,
+        photo_urls: pendingPhotos,
+        submitted_at: new Date().toISOString(),
+      })
+      .eq('id', existingInspection.id)
+    dbError = error
+  } else {
+    const { error } = await serviceClient
+      .from('inspections')
+      .insert({
+        lead_id: leadId,
+        inspector_id: user.id,
+        checklist_json: checklistJson,
+        recommended_offer: recommendedOffer ? Number(recommendedOffer) : null,
+        notes: notes || null,
+        photo_urls: pendingPhotos,
+        submitted_at: new Date().toISOString(),
+      })
+    dbError = error
+  }
+
+  if (dbError) {
+    throw new Error(`Failed to submit inspection: ${dbError.message}`)
+  }
+
+  // 6. Update lead: status = inspected, clear pending photos
+  await serviceClient
+    .from('leads')
+    .update({
+      status: 'inspected',
+      pending_photo_urls: [],
+    })
+    .eq('id', leadId)
+
+  // 7. Audit log
+  await serviceClient.from('audit_log').insert([
+    {
+      lead_id: leadId,
+      action: 'inspection_submitted',
+      actor_user_id: user.id,
+      new_value: {
+        recommended_offer: recommendedOffer ? Number(recommendedOffer) : null,
+        photo_count: pendingPhotos.length,
+      },
+    },
+    {
+      lead_id: leadId,
+      action: 'status_change',
+      actor_user_id: user.id,
+      old_value: { status: previousStatus },
+      new_value: { status: 'inspected' },
+    },
+  ])
+
+  redirect('/inspector')
+}
