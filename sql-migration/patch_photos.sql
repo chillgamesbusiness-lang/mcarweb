@@ -1,6 +1,5 @@
 -- ============================================================
 -- Patch: Add pending_photo_urls + expand audit_log action
--- Run in Supabase SQL Editor BEFORE deploying the new code.
 -- Safe to re-run (idempotent).
 -- ============================================================
 
