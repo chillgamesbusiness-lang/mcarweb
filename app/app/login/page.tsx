@@ -21,6 +21,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         )}
 
+        {error === 'too_many_attempts' && (
+          <div className="mb-4 rounded-md bg-orange-50 border border-orange-200 p-3 text-sm text-orange-700">
+            Too many sign-in attempts. Please wait 5 minutes and try again.
+          </div>
+        )}
+
         <form action={login} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">

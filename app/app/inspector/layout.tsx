@@ -1,6 +1,21 @@
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { logout } from '@/app/login/actions'
 
-export default function InspectorLayout({ children }: { children: React.ReactNode }) {
+export default async function InspectorLayout({ children }: { children: React.ReactNode }) {
+  // Role-level guard — prevents an admin account from reaching /inspector
+  // and double-checks auth in case middleware is ever bypassed.
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profile?.role !== 'inspector') redirect('/admin')
   return (
     <div className="min-h-screen flex bg-gray-100">
       {/* Sidebar */}

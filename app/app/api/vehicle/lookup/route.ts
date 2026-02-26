@@ -16,9 +16,8 @@ import { verifyTurnstile } from '@/lib/turnstile'
  * v2: uses dvlaService + motService + mileageAnalyser v2.
  */
 
-const CURRENT_YEAR = 2026
-
 export async function POST(request: NextRequest) {
+  const CURRENT_YEAR = new Date().getFullYear()
   try {
     // ── Rate limiting ─────────────────────────────────────────────────────
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
