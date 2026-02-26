@@ -39,6 +39,7 @@ export async function proxy(request: NextRequest) {
   if (!user && (pathname.startsWith('/admin') || pathname.startsWith('/inspector'))) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
+    loginUrl.searchParams.set('from', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
