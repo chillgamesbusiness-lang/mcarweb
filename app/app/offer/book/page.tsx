@@ -11,7 +11,13 @@ interface BookPageProps {
 export default async function OfferBookPage({ searchParams }: BookPageProps) {
   const { leadId, token } = await searchParams
 
-  if (!leadId) notFound()
+  // ── Token gate: valid signed token required to access booking ────────
+  if (!token || !leadId) notFound()
+
+  const payload = verifyOfferToken(token)
+  if (!payload) {
+    redirect('/offer?error=Session+expired+or+invalid.+Please+start+again.')
+  }
 
   const serviceClient = createServiceClient()
 
@@ -40,8 +46,6 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
     redirect('/offer?error=Your+quote+has+expired.+Please+get+a+new+valuation.')
   }
 
-  // Decode valuation from token (if present) for richer display
-  const payload = token ? verifyOfferToken(token) : null
   const valuation = payload?.valuation ?? null
   const autoQuote = valuation?.quoteMode === 'auto' || (lead.estimated_min > 0 && !valuation)
 
@@ -52,11 +56,11 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
     const slot = formData.get('slot') as string
 
     if (!type || !['in_person', 'video'].includes(type)) {
-      redirect(`/offer/book?leadId=${leadId}&error=Invalid+appointment+type`)
+      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=Invalid+appointment+type`)
     }
 
     if (!slot) {
-      redirect(`/offer/book?leadId=${leadId}&error=Please+select+a+time+slot`)
+      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=Please+select+a+time+slot`)
     }
 
     const svc = createServiceClient()
@@ -85,6 +89,20 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
     const startAt = new Date(slot)
     const endAt = new Date(startAt.getTime() + 30 * 60 * 1000) // 30 min slots
 
+    // ── Slot collision check: prevent double-booking ──────────────────
+    const { data: existingSlot } = await svc
+      .from('appointments')
+      .select('id')
+      .eq('status', 'booked')
+      .lt('start_at', endAt.toISOString())
+      .gt('end_at', startAt.toISOString())
+      .limit(1)
+      .maybeSingle()
+
+    if (existingSlot) {
+      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=That+slot+was+just+taken.+Please+choose+another.`)
+    }
+
     // Create appointment
     const { error: apptErr } = await svc
       .from('appointments')
@@ -98,7 +116,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       })
 
     if (apptErr) {
-      redirect(`/offer/book?leadId=${leadId}&error=Failed+to+book.+Please+try+again.`)
+      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=Failed+to+book.+Please+try+again.`)
     }
 
     // Update lead status
@@ -111,7 +129,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
     await svc.from('audit_log').insert({
       lead_id: leadId,
       action: 'status_change',
-      old_value: { status: 'new' },
+      old_value: { status: lead.status },
       new_value: { status: 'appointment_booked' },
     })
 

@@ -50,6 +50,36 @@ export async function submitInspection(formData: FormData) {
     }
   }
 
+  // ── Server-side checklist validation ──────────────────────────────────
+  const EXPECTED_SECTIONS = ['Bodywork', 'Interior', 'Mechanical', 'Tyres'] as const
+  const EXPECTED_FIELDS: Record<string, string[]> = {
+    Bodywork: ['Paintwork', 'Panel gaps', 'Dents / scratches', 'Windscreen'],
+    Interior: ['Seats / upholstery', 'Dashboard / trim', 'Electronics', 'Boot'],
+    Mechanical: ['Engine', 'Gearbox', 'Brakes', 'Suspension'],
+    Tyres: ['Front left', 'Front right', 'Rear left', 'Rear right'],
+  }
+  const VALID_RATINGS = ['good', 'ok', 'poor', 'na']
+
+  const missingFields: string[] = []
+  for (const section of EXPECTED_SECTIONS) {
+    for (const field of EXPECTED_FIELDS[section]) {
+      const val = checklistJson[`${section}_${field}`]
+      if (!val || !VALID_RATINGS.includes(val)) {
+        missingFields.push(`${section} > ${field}`)
+      }
+    }
+  }
+
+  if (missingFields.length > 0) {
+    throw new Error(`Incomplete checklist — missing: ${missingFields.join(', ')}`)
+  }
+
+  // Recommended offer bounds check (£0 – £500,000)
+  const offerNum = recommendedOffer ? Number(recommendedOffer) : null
+  if (offerNum !== null && (isNaN(offerNum) || offerNum < 0 || offerNum > 500000)) {
+    throw new Error('Recommended offer must be between £0 and £500,000')
+  }
+
   // 4. Get pending photos from lead
   const pendingPhotos: string[] = (lead as Record<string, unknown>).pending_photo_urls as string[] ?? []
   const previousStatus = lead.status

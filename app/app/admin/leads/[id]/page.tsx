@@ -26,6 +26,9 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   const { id } = await params
   const supabase = await createClient()
 
+  // Get current admin user for audit log actor_user_id
+  const { data: { user: adminUser } } = await supabase.auth.getUser()
+
   const { data: lead, error } = await supabase
     .from('leads')
     .select('*')
@@ -40,12 +43,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     { data: notes },
     { data: auditLog },
     { data: snapshot },
+    { data: inspectors },
   ] = await Promise.all([
     supabase.from('appointments').select('*').eq('lead_id', id).maybeSingle(),
     supabase.from('inspections').select('*').eq('lead_id', id).maybeSingle(),
     supabase.from('notes').select('*').eq('lead_id', id).order('created_at', { ascending: false }),
     supabase.from('audit_log').select('*').eq('lead_id', id).order('created_at', { ascending: false }),
     supabase.from('valuation_snapshots').select('*').eq('lead_id', id).maybeSingle(),
+    supabase.from('users').select('id, name, email').eq('role', 'inspector').eq('is_active', true),
   ])
 
   // Generate signed URLs for inspection photos
@@ -91,10 +96,11 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       console.warn(
         `[admin] Invalid status transition: ${currentStatus} → ${targetStatus} for lead ${leadId} (allowed by admin override)`
       )
-      // Log the invalid transition in audit but proceed
+      // Audit log
       await svc.from('audit_log').insert({
         lead_id: leadId,
         action: 'status_change',
+        actor_user_id: adminUser?.id,
         old_value: { status: currentStatus, warning: 'invalid_transition' },
         new_value: { status: targetStatus },
       })
@@ -123,8 +129,115 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     await svc.from('audit_log').insert({
       lead_id: leadId,
       action: 'outcome_recorded',
+      actor_user_id: adminUser?.id,
       old_value: { status: currentStatus },
       new_value: updateData,
+    })
+
+    redirect(`/admin/leads/${leadId}`)
+  }
+
+  // ── Add note server action ───────────────────────────────────────────
+  async function submitNote(formData: FormData) {
+    'use server'
+
+    const leadId = formData.get('leadId') as string
+    const body = (formData.get('body') as string)?.trim()
+
+    if (!leadId || !body || body.length < 1) return
+
+    const svc = createServiceClient()
+
+    await svc.from('notes').insert({
+      lead_id: leadId,
+      author_user_id: adminUser?.id,
+      body,
+    })
+
+    await svc.from('audit_log').insert({
+      lead_id: leadId,
+      action: 'note_added',
+      actor_user_id: adminUser?.id,
+      new_value: { body: body.slice(0, 100) },
+    })
+
+    redirect(`/admin/leads/${leadId}`)
+  }
+
+  // ── Assign inspector server action ───────────────────────────────────
+  async function submitAssignInspector(formData: FormData) {
+    'use server'
+
+    const leadId = formData.get('leadId') as string
+    const inspectorId = formData.get('inspector_id') as string
+
+    if (!leadId) return
+
+    const svc = createServiceClient()
+
+    const { data: currentLead } = await svc
+      .from('leads')
+      .select('assigned_inspector_id')
+      .eq('id', leadId)
+      .single()
+
+    const prevInspector = currentLead?.assigned_inspector_id ?? null
+    const newInspector = inspectorId || null
+
+    if (prevInspector === newInspector) {
+      redirect(`/admin/leads/${leadId}`)
+    }
+
+    await svc
+      .from('leads')
+      .update({ assigned_inspector_id: newInspector })
+      .eq('id', leadId)
+
+    await svc.from('audit_log').insert({
+      lead_id: leadId,
+      action: 'assignment_change',
+      actor_user_id: adminUser?.id,
+      old_value: { assigned_inspector_id: prevInspector },
+      new_value: { assigned_inspector_id: newInspector },
+    })
+
+    redirect(`/admin/leads/${leadId}`)
+  }
+
+  // ── Change finance status server action ───────────────────────────────
+  async function submitFinanceStatus(formData: FormData) {
+    'use server'
+
+    const leadId = formData.get('leadId') as string
+    const newFinanceStatus = formData.get('finance_status') as string
+
+    if (!leadId || !newFinanceStatus || !['not_checked', 'clear', 'finance_found'].includes(newFinanceStatus)) return
+
+    const svc = createServiceClient()
+
+    const { data: currentLead } = await svc
+      .from('leads')
+      .select('finance_status')
+      .eq('id', leadId)
+      .single()
+
+    const prevStatus = currentLead?.finance_status ?? 'not_checked'
+
+    if (prevStatus === newFinanceStatus) {
+      redirect(`/admin/leads/${leadId}`)
+    }
+
+    await svc
+      .from('leads')
+      .update({ finance_status: newFinanceStatus })
+      .eq('id', leadId)
+
+    await svc.from('audit_log').insert({
+      lead_id: leadId,
+      action: 'finance_change',
+      actor_user_id: adminUser?.id,
+      old_value: { finance_status: prevStatus },
+      new_value: { finance_status: newFinanceStatus },
     })
 
     redirect(`/admin/leads/${leadId}`)
@@ -162,6 +275,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       await svc.from('audit_log').insert({
         lead_id: leadId,
         action: 'status_change',
+        actor_user_id: adminUser?.id,
         old_value: { status: currentStatus, warning: 'invalid_transition_override' },
         new_value: { status: newStatus },
       })
@@ -175,6 +289,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     await svc.from('audit_log').insert({
       lead_id: leadId,
       action: 'status_change',
+      actor_user_id: adminUser?.id,
       old_value: { status: currentStatus },
       new_value: { status: newStatus },
     })
@@ -354,8 +469,68 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
       <Section title="CRM State">
         <Field label="Current Status" value={lead.status} />
-        <Field label="Finance Status" value={lead.finance_status} />
-        <Field label="Assigned Inspector" value={lead.assigned_inspector_id ?? 'Unassigned'} />
+        <Field label="Finance Status" value={lead.finance_status ?? 'not_checked'} />
+        <Field label="Assigned Inspector" value={
+          (() => {
+            const insp = inspectors?.find((i: { id: string; name: string; email: string }) => i.id === lead.assigned_inspector_id)
+            return insp ? `${insp.name} (${insp.email})` : 'Unassigned'
+          })()
+        } />
+
+        {/* Inspector assignment form */}
+        <form action={submitAssignInspector} className="mt-3 flex gap-2 items-end">
+          <input type="hidden" name="leadId" value={lead.id} />
+          <div className="flex-1">
+            <label htmlFor="inspector_id" className="block text-xs text-gray-400 mb-1">
+              Assign Inspector
+            </label>
+            <select
+              id="inspector_id"
+              name="inspector_id"
+              defaultValue={lead.assigned_inspector_id ?? ''}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            >
+              <option value="">Unassigned</option>
+              {inspectors?.map((insp: { id: string; name: string; email: string }) => (
+                <option key={insp.id} value={insp.id}>
+                  {insp.name} ({insp.email})
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            Assign
+          </button>
+        </form>
+
+        {/* Finance status form */}
+        <form action={submitFinanceStatus} className="mt-3 flex gap-2 items-end">
+          <input type="hidden" name="leadId" value={lead.id} />
+          <div className="flex-1">
+            <label htmlFor="finance_status" className="block text-xs text-gray-400 mb-1">
+              Finance Status
+            </label>
+            <select
+              id="finance_status"
+              name="finance_status"
+              defaultValue={lead.finance_status ?? 'not_checked'}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            >
+              <option value="not_checked">Not Checked</option>
+              <option value="clear">Clear</option>
+              <option value="finance_found">Finance Found</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            Update
+          </button>
+        </form>
 
         {/* Status change form with valid transitions */}
         {(() => {
@@ -461,6 +636,24 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       </Section>
 
       <Section title={`Notes (${notes?.length ?? 0})`}>
+        {/* Add note form */}
+        <form action={submitNote} className="mb-4">
+          <input type="hidden" name="leadId" value={lead.id} />
+          <textarea
+            name="body"
+            required
+            rows={2}
+            placeholder="Add a note..."
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-y"
+          />
+          <button
+            type="submit"
+            className="mt-2 rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            Add Note
+          </button>
+        </form>
+
         {notes && notes.length > 0 ? (
           <ul className="space-y-2">
             {notes.map((note) => (

@@ -6,6 +6,7 @@ import { checkMileageDiscrepancy } from '@/lib/mileageAnalyser'
 import { normaliseFuel, checkUlezCompliance } from '@/lib/dvlaService'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendAdminNewLeadAlert } from '@/lib/email'
+import { verifyOTP } from '@/lib/leadVerification'
 import ContactForm from './ContactForm'
 
 interface ContactPageProps {
@@ -64,6 +65,36 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
 
     if (errors.length > 0) {
       redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent(errors.join('. '))}`)
+    }
+
+    // ── OTP verification ────────────────────────────────────────────────
+    const otpSessionId = formData.get('otp_session_id') as string | null
+    const otpVerifiedFlag = formData.get('otp_verified') as string
+
+    if (otpVerifiedFlag !== 'true' || !otpSessionId) {
+      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification is required.')}`)
+    }
+
+    // Double-check OTP session is actually verified in the DB (tamper-proof)
+    try {
+      const verified = await verifyOTP(otpSessionId, 'already_verified_check')
+      // verifyOTP returns true if session.verified is already true
+      if (!verified) {
+        redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification failed. Please verify again.')}`)
+      }
+    } catch {
+      // If the session is already verified, verifyOTP returns true above.
+      // If it throws (expired, etc.), we check the DB directly
+      const svcCheck = createServiceClient()
+      const { data: otpSession } = await svcCheck
+        .from('otp_sessions')
+        .select('verified')
+        .eq('id', otpSessionId)
+        .single()
+
+      if (!otpSession?.verified) {
+        redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification expired. Please try again.')}`)
+      }
     }
 
     // ── Build VehicleProfile for pricing engine ─────────────────────────
@@ -157,6 +188,35 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
 
     // ── Create lead ─────────────────────────────────────────────────────
     const serviceClient = createServiceClient()
+
+    // Duplicate lead prevention: check if a lead with same reg + email
+    // was created in the last 24 hours
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    const { data: existingLead } = await serviceClient
+      .from('leads')
+      .select('id')
+      .eq('reg', p.reg)
+      .eq('seller_email', email)
+      .gte('created_at', oneDayAgo)
+      .limit(1)
+      .maybeSingle()
+
+    if (existingLead) {
+      // Silently redirect to booking for the existing lead — no duplicate created
+      const bookToken = createOfferToken({
+        reg: p.reg,
+        vehicle: {
+          make: p.vehicle.make,
+          model: p.vehicle.model,
+          year: p.vehicle.year,
+          fuel: p.vehicle.fuel,
+          transmission: p.vehicle.transmission,
+        },
+        mileage: p.mileage,
+        condition: p.condition,
+      })
+      redirect(`/offer/book?leadId=${existingLead.id}&token=${encodeURIComponent(bookToken)}`)
+    }
 
     const { data: lead, error: insertErr } = await serviceClient
       .from('leads')

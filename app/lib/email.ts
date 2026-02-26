@@ -22,6 +22,20 @@ function getFromAddress(): string {
   return process.env.RESEND_FROM_ADDRESS || 'noreply@mcar.example.com'
 }
 
+/** Escape HTML special chars to prevent XSS in email templates */
+function esc(str: string | number): string {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function getAppUrl(): string {
+  return process.env.NEXT_PUBLIC_APP_URL || 'https://mcarweb.vercel.app'
+}
+
 // ── Email templates ────────────────────────────────────────────────────────────
 
 interface BookingConfirmationData {
@@ -55,19 +69,19 @@ interface AdminNewLeadData {
 export async function sendBookingConfirmation(data: BookingConfirmationData): Promise<void> {
   const resend = getResend()
 
-  const subject = `Booking Confirmed - ${data.reg}`
+  const subject = `Booking Confirmed - ${esc(data.reg)}`
   const html = `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #1a1a1a;">Booking Confirmed</h2>
-      <p>Hi ${data.customerName},</p>
+      <p>Hi ${esc(data.customerName)},</p>
       <p>Your appointment has been booked. Here are the details:</p>
 
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-        <tr><td style="padding: 8px 0; color: #666;">Vehicle</td><td style="padding: 8px 0; font-weight: 600;">${data.make} ${data.model} (${data.year})</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Registration</td><td style="padding: 8px 0; font-weight: 600;">${data.reg}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Vehicle</td><td style="padding: 8px 0; font-weight: 600;">${esc(data.make)} ${esc(data.model)} (${esc(data.year)})</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Registration</td><td style="padding: 8px 0; font-weight: 600;">${esc(data.reg)}</td></tr>
         <tr><td style="padding: 8px 0; color: #666;">Appointment</td><td style="padding: 8px 0; font-weight: 600;">${data.appointmentType === 'video' ? 'Video Call' : 'In Person'}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Date</td><td style="padding: 8px 0; font-weight: 600;">${data.appointmentDate}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Estimated Offer</td><td style="padding: 8px 0; font-weight: 600; color: #16a34a;">GBP ${data.estimatedMin.toLocaleString()} - GBP ${data.estimatedMax.toLocaleString()}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Date</td><td style="padding: 8px 0; font-weight: 600;">${esc(data.appointmentDate)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Estimated Offer</td><td style="padding: 8px 0; font-weight: 600; color: #16a34a;">GBP ${esc(data.estimatedMin.toLocaleString())} - GBP ${esc(data.estimatedMax.toLocaleString())}</td></tr>
       </table>
 
       <p>We'll be in touch shortly to confirm the final details.</p>
@@ -99,22 +113,22 @@ export async function sendAdminNewLeadAlert(data: AdminNewLeadData): Promise<voi
   const resend = getResend()
   const adminEmail = process.env.ADMIN_ALERT_EMAIL || getFromAddress()
 
-  const subject = `New Lead: ${data.reg} - ${data.sellerName}`
+  const subject = `New Lead: ${esc(data.reg)} - ${esc(data.sellerName)}`
   const html = `
     <div style="font-family: sans-serif; max-width: 500px; margin: 0 auto;">
       <h2 style="color: #1a1a1a;">New Lead Created</h2>
 
       <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
-        <tr><td style="padding: 8px 0; color: #666;">Lead ID</td><td style="padding: 8px 0; font-weight: 600;">${data.leadId}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Seller</td><td style="padding: 8px 0; font-weight: 600;">${data.sellerName}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Email</td><td style="padding: 8px 0;">${data.sellerEmail}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Phone</td><td style="padding: 8px 0;">${data.sellerPhone}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Vehicle</td><td style="padding: 8px 0; font-weight: 600;">${data.make} ${data.model}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Registration</td><td style="padding: 8px 0; font-weight: 600;">${data.reg}</td></tr>
-        <tr><td style="padding: 8px 0; color: #666;">Estimated Offer</td><td style="padding: 8px 0; font-weight: 600; color: #16a34a;">GBP ${data.estimatedMin.toLocaleString()} - GBP ${data.estimatedMax.toLocaleString()}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Lead ID</td><td style="padding: 8px 0; font-weight: 600;">${esc(data.leadId)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Seller</td><td style="padding: 8px 0; font-weight: 600;">${esc(data.sellerName)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Email</td><td style="padding: 8px 0;">${esc(data.sellerEmail)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Phone</td><td style="padding: 8px 0;">${esc(data.sellerPhone)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Vehicle</td><td style="padding: 8px 0; font-weight: 600;">${esc(data.make)} ${esc(data.model)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Registration</td><td style="padding: 8px 0; font-weight: 600;">${esc(data.reg)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #666;">Estimated Offer</td><td style="padding: 8px 0; font-weight: 600; color: #16a34a;">GBP ${esc(data.estimatedMin.toLocaleString())} - GBP ${esc(data.estimatedMax.toLocaleString())}</td></tr>
       </table>
 
-      <p><a href="https://mcarweb.vercel.app/admin/leads/${data.leadId}" style="color: #2563eb;">View in Admin Panel</a></p>
+      <p><a href="${getAppUrl()}/admin/leads/${encodeURIComponent(data.leadId)}" style="color: #2563eb;">View in Admin Panel</a></p>
     </div>
   `
 

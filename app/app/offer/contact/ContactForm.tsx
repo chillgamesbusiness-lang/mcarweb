@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useState, useRef } from 'react'
 import Link from 'next/link'
 
 interface ContactFormProps {
@@ -12,13 +12,106 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 
+  const [otpStep, setOtpStep] = useState(false)
+  const [otpSessionId, setOtpSessionId] = useState<string | null>(null)
+  const [otpVerified, setOtpVerified] = useState(false)
+  const [otpError, setOtpError] = useState<string | null>(null)
+  const [otpSending, setOtpSending] = useState(false)
+  const [otpVerifying, setOtpVerifying] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [cooldown, setCooldown] = useState(0)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  // Countdown timer for resend cooldown
+  function startCooldown() {
+    setCooldown(60)
+    const iv = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) { clearInterval(iv); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  async function handleSendOtp() {
+    if (!formRef.current) return
+    const fd = new FormData(formRef.current)
+    const phone = (fd.get('phone') as string)?.trim()
+
+    if (!phone || phone.length < 10) {
+      setOtpError('Please enter a valid UK mobile number first.')
+      return
+    }
+
+    setOtpSending(true)
+    setOtpError(null)
+
+    try {
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      })
+      const data = await res.json()
+
+      if (data.sessionId) {
+        setOtpSessionId(data.sessionId)
+        setOtpStep(true)
+        startCooldown()
+      } else if (data.error) {
+        setOtpError(data.error)
+      } else {
+        // Generic response — still show OTP step in case silent rejection
+        setOtpStep(true)
+        setOtpError('If this is a valid UK mobile, you should receive a code shortly.')
+      }
+    } catch {
+      setOtpError('Failed to send verification code. Please try again.')
+    } finally {
+      setOtpSending(false)
+    }
+  }
+
+  async function handleVerifyOtp() {
+    if (!otpSessionId || !otpCode.trim()) {
+      setOtpError('Please enter the 6-digit code.')
+      return
+    }
+
+    setOtpVerifying(true)
+    setOtpError(null)
+
+    try {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: otpSessionId, code: otpCode.trim() }),
+      })
+      const data = await res.json()
+
+      if (data.verified) {
+        setOtpVerified(true)
+      } else {
+        setOtpError(data.error || 'Incorrect code. Please try again.')
+      }
+    } catch {
+      setOtpError('Verification failed. Please try again.')
+    } finally {
+      setOtpVerifying(false)
+    }
+  }
+
   return (
-    <form action={submitContact} className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+    <form ref={formRef} action={submitContact} className="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
       {error && (
         <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
           {error}
         </div>
       )}
+
+      {/* Hidden fields for OTP session data */}
+      {otpSessionId && <input type="hidden" name="otp_session_id" value={otpSessionId} />}
+      <input type="hidden" name="otp_verified" value={otpVerified ? 'true' : 'false'} />
 
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -38,15 +131,68 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
         <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
           Phone Number
         </label>
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          required
-          placeholder="07123 456789"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-        />
+        <div className="flex gap-2">
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            required
+            placeholder="07123 456789"
+            disabled={otpVerified}
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-500"
+          />
+          {!otpVerified && (
+            <button
+              type="button"
+              onClick={handleSendOtp}
+              disabled={otpSending || cooldown > 0}
+              className="rounded-md bg-gray-700 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              {otpSending ? 'Sending...' : cooldown > 0 ? `Resend (${cooldown}s)` : otpStep ? 'Resend Code' : 'Verify Phone'}
+            </button>
+          )}
+          {otpVerified && (
+            <span className="flex items-center text-green-600 text-sm font-medium px-3">
+              ✓ Verified
+            </span>
+          )}
+        </div>
       </div>
+
+      {/* OTP input step */}
+      {otpStep && !otpVerified && (
+        <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
+          <p className="text-sm text-blue-700">
+            Enter the 6-digit code sent to your phone.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={6}
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="000000"
+              className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-center tracking-widest font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+            <button
+              type="button"
+              onClick={handleVerifyOtp}
+              disabled={otpVerifying || otpCode.length !== 6}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {otpVerifying ? 'Checking...' : 'Verify'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {otpError && (
+        <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700">
+          {otpError}
+        </div>
+      )}
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -107,9 +253,10 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
 
       <button
         type="submit"
-        className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+        disabled={!otpVerified}
+        className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Get My Offer
+        {otpVerified ? 'Get My Offer' : 'Verify your phone to continue'}
       </button>
     </form>
   )

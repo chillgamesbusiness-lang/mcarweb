@@ -107,6 +107,9 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
             <input
               type="number"
               name="recommended_offer"
+              required={!isSubmitted}
+              min={0}
+              max={500000}
               defaultValue={existingInspection?.recommended_offer ?? undefined}
               disabled={isSubmitted}
               className="w-40 rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"
@@ -161,6 +164,7 @@ function ChecklistSection({
             <select
               name={`checklist_${title}_${field}`}
               disabled={readOnly}
+              required={!readOnly}
               defaultValue={existing?.[`${title}_${field}`] ?? ''}
               className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm disabled:bg-gray-50 disabled:text-gray-400"
             >
