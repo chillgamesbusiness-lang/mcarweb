@@ -3,15 +3,15 @@
  *
  * Spec reference: valuationeng.md Part 5
  *
- * OTP: 6-digit cryptographically random, 10min expiry, max 3 attempts.
- * SMS provider: Twilio (env: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER)
+ * OTP: 6-digit code managed by Twilio Verify, 10 min expiry.
+ * SMS provider: Twilio Verify (env: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID)
  *
  * Abuse guardrails:
  *  - 3 OTP sends/day per phone number (hard cap)
  *  - 10 OTP sends/day per IP (hard cap)
  *  - 60s cooldown between OTP sends per phone
  *  - Disposable/invalid UK number blocking
- *  - OTP codes stored as SHA-256 hashes (not plaintext)
+ *  - OTP codes are never stored — Twilio Verify manages the full code lifecycle
  *  - Generic response: never reveals whether a phone exists in the system
  */
 
@@ -92,24 +92,6 @@ export function cleanPhone(phone: string): string {
 
 // ── OTP ────────────────────────────────────────────────────────────────────────
 
-interface OTPSession {
-  phone: string
-  code: string
-  expiresAt: string
-  attempts: number
-  verified: boolean
-}
-
-/** Generate cryptographically random 6-digit code */
-function generateOTP(): string {
-  return crypto.randomInt(100000, 999999).toString()
-}
-
-/** Hash OTP code with SHA-256 for storage (never store plaintext codes) */
-function hashOTP(code: string): string {
-  return crypto.createHash('sha256').update(code).digest('hex')
-}
-
 /**
  * Send an OTP code via SMS and store session in Supabase.
  *
@@ -121,7 +103,7 @@ function hashOTP(code: string): string {
  *  - Blocks disposable/virtual numbers
  *  - Enforces 60s cooldown per phone
  *  - Enforces 3/day per phone, 10/day per IP
- *  - Stores OTP as SHA-256 hash, not plaintext
+ *  - Code generation and SMS delivery via Twilio Verify (no plaintext stored)
  */
 export async function sendOTP(
   phone: string,
@@ -156,18 +138,16 @@ export async function sendOTP(
     throw new Error('Please wait 60 seconds before requesting another code.')
   }
 
-  // ── Generate & hash OTP ──────────────────────────────────────────────
-  const code = generateOTP()
-  const codeHash = hashOTP(code)
+  // ── Generate session ID ──────────────────────────────────────────────
   const sessionId = crypto.randomUUID()
 
-  // Store hashed code + metadata (never store plaintext OTP)
+  // ── Store session (code managed by Twilio Verify — store placeholder) ─
   const { error: storeError } = await getSupabase()
     .from('otp_sessions')
     .insert({
       id: sessionId,
       phone: cleanedPhone,
-      code_hash: codeHash,
+      code_hash: 'twilio_verify', // Twilio Verify manages the actual code
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min
       attempts: 0,
       verified: false,
@@ -180,29 +160,27 @@ export async function sendOTP(
     throw new Error('Failed to create verification session')
   }
 
-  // ── Send SMS via Twilio ──────────────────────────────────────────────
+  // ── Send SMS via Twilio Verify ───────────────────────────────────────
   const accountSid = process.env.TWILIO_ACCOUNT_SID
   const authToken = process.env.TWILIO_AUTH_TOKEN
-  const fromNumber = process.env.TWILIO_FROM_NUMBER
+  const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID
 
-  if (!accountSid || !authToken || !fromNumber) {
-    console.error('Twilio credentials not configured')
-    // In development, log the code instead (never in production)
+  if (!accountSid || !authToken || !verifyServiceSid) {
+    console.error('Twilio Verify credentials not configured (need TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID)')
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] OTP for ${cleanedPhone}: ${code}`)
+      console.log(`[DEV] OTP session created for ${cleanedPhone} — no Twilio configured, any 6-digit code accepted`)
     }
     return { sessionId }
   }
 
   try {
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
+    const verifyUrl = `https://verify.twilio.com/v2/Services/${verifyServiceSid}/Verifications`
     const body = new URLSearchParams({
       To: `+44${cleanedPhone.slice(1)}`, // Convert 07xxx to +447xxx
-      From: fromNumber,
-      Body: `Your valuation code is: ${code}. Valid for 10 minutes.`,
+      Channel: 'sms',
     })
 
-    const res = await fetch(twilioUrl, {
+    const res = await fetch(verifyUrl, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
@@ -213,22 +191,22 @@ export async function sendOTP(
 
     if (!res.ok) {
       const errBody = await res.text()
-      console.error('Twilio SMS error:', errBody)
-      // Don't throw — session is created, admin can see hash in DB
+      console.error('Twilio Verify send error:', errBody)
+      // Non-fatal: log and continue — session exists
     }
   } catch (err) {
-    console.error('SMS send error:', err)
-    // Non-fatal: session exists for manual verification
+    console.error('Twilio Verify send error:', err)
+    // Non-fatal: session exists for manual follow-up
   }
 
   return { sessionId }
 }
 
 /**
- * Verify an OTP code against a session.
- * Compares user input against stored SHA-256 hash.
- * Returns true if verified, false if wrong code.
- * Throws on expired/exhausted sessions.
+ * Verify an OTP code against a Twilio Verify session.
+ * Looks up the phone from our DB session, then calls Twilio Verify's
+ * VerificationCheck endpoint. Falls back to accepting any code in dev
+ * when Twilio credentials are not configured.
  */
 export async function verifyOTP(
   sessionId: string,
@@ -250,32 +228,71 @@ export async function verifyOTP(
     throw new Error('Code expired. Please request a new code.')
   }
 
-  if (session.attempts >= 3) {
-    throw new Error('Too many attempts. Please request a new code.')
+  // ── Twilio Verify Check ──────────────────────────────────────────────
+  const accountSid = process.env.TWILIO_ACCOUNT_SID
+  const authToken = process.env.TWILIO_AUTH_TOKEN
+  const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID
+
+  if (!accountSid || !authToken || !verifyServiceSid) {
+    // Dev mode: accept any 6-digit code when Twilio is not configured
+    if (process.env.NODE_ENV !== 'production') {
+      await getSupabase()
+        .from('otp_sessions')
+        .update({ verified: true })
+        .eq('id', sessionId)
+      return true
+    }
+    throw new Error('Verification service not configured')
   }
 
-  // Increment attempts
-  const newAttempts = session.attempts + 1
+  try {
+    const checkUrl = `https://verify.twilio.com/v2/Services/${verifyServiceSid}/VerificationCheck`
+    const body = new URLSearchParams({
+      To: `+44${session.phone.slice(1)}`, // Convert 07xxx to +447xxx
+      Code: userCode.trim(),
+    })
 
-  // Compare against stored hash (never store raw code)
-  const inputHash = hashOTP(userCode.trim())
+    const res = await fetch(checkUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    })
 
-  if (session.code_hash === inputHash) {
-    // Verified
-    await getSupabase()
-      .from('otp_sessions')
-      .update({ verified: true, attempts: newAttempts })
-      .eq('id', sessionId)
-    return true
+    const data = await res.json()
+
+    if (data.status === 'approved') {
+      await getSupabase()
+        .from('otp_sessions')
+        .update({ verified: true })
+        .eq('id', sessionId)
+      return true
+    }
+
+    // Twilio error codes
+    if (!res.ok) {
+      const twilioCode = data?.code
+      if (res.status === 404 || twilioCode === 20404) {
+        throw new Error('Code expired or already used. Please request a new code.')
+      }
+      if (twilioCode === 60202) {
+        throw new Error('Too many incorrect attempts. Please request a new code.')
+      }
+    }
+
+    return false // Wrong code but still valid session
+  } catch (err) {
+    if (err instanceof Error && (
+      err.message.includes('expired') ||
+      err.message.includes('attempts') ||
+      err.message.includes('already used')
+    )) {
+      throw err
+    }
+    throw new Error('Verification failed. Please try again.')
   }
-
-  // Wrong code
-  await getSupabase()
-    .from('otp_sessions')
-    .update({ attempts: newAttempts })
-    .eq('id', sessionId)
-
-  return false
 }
 
 // ── Rate limiting is now handled by checkOtpRateLimit in rateLimit.ts ──────────

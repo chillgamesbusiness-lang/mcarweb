@@ -108,9 +108,9 @@ export default function OutcomeForm({
         <button
           type="submit"
           disabled={submitted}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {submitted ? 'Saving...' : 'Save Outcome'}
+          {submitted ? 'Saving…' : 'Save Outcome'}
         </button>
       )}
     </form>

@@ -1,4 +1,5 @@
 import { login } from './actions'
+import { SubmitButton } from '@/app/components/SubmitButton'
 
 interface LoginPageProps {
   searchParams: Promise<{ error?: string }>
@@ -64,12 +65,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          <SubmitButton
+            loadingText="Signing in…"
+            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Sign in
-          </button>
+          </SubmitButton>
         </form>
       </div>
     </main>

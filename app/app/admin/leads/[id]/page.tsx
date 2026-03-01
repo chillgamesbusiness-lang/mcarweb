@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { isValidStatusTransition, VALID_STATUS_TRANSITIONS } from '@/lib/types'
 import type { LeadStatus } from '@/lib/types'
 import OutcomeForm from './OutcomeForm'
+import { SubmitButton } from '@/app/components/SubmitButton'
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>
@@ -526,12 +527,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
               ))}
             </select>
           </div>
-          <button
-            type="submit"
-            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          <SubmitButton
+            loadingText="Assigning…"
+            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Assign
-          </button>
+          </SubmitButton>
         </form>
 
         {/* Finance status form */}
@@ -552,12 +553,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
               <option value="finance_found">Finance Found</option>
             </select>
           </div>
-          <button
-            type="submit"
-            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          <SubmitButton
+            loadingText="Updating…"
+            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Update
-          </button>
+          </SubmitButton>
         </form>
 
         {/* Status change form with valid transitions */}
@@ -590,12 +591,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   ))}
                 </select>
               </div>
-              <button
-                type="submit"
-                className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+              <SubmitButton
+                loadingText="Updating…"
+                className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 Update
-              </button>
+              </SubmitButton>
             </form>
           )
         })()}
@@ -674,12 +675,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             placeholder="Add a note..."
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-y"
           />
-          <button
-            type="submit"
-            className="mt-2 rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          <SubmitButton
+            loadingText="Adding…"
+            className="mt-2 rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Add Note
-          </button>
+          </SubmitButton>
         </form>
 
         {notes && notes.length > 0 ? (

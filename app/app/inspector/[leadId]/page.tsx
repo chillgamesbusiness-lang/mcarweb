@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { submitInspection } from './actions'
 import PhotoUpload from '../PhotoUpload'
+import { SubmitButton } from '@/app/components/SubmitButton'
 
 interface InspectorLeadPageProps {
   params: Promise<{ leadId: string }>
@@ -131,12 +132,12 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
         </div>
 
         {!isSubmitted && (
-          <button
-            type="submit"
-            className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          <SubmitButton
+            loadingText="Submitting…"
+            className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Submit Inspection
-          </button>
+          </SubmitButton>
         )}
       </form>
     </div>
