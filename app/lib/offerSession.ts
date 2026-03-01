@@ -43,6 +43,7 @@ export interface MOTSummary {
   advisoryCount: number
   dangerousDefects: boolean
   structuralAdvisories: boolean
+  structuralAdvisoryCount: number
   brakeAdvisories: boolean
   riskAdvisories: string[]
   totalTestCount: number
