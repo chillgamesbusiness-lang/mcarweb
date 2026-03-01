@@ -11,7 +11,7 @@
  * Spec reference: valuationeng.md Part 2
  */
 
-import type { MarketEntry, Volatility, FuelType } from '@/lib/types'
+import type { MarketEntry, Volatility, FuelType, MarketMatchQuality } from '@/lib/types'
 
 // ── Market Data (210+ entries) ─────────────────────────────────────────────────
 
@@ -371,7 +371,7 @@ export function getMarketValue(
   model: string,
   year: number,
   fuel: string
-): { avgRetail: number; volatility: Volatility } | null {
+): { avgRetail: number; volatility: Volatility; matchQuality: MarketMatchQuality } | null {
   const normMake = make.toUpperCase().trim()
   const normModel = model.toUpperCase().trim()
   const normFuel = normaliseFuelForLookup(fuel)
@@ -385,7 +385,7 @@ export function getMarketValue(
       year <= e.yearRange[1] &&
       e.fuel === normFuel
   )
-  if (exact) return { avgRetail: exact.avgRetail, volatility: exact.volatility }
+  if (exact) return { avgRetail: exact.avgRetail, volatility: exact.volatility, matchQuality: 'exact' }
 
   // 2. Fuzzy: match make + model + year, any fuel
   const fuelFuzzy = MARKET_DATA.find(
@@ -396,7 +396,7 @@ export function getMarketValue(
       year <= e.yearRange[1]
   )
   if (fuelFuzzy)
-    return { avgRetail: fuelFuzzy.avgRetail, volatility: fuelFuzzy.volatility }
+    return { avgRetail: fuelFuzzy.avgRetail, volatility: fuelFuzzy.volatility, matchQuality: 'fuel_fuzzy' }
 
   // 3. Fuzzy: match make + model, closest year range (within 3 years)
   const modelMatches = MARKET_DATA.filter(
@@ -421,7 +421,7 @@ export function getMarketValue(
           ? year - closest.yearRange[1]
           : 0
     if (dist <= 3) {
-      return { avgRetail: closest.avgRetail, volatility: closest.volatility }
+      return { avgRetail: closest.avgRetail, volatility: closest.volatility, matchQuality: 'year_fuzzy' }
     }
   }
 
@@ -434,7 +434,7 @@ export function getMarketValue(
       year <= e.yearRange[1]
   )
   if (partial)
-    return { avgRetail: partial.avgRetail, volatility: partial.volatility }
+    return { avgRetail: partial.avgRetail, volatility: partial.volatility, matchQuality: 'partial' }
 
   // 5. No match → manual review
   return null

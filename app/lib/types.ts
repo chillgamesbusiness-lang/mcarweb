@@ -142,6 +142,8 @@ export interface MarketEntry {
 
 export type Volatility = 'stable' | 'moderate' | 'volatile'
 
+export type MarketMatchQuality = 'exact' | 'fuel_fuzzy' | 'year_fuzzy' | 'partial' | 'none'
+
 // ── Valuation Result ──────────────────────────────────────────────────────────
 
 export interface MultiplierBreakdown {
@@ -159,6 +161,8 @@ export interface MultiplierBreakdown {
   sornMultiplier: number
   reconMultiplier: number
   reconEstimate: number
+  marketConfidenceMultiplier: number
+  inputTrustMultiplier: number
   liquidityBuffer: number
   // Debug fields: visible in admin breakdown
   combinedAdjustment: number
@@ -178,6 +182,7 @@ export interface ValuationResult {
   marketDataMatched: boolean
   allMultipliers: MultiplierBreakdown
   quoteMode: QuoteMode
+  matchQuality: MarketMatchQuality
   regionUsed: string
   spreadApplied: number
   calculatedAt: string

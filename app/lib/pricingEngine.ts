@@ -41,6 +41,7 @@ import type {
   QuoteMode,
   MultiplierBreakdown,
   ValuationResult,
+  MarketMatchQuality,
 } from '@/lib/types'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -95,7 +96,15 @@ export function calculateValuation(input: {
 
   const estimatedRetail = marketResult.avgRetail
   const volatility = marketResult.volatility
+  const matchQuality: MarketMatchQuality = marketResult.matchQuality
   const tradeBase = Math.round(estimatedRetail * TRADE_MARGIN)
+
+  // ── Step 1b: Market anchor confidence ──────────────────────────────────
+  // Weak match quality = less trust in the anchor → small haircut + wider spread
+  const marketConfidenceMultiplier = getMarketConfidenceMultiplier(matchQuality, volatility)
+  if (marketConfidenceMultiplier < 1.0) {
+    riskFlags.push(`Market data match: ${matchQuality} — anchor discounted`)
+  }
 
   // ── Step 2: Age depreciation (non-linear, from yearRange midpoint) ────
   const ageMultiplier = getAgeMultiplier(vehicleAge)
@@ -145,6 +154,11 @@ export function calculateValuation(input: {
   if (condition === 'poor') {
     riskFlags.push('Poor condition — high reconditioning cost')
   }
+
+  // ── Step 7b: Anti-gaming — user input trust model ─────────────────────
+  const { multiplier: inputTrustMultiplier, flags: trustFlags } =
+    getInputTrustMultiplier(vp, condition, vehicleAge)
+  riskFlags.push(...trustFlags)
 
   // ── Step 8: Regional adjustment ────────────────────────────────────────
   const regionResult = getRegionMultiplier(postcode, normFuel, vp.ulezCompliant)
@@ -203,6 +217,18 @@ export function calculateValuation(input: {
     spreadSignals.push('high_recon')
   }
 
+  // ── Step 12c: Liability overrides — hard rule gates ───────────────────
+  // Explicit, predictable, explainable behaviour for high-liability vehicles.
+  // These override quoteMode regardless of multiplier math.
+  const liabilityResult = applyLiabilityOverrides(vp, reconEstimate, tradeBase, riskFlags)
+  if (liabilityResult.blocked) {
+    const { score: cs, deductions: cd } = calculateConfidence(vp, condition)
+    return buildManualResult(riskFlags, cs, cd, now)
+  }
+  if (liabilityResult.manualReview) {
+    quoteMode = 'manual_review'
+  }
+
   // ── Step 13: Final calculation ─────────────────────────────────────────
   const rawCombined =
     ageMultiplier *
@@ -216,7 +242,9 @@ export function calculateValuation(input: {
     volatilityMultiplier *
     keeperMultiplier *
     sornMultiplier *
-    reconMultiplier
+    reconMultiplier *
+    marketConfidenceMultiplier *
+    inputTrustMultiplier
 
   // Conditional compound floor: only protect if vehicle has no liability flags.
   // Rollback, structural damage, SORN, or expired MOT = liability, not just risk.
@@ -292,12 +320,15 @@ export function calculateValuation(input: {
       sornMultiplier: round4(sornMultiplier),
       reconMultiplier: round4(reconMultiplier),
       reconEstimate: Math.round(reconEstimate),
+      marketConfidenceMultiplier: round4(marketConfidenceMultiplier),
+      inputTrustMultiplier: round4(inputTrustMultiplier),
       liquidityBuffer: LIQUIDITY_BUFFER,
       // Admin debug: full pipeline trace
       combinedAdjustment: round4(combinedAdjustment),
       rawValue: Math.round(rawValue),
     },
     quoteMode,
+    matchQuality,
     regionUsed: regionResult.region,
     spreadApplied,
     calculatedAt,
@@ -652,17 +683,150 @@ function buildManualResult(
       sornMultiplier: 0,
       reconMultiplier: 0,
       reconEstimate: 0,
+      marketConfidenceMultiplier: 0,
+      inputTrustMultiplier: 0,
       liquidityBuffer: 0,
       combinedAdjustment: 0,
       rawValue: 0,
     },
-    // 'blocked': UI must show no range; this goes to manual human review
     quoteMode: 'blocked',
+    matchQuality: 'none',
     regionUsed: 'unknown',
     spreadApplied: 0,
     calculatedAt: now.toISOString(),
     expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   }
+}
+
+// ── Market confidence multiplier ────────────────────────────────────────────
+
+/**
+ * Weaker market data match = less trust in the anchor.
+ * exact: 1.00, fuel_fuzzy: 0.99, year_fuzzy: 0.97, partial: 0.95
+ * Volatile markets get an extra -1% on top.
+ */
+function getMarketConfidenceMultiplier(
+  matchQuality: MarketMatchQuality,
+  volatility: Volatility
+): number {
+  let m: number
+  switch (matchQuality) {
+    case 'exact':      m = 1.00; break
+    case 'fuel_fuzzy': m = 0.99; break
+    case 'year_fuzzy': m = 0.97; break
+    case 'partial':    m = 0.95; break
+    default:           m = 1.00
+  }
+  // Volatile markets with weak match = extra uncertainty
+  if (volatility === 'volatile' && matchQuality !== 'exact') {
+    m -= 0.01
+  }
+  return m
+}
+
+// ── Anti-gaming: user input trust model ─────────────────────────────────────
+
+/**
+ * Treat user-supplied "nice" inputs as claims, not facts.
+ *
+ * 1. Mileage edited away from MOT prefill → small trust penalty
+ * 2. "Excellent" on 12+ year diesel → downweight to "good" equivalent
+ * 3. Future: postcode plausibility checks
+ */
+function getInputTrustMultiplier(
+  vp: VehicleProfile,
+  condition: Condition,
+  vehicleAge: number
+): { multiplier: number; flags: string[] } {
+  let m = 1.0
+  const flags: string[] = []
+
+  // If user declared mileage differs from MOT even within "allowed" range,
+  // apply a micro-penalty. They edited the prefill — that's a trust signal.
+  if (
+    vp.motAnalysis.latestMileage != null &&
+    vp.userDeclaredMileage !== vp.motAnalysis.latestMileage &&
+    !vp.mileageDiscrepancy // Not already penalised by the discrepancy scaler
+  ) {
+    const drift = Math.abs(vp.userDeclaredMileage - vp.motAnalysis.latestMileage)
+    if (drift > 500) {
+      m *= 0.99
+      flags.push(`Mileage edited from MOT prefill (Δ${drift.toLocaleString()} mi) — trust penalty`)
+    }
+  }
+
+  // "Excellent" condition on old diesel / high-mileage = suspicious claim
+  if (condition === 'excellent') {
+    if (vehicleAge >= 12) {
+      m *= 0.97 // Equivalent to downgrading toward "good"
+      flags.push('Excellent condition claim on 12+ year vehicle — auto-discounted')
+    } else if (vehicleAge >= 8 && vp.fuel === 'diesel') {
+      m *= 0.98
+      flags.push('Excellent condition claim on older diesel — auto-discounted')
+    } else if (vp.resolvedMileage > 100000) {
+      m *= 0.98
+      flags.push('Excellent condition claim on 100k+ mileage vehicle — auto-discounted')
+    }
+  }
+
+  // "Excellent" with multiple MOT advisories = contradiction
+  if (condition === 'excellent' && vp.motAnalysis.advisoryCount >= 5) {
+    m *= 0.97
+    flags.push('Excellent condition contradicts 5+ MOT advisories — auto-discounted')
+  }
+
+  return { multiplier: m, flags }
+}
+
+// ── Liability overrides — explicit hard rule gates ──────────────────────────
+
+/**
+ * Predictable, explainable overrides independent of multiplier math.
+ * These are the "laws" of the engine — non-negotiable.
+ */
+function applyLiabilityOverrides(
+  vp: VehicleProfile,
+  reconEstimate: number,
+  tradeBase: number,
+  flags: string[]
+): { blocked: boolean; manualReview: boolean } {
+  let blocked = false
+  let manualReview = false
+
+  // RULE 1: Rollback → always blocked (already handled by quoteMode, belt-and-suspenders)
+  if (vp.motAnalysis.mileageConsistency === 'rollback_detected') {
+    blocked = true
+    // Flag already pushed by consistency multiplier
+  }
+
+  // RULE 2: Structural 4+ AND MOT expired → blocked
+  if (
+    (vp.motAnalysis.structuralAdvisoryCount ?? 0) >= 4 &&
+    vp.motAnalysis.motExpired
+  ) {
+    blocked = true
+    flags.push('BLOCKED: 4+ structural advisories + expired MOT → liability')
+  }
+
+  // RULE 3: Recon estimate > 18% of trade base → manual review
+  if (tradeBase > 0 && reconEstimate / tradeBase > 0.18) {
+    manualReview = true
+    flags.push(`Recon estimate exceeds 18% of trade base (${Math.round(reconEstimate / tradeBase * 100)}%) — manual review`)
+  }
+
+  // RULE 4: Dangerous defects present → manual review
+  if (vp.motAnalysis.dangerousDefects) {
+    manualReview = true
+    flags.push('Dangerous defect in history — manual review required')
+  }
+
+  // RULE 5: SORN + expired MOT = not roadworthy at all → blocked
+  if (vp.sornRegistered && vp.motAnalysis.motExpired) {
+    blocked = true
+    flags.push('BLOCKED: SORN + expired MOT → vehicle not roadworthy')
+  }
+
+  return { blocked, manualReview }
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
