@@ -1,17 +1,18 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export default async function InspectorIndexPage() {
-  const supabase = await createClient()
+  const authClient = await createClient()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await authClient.auth.getUser()
 
   if (!user) return null
 
   // Leads assigned to this inspector that are in inspection-relevant stages
-  const { data: leads, error } = await supabase
+  const svc = createServiceClient()
+  const { data: leads, error } = await svc
     .from('leads')
     .select('id, reg, make, model, seller_name, seller_phone, status, appointments(start_at, type)')
     .eq('assigned_inspector_id', user.id)

@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export default async function AdminCalendarPage() {
-  const supabase = await createClient()
+  const svc = createServiceClient()
 
-  const { data: appointments } = await supabase
+  const { data: appointments } = await svc
     .from('appointments')
     .select('*, leads(seller_name, reg)')
     .in('status', ['booked', 'completed'])

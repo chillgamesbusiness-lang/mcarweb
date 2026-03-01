@@ -9,15 +9,16 @@ interface InspectorLeadPageProps {
 
 export default async function InspectorLeadPage({ params }: InspectorLeadPageProps) {
   const { leadId } = await params
-  const supabase = await createClient()
+  const authClient = await createClient()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await authClient.auth.getUser()
 
   if (!user) redirect('/login')
 
-  const { data: lead, error } = await supabase
+  const svc = createServiceClient()
+  const { data: lead, error } = await svc
     .from('leads')
     .select('*, appointments(*)')
     .eq('id', leadId)
@@ -26,7 +27,7 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
 
   if (error || !lead) notFound()
 
-  const { data: existingInspection } = await supabase
+  const { data: existingInspection } = await svc
     .from('inspections')
     .select('*')
     .eq('lead_id', leadId)
@@ -42,8 +43,7 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
   // Generate signed URLs server-side (1 hour expiry)
   let signedUrls: string[] = []
   if (storagePaths.length > 0) {
-    const serviceClient = createServiceClient()
-    const { data } = await serviceClient.storage
+    const { data } = await svc.storage
       .from('inspection-photos')
       .createSignedUrls(storagePaths, 3600)
     signedUrls = (data ?? []).map((item) => item.signedUrl).filter(Boolean) as string[]

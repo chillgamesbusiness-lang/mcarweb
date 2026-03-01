@@ -24,10 +24,11 @@ const MULTIPLIER_LABELS: Record<string, string> = {
 
 export default async function AdminLeadDetailPage({ params }: LeadDetailPageProps) {
   const { id } = await params
-  const supabase = await createClient()
+  const authClient = await createClient()
+  const supabase = createServiceClient()
 
   // Get current admin user for audit log actor_user_id
-  const { data: { user: adminUser } } = await supabase.auth.getUser()
+  const { data: { user: adminUser } } = await authClient.auth.getUser()
 
   const { data: lead, error } = await supabase
     .from('leads')

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import type { Lead } from '@/lib/types'
 
 const PAGE_SIZE = 25
@@ -44,7 +44,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   const q = (params.q ?? '').trim()
   const statusFilter = params.status ?? ''
 
-  const supabase = await createClient()
+  const supabase = createServiceClient()
 
   // Build query
   let query = supabase

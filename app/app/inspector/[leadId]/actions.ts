@@ -4,11 +4,11 @@ import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function submitInspection(formData: FormData) {
-  const supabase = await createClient()
+  const authClient = await createClient()
 
   const {
     data: { user },
-  } = await supabase.auth.getUser()
+  } = await authClient.auth.getUser()
 
   if (!user) redirect('/login')
 
@@ -27,8 +27,9 @@ export async function submitInspection(formData: FormData) {
     throw new Error('Notes must be 2000 characters or fewer')
   }
 
-  // 1. Verify lead is assigned to this inspector (via session client = RLS)
-  const { data: lead, error: leadError } = await supabase
+  // 1. Verify lead is assigned to this inspector
+  const serviceClient = createServiceClient()
+  const { data: lead, error: leadError } = await serviceClient
     .from('leads')
     .select('id, status, pending_photo_urls')
     .eq('id', leadId)
@@ -38,8 +39,6 @@ export async function submitInspection(formData: FormData) {
   if (leadError || !lead) {
     throw new Error('Lead not found or not assigned to you')
   }
-
-  const serviceClient = createServiceClient()
 
   // 2. Idempotency: if inspection already submitted, redirect cleanly
   const { data: existingInspection } = await serviceClient

@@ -1,14 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
+  const svc = createServiceClient()
 
   // Aggregate counts
   const [{ count: totalLeads }, { count: newLeads }, { count: todayAppointments }] =
     await Promise.all([
-      supabase.from('leads').select('*', { count: 'exact', head: true }),
-      supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'new'),
-      supabase
+      svc.from('leads').select('*', { count: 'exact', head: true }),
+      svc.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'new'),
+      svc
         .from('appointments')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'booked')
