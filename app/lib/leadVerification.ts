@@ -121,21 +121,31 @@ export async function sendOTP(
     throw new Error('Invalid UK mobile number')
   }
 
+  // ── Rate limit bypass whitelist (dev/test numbers) ───────────────────
+  // OTP_BYPASS_PHONES = comma-separated E.164-style or 07xxx numbers, e.g. "+447503715100,07123456789"
+  const bypassList = (process.env.OTP_BYPASS_PHONES ?? '')
+    .split(',')
+    .map((n) => cleanPhone(n.trim()))
+    .filter(Boolean)
+  const isWhitelisted = bypassList.includes(cleanedPhone)
+
   // ── Rate limits: per-phone (3/day) + per-IP (10/day) ─────────────────
-  const phoneLimit = await checkOtpRateLimit(`otp:phone:${cleanedPhone}`, 3, 86400)
-  if (!phoneLimit.allowed) {
-    throw new Error('Too many verification requests. Please try again tomorrow.')
-  }
+  if (!isWhitelisted) {
+    const phoneLimit = await checkOtpRateLimit(`otp:phone:${cleanedPhone}`, 3, 86400)
+    if (!phoneLimit.allowed) {
+      throw new Error('Too many verification requests. Please try again tomorrow.')
+    }
 
-  const ipLimit = await checkOtpRateLimit(`otp:ip:${ip}`, 10, 86400)
-  if (!ipLimit.allowed) {
-    throw new Error('Too many verification requests. Please try again later.')
-  }
+    const ipLimit = await checkOtpRateLimit(`otp:ip:${ip}`, 10, 86400)
+    if (!ipLimit.allowed) {
+      throw new Error('Too many verification requests. Please try again later.')
+    }
 
-  // ── 60s cooldown per phone ───────────────────────────────────────────
-  const cooldown = await checkOtpRateLimit(`otp:cooldown:${cleanedPhone}`, 1, 60)
-  if (!cooldown.allowed) {
-    throw new Error('Please wait 60 seconds before requesting another code.')
+    // ── 60s cooldown per phone ─────────────────────────────────────────
+    const cooldown = await checkOtpRateLimit(`otp:cooldown:${cleanedPhone}`, 1, 60)
+    if (!cooldown.allowed) {
+      throw new Error('Please wait 60 seconds before requesting another code.')
+    }
   }
 
   // ── Generate session ID ──────────────────────────────────────────────
