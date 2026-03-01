@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') redirect('/inspector')
+  if (profile?.role !== 'admin') redirect('/login')
   return (
     <div className="min-h-screen flex bg-gray-100">
       {/* Sidebar */}

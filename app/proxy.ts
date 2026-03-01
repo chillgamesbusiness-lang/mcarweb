@@ -54,10 +54,28 @@ export async function proxy(request: NextRequest) {
 
     const role = profile?.role as string | undefined
 
+    // No valid role → sign out and send to login (prevents redirect loop)
+    if (role !== 'admin' && role !== 'inspector') {
+      await supabase.auth.signOut()
+      const loginUrl = request.nextUrl.clone()
+      loginUrl.pathname = '/login'
+      loginUrl.searchParams.set('error', 'no_role')
+      return NextResponse.redirect(loginUrl)
+    }
+
     // Redirect away from /login if already authenticated
     if (pathname === '/login') {
+      const from = request.nextUrl.searchParams.get('from')
       const dest = request.nextUrl.clone()
-      dest.pathname = role === 'admin' ? '/admin' : '/inspector'
+      // Honour ?from= if it matches the user's role
+      if (from && from.startsWith('/admin') && role === 'admin') {
+        dest.pathname = from
+      } else if (from && from.startsWith('/inspector') && role === 'inspector') {
+        dest.pathname = from
+      } else {
+        dest.pathname = role === 'admin' ? '/admin' : '/inspector'
+      }
+      dest.search = ''
       return NextResponse.redirect(dest)
     }
 

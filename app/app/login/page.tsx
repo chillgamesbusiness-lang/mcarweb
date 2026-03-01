@@ -27,6 +27,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         )}
 
+        {error === 'no_role' && (
+          <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+            Your account does not have an assigned role. Contact an administrator.
+          </div>
+        )}
+
         <form action={login} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">

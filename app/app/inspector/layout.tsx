@@ -15,7 +15,7 @@ export default async function InspectorLayout({ children }: { children: React.Re
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'inspector') redirect('/admin')
+  if (profile?.role !== 'inspector') redirect('/login')
   return (
     <div className="min-h-screen flex bg-gray-100">
       {/* Sidebar */}
