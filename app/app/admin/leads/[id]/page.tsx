@@ -12,15 +12,22 @@ interface LeadDetailPageProps {
 // Multiplier display names for the breakdown table
 const MULTIPLIER_LABELS: Record<string, string> = {
   tradeBase: 'Trade Base (£)',
-  ageDepreciation: 'Age Depreciation',
-  mileageAdjustment: 'Mileage Adjustment',
-  motAdjustment: 'MOT Risk',
-  fuelAdjustment: 'Fuel Market Risk',
+  ageMultiplier: 'ageMultiplier',
+  mileageMultiplier: 'mileageMultiplier',
+  motMultiplier: 'motMultiplier',
+  fuelMultiplier: 'fuelMultiplier',
   conditionMultiplier: 'Condition',
-  regionAdjustment: 'Regional',
+  regionMultiplier: 'regionMultiplier',
+  ulezMultiplier: 'ulezMultiplier',
+  mileageConsistencyMultiplier: 'mileageConsistencyMultiplier',
+  volatilityMultiplier: 'volatilityMultiplier',
+  keeperMultiplier: 'keeperMultiplier',
+  sornMultiplier: 'sornMultiplier',
+  reconMultiplier: 'reconMultiplier',
+  reconEstimate: 'Recon Estimate (£)',
   liquidityBuffer: 'Liquidity Buffer',
-  ulezPenalty: 'ULEZ Penalty',
-  mileageConsistencyPenalty: 'Mileage Consistency',
+  combinedAdjustment: 'combinedAdjustment',
+  rawValue: 'rawValue',
 }
 
 export default async function AdminLeadDetailPage({ params }: LeadDetailPageProps) {

@@ -1,7 +1,16 @@
 /**
- * Production Valuation Engine v2 — 14-step conservative pricing.
+ * Production Valuation Engine v3 — 16-step conservative pricing.
  *
- * v2 additions over v1:
+ * v3 additions over v2:
+ *  - Conditional compound floor: 0.35 for normal vehicles, 0.15 for liability
+ *    vehicles (rollback, structural, SORN, expired MOT)
+ *  - Mileage discrepancy scaling: tiered by delta (<2k/2-10k/10-25k/25k+)
+ *  - Structural advisory proportional weighting by count
+ *  - Severity-weighted spread tiers (fraud=5, mechanical=3, financial=2, info=1)
+ *  - EV battery age 4-tier: ≤4yr/5-6yr/7-8yr/8+yr
+ *  - Recon cost estimation from advisory classification
+ *
+ * v2 features retained:
  *  - Volatility multiplier (step 10)
  *  - Keeper history check (step 11)
  *  - Age multiplier from yearRange midpoint
@@ -21,6 +30,7 @@
 import { getMarketValue } from '@/lib/marketData'
 import { getRegionMultiplier } from '@/lib/regionPricing'
 import { calculateConfidence } from '@/lib/confidenceScorer'
+import { estimateReconCost } from '@/lib/mileageAnalyser'
 import type {
   VehicleProfile,
   Condition,
@@ -115,7 +125,9 @@ export function calculateValuation(input: {
   if (normFuel === 'diesel') {
     riskFlags.push('Diesel — market softness')
   }
-  if (normFuel === 'electric' && vehicleAge > 6) {
+  if (normFuel === 'electric' && vehicleAge > 8) {
+    riskFlags.push('Older electric — battery pack uncertainty (8+ years)')
+  } else if (normFuel === 'electric' && vehicleAge > 6) {
     riskFlags.push('Older electric — battery degradation uncertainty')
   } else if (normFuel === 'electric' && vehicleAge > 4) {
     riskFlags.push('Electric 5-6yr — battery warranty concerns')
@@ -179,9 +191,20 @@ export function calculateValuation(input: {
   // ── Step 12: Liquidity buffer ──────────────────────────────────────────
   // Applied via final formula
 
+  // ── Step 12b: Recon estimation from advisories ────────────────────────
+  const reconEstimate = estimateReconCost(vp.motAnalysis.riskAdvisories)
+  // Cap recon deduction at 20% of trade base
+  const reconMultiplier = Math.max(0.80, 1 - reconEstimate / tradeBase)
+
+  if (reconEstimate > 500) {
+    riskFlags.push(`Estimated recon cost: £${reconEstimate.toLocaleString()}`)
+  }
+  if (reconEstimate > 1500) {
+    spreadSignals.push('high_recon')
+  }
+
   // ── Step 13: Final calculation ─────────────────────────────────────────
-  const combinedAdjustment = Math.max(
-    COMPOUND_ADJUSTMENT_FLOOR,
+  const rawCombined =
     ageMultiplier *
     mileageMultiplier *
     motMultiplier *
@@ -192,8 +215,20 @@ export function calculateValuation(input: {
     consistencyMultiplier *
     volatilityMultiplier *
     keeperMultiplier *
-    sornMultiplier
-  )
+    sornMultiplier *
+    reconMultiplier
+
+  // Conditional compound floor: only protect if vehicle has no liability flags.
+  // Rollback, structural damage, SORN, or expired MOT = liability, not just risk.
+  // Those vehicles are allowed to fall below the normal 0.35 floor.
+  const hasLiabilityFlag =
+    vp.motAnalysis.mileageConsistency === 'rollback_detected' ||
+    vp.motAnalysis.structuralAdvisories ||
+    vp.sornRegistered ||
+    vp.motAnalysis.motExpired
+
+  const effectiveFloor = hasLiabilityFlag ? 0.15 : COMPOUND_ADJUSTMENT_FLOOR
+  const combinedAdjustment = Math.max(effectiveFloor, rawCombined)
 
   const rawValue = tradeBase * combinedAdjustment * (1 - LIQUIDITY_BUFFER)
   const adjustedValue = roundToNearest50(rawValue)
@@ -255,6 +290,8 @@ export function calculateValuation(input: {
       volatilityMultiplier: round4(volatilityMultiplier),
       keeperMultiplier: round4(keeperMultiplier),
       sornMultiplier: round4(sornMultiplier),
+      reconMultiplier: round4(reconMultiplier),
+      reconEstimate: Math.round(reconEstimate),
       liquidityBuffer: LIQUIDITY_BUFFER,
       // Admin debug: full pipeline trace
       combinedAdjustment: round4(combinedAdjustment),
@@ -355,10 +392,16 @@ function getMotMultiplier(
     signals.push('mot_dangerous')
   }
 
-  // Structural concerns (corrosion, subframe, chassis)
+  // Structural concerns — proportional to advisory count
   if (mot.structuralAdvisories) {
-    m -= 0.04
-    flags.push('Structural/corrosion advisories present')
+    const structCount = mot.structuralAdvisoryCount ?? 1
+    // Base -3%, then -2% for 2+, then -3% more for 4+
+    m -= 0.03
+    if (structCount > 1) m -= 0.02
+    if (structCount > 3) m -= 0.03
+    flags.push(
+      `Structural/corrosion advisories present (${structCount} found)`
+    )
     signals.push('mot_structural')
   }
 
@@ -374,11 +417,14 @@ function getMotMultiplier(
 }
 
 /**
- * Fuel multiplier v2:
+ * Fuel multiplier v3:
  * - Diesel ≤5yr: 0.97, >5yr: 0.94
  * - Hybrid: 1.03
- * - Electric ≤4yr: 1.03, 5-6yr: 0.98, >6yr: 0.90
+ * - Electric ≤4yr: 1.03, 5-6yr: 0.98, 7-8yr: 0.90, >8yr: 0.85
  * - Petrol: 1.00
+ *
+ * EV >8yr gets steeper discount due to battery pack uncertainty
+ * and trader resistance on older packs without warranty.
  */
 function getFuelMultiplier(fuel: FuelType, age: number): number {
   switch (fuel) {
@@ -389,7 +435,8 @@ function getFuelMultiplier(fuel: FuelType, age: number): number {
     case 'electric':
       if (age <= 4) return 1.03
       if (age <= 6) return 0.98
-      return 0.90
+      if (age <= 8) return 0.90
+      return 0.85 // Battery anxiety premium
     default:
       return 1.00
   }
@@ -397,7 +444,8 @@ function getFuelMultiplier(fuel: FuelType, age: number): number {
 
 /**
  * Mileage consistency penalty.
- * Rollback: -15%, Suspicious: -5%, Discrepancy: additional -3%.
+ * Rollback: -15%, Suspicious: -5%.
+ * Discrepancy: scaled by delta miles (not flat).
  */
 function getConsistencyMultiplier(
   consistency: MileageConsistency,
@@ -418,10 +466,18 @@ function getConsistencyMultiplier(
     signals.push('suspicious_mileage')
   }
 
+  // Scaled mileage discrepancy: larger delta → bigger penalty
   if (discrepancy) {
-    m *= 0.97
+    const absDelta = Math.abs(discrepancyAmount)
+    let discMult: number
+    if (absDelta < 2000)       discMult = 0.98
+    else if (absDelta < 10000) discMult = 0.95
+    else if (absDelta < 25000) discMult = 0.90
+    else                       discMult = 0.80
+
+    m *= discMult
     flags.push(
-      `User-declared mileage doesn't match MOT records (Δ${Math.abs(discrepancyAmount).toLocaleString()} miles)`
+      `User-declared mileage doesn't match MOT records (Δ${absDelta.toLocaleString()} miles)`
     )
     signals.push('mileage_discrepancy')
   }
@@ -471,14 +527,35 @@ function getKeeperMultiplier(
 
 // ── Dynamic spread (v2) ────────────────────────────────────────────────────────
 
+// ── Severity-weighted spread signals ───────────────────────────────────────────
+
+const SIGNAL_SEVERITY: Record<string, number> = {
+  // Fraud risk (5)
+  rollback: 5,
+  // Mechanical / liability risk (3)
+  mot_structural: 3,
+  mot_dangerous: 3,
+  sorn: 3,
+  mot_expired: 3,
+  suspicious_mileage: 3,
+  // Financial risk (2)
+  mot_failures: 2,
+  mot_advisories_high: 2,
+  mot_brakes: 2,
+  high_mileage: 2,
+  mileage_discrepancy: 2,
+  high_recon: 2,
+  // Informational (1)
+  mot_expiring: 1,
+}
+
 function calculateSpread(
   adjustedValue: number,
-  spreadSignals: string[], // Counted for tier — serious risks only
+  spreadSignals: string[], // Weighted by severity for tier
   confidenceScore: number,
   volatility: Volatility,
   riskFlags: string[]     // Full flags — for rollback/structural pattern checks
 ): { spread: number; riskTier: RiskTier } {
-  const flagCount = spreadSignals.length
   const hasRollback = spreadSignals.includes('rollback')
   const hasStructural = spreadSignals.includes('mot_structural')
 
@@ -487,17 +564,23 @@ function calculateSpread(
     return { spread: 0, riskTier: 'manual_only' }
   }
 
-  // Base spread by flag count
+  // Severity-weighted risk score (not just flag count)
+  const riskScore = spreadSignals.reduce(
+    (sum, signal) => sum + (SIGNAL_SEVERITY[signal] ?? 1),
+    0
+  )
+
+  // Base spread by severity score
   let spread: number
   let tier: RiskTier
 
-  if (flagCount <= 1) {
+  if (riskScore <= 2) {
     spread = 250
     tier = 'low'
-  } else if (flagCount <= 3) {
+  } else if (riskScore <= 5) {
     spread = 400
     tier = 'medium'
-  } else if (flagCount <= 5) {
+  } else if (riskScore <= 9) {
     spread = 650
     tier = 'high'
   } else {
@@ -561,6 +644,8 @@ function buildManualResult(
       volatilityMultiplier: 0,
       keeperMultiplier: 0,
       sornMultiplier: 0,
+      reconMultiplier: 0,
+      reconEstimate: 0,
       liquidityBuffer: 0,
       combinedAdjustment: 0,
       rawValue: 0,

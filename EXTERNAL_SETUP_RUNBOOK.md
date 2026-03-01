@@ -7,6 +7,8 @@
 - ✅ `npm run dev` works with login functional
 - ✅ Inspector / Admin role-based routing tested
 
+**cd "c:\Users\xxxsa\Desktop\mcarweb\app" ; vercel deploy --prod 2>&1**
+
 ---
 
 ## 0. Local Prerequisites (5 mins)

@@ -98,6 +98,7 @@ export interface MOTAnalysis {
   advisoryCount: number
   dangerousDefects: boolean
   structuralAdvisories: boolean
+  structuralAdvisoryCount: number
   brakeAdvisories: boolean
   riskAdvisories: string[]
   totalTestCount: number
@@ -156,6 +157,8 @@ export interface MultiplierBreakdown {
   volatilityMultiplier: number
   keeperMultiplier: number
   sornMultiplier: number
+  reconMultiplier: number
+  reconEstimate: number
   liquidityBuffer: number
   // Debug fields: visible in admin breakdown
   combinedAdjustment: number

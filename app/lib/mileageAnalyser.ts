@@ -255,14 +255,19 @@ export function buildMotAnalysis(
     t.defects.some((d) => d.type === 'DANGEROUS')
   )
 
-  // Structural/corrosion advisories
-  const structuralAdvisories = sorted.some((t) =>
-    t.defects.some(
-      (d) =>
+  // Structural/corrosion advisories — count for proportional weighting
+  let structuralAdvisoryCount = 0
+  for (const t of sorted) {
+    for (const d of t.defects) {
+      if (
         d.type === 'ADVISORY' &&
         STRUCTURAL_KEYWORDS.some((kw) => d.text.toLowerCase().includes(kw))
-    )
-  )
+      ) {
+        structuralAdvisoryCount++
+      }
+    }
+  }
+  const structuralAdvisories = structuralAdvisoryCount > 0
 
   // Brake advisories on latest test
   const brakeAdvisories =
@@ -314,6 +319,7 @@ export function buildMotAnalysis(
     advisoryCount,
     dangerousDefects,
     structuralAdvisories,
+    structuralAdvisoryCount,
     brakeAdvisories,
     riskAdvisories,
     totalTestCount: sorted.length,
@@ -339,10 +345,52 @@ export function newVehicleExemptAnalysis(
     advisoryCount: 0,
     dangerousDefects: false,
     structuralAdvisories: false,
+    structuralAdvisoryCount: 0,
     brakeAdvisories: false,
     riskAdvisories: [],
     totalTestCount: 0,
   }
+}
+
+// ── Recon cost estimation from advisories ──────────────────────────────────────
+
+const RECON_COST_MAP: { keywords: string[]; avgCost: number }[] = [
+  { keywords: ['corrosi', 'rust', 'subframe', 'chassis', 'structural', 'sill', 'mounting', 'outrigger'], avgCost: 600 },
+  { keywords: ['brake', 'braking', 'disc', 'pad', 'caliper', 'handbrake'], avgCost: 350 },
+  { keywords: ['oil leak', 'oil seep'], avgCost: 500 },
+  { keywords: ['suspension', 'arm', 'bush', 'shock', 'spring', 'damper'], avgCost: 400 },
+  { keywords: ['exhaust', 'catalyst', 'catalytic', 'backbox', 'flexi'], avgCost: 250 },
+  { keywords: ['tyre', 'tire'], avgCost: 120 },
+  { keywords: ['steering', 'rack', 'track rod', 'ball joint'], avgCost: 350 },
+  { keywords: ['cv joint', 'cv boot', 'driveshaft', 'gaiter'], avgCost: 300 },
+  { keywords: ['clutch', 'flywheel'], avgCost: 600 },
+  { keywords: ['coolant', 'radiator', 'water pump', 'thermostat'], avgCost: 300 },
+]
+
+/**
+ * Estimate reconditioning cost from advisory texts.
+ * Classifies each advisory into a cost bucket and sums estimated total.
+ * Each keyword group counted once per advisory (no double count within an advisory).
+ */
+export function estimateReconCost(riskAdvisories: string[]): number {
+  let totalCost = 0
+
+  for (const advisory of riskAdvisories) {
+    const lower = advisory.toLowerCase()
+    let matched = false
+
+    for (const category of RECON_COST_MAP) {
+      if (!matched && category.keywords.some((kw) => lower.includes(kw))) {
+        totalCost += category.avgCost
+        matched = true
+      }
+    }
+
+    // Unclassified advisory: small baseline cost
+    if (!matched) totalCost += 150
+  }
+
+  return totalCost
 }
 
 export function unknownMotAnalysis(): MOTAnalysis {
@@ -359,6 +407,7 @@ export function unknownMotAnalysis(): MOTAnalysis {
     advisoryCount: 0,
     dangerousDefects: false,
     structuralAdvisories: false,
+    structuralAdvisoryCount: 0,
     brakeAdvisories: false,
     riskAdvisories: [],
     totalTestCount: 0,
