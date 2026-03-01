@@ -112,6 +112,8 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
       {/* Hidden fields for OTP session data */}
       {otpSessionId && <input type="hidden" name="otp_session_id" value={otpSessionId} />}
       <input type="hidden" name="otp_verified" value={otpVerified ? 'true' : 'false'} />
+      {/* Mirror phone value as hidden field — disabled inputs are excluded from FormData */}
+      <input type="hidden" name="phone_verified" id="phone_verified" value="" />
 
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
@@ -136,10 +138,10 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
             id="phone"
             name="phone"
             type="tel"
-            required
+            required={!otpVerified}
             placeholder="07123 456789"
-            disabled={otpVerified}
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none disabled:bg-gray-100 disabled:text-gray-500"
+            readOnly={otpVerified}
+            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none read-only:bg-gray-100 read-only:text-gray-500"
           />
           {!otpVerified && (
             <button

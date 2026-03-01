@@ -31,10 +31,10 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       redirect('/offer?error=Session+expired.+Please+start+again.')
     }
 
-    const name = (formData.get('name') as string)?.trim()
-    const phone = (formData.get('phone') as string)?.trim()
-    const email = (formData.get('email') as string)?.trim()
-    const postcode = (formData.get('postcode') as string)?.trim()
+    const name = (formData.get('name') as string | null)?.trim() ?? ''
+    const phone = (formData.get('phone') as string | null)?.trim() ?? ''
+    const email = (formData.get('email') as string | null)?.trim() ?? ''
+    const postcode = (formData.get('postcode') as string | null)?.trim() ?? ''
     const consentGiven = formData.get('consent') === 'on'
     const consentMarketing = formData.get('consent_marketing') === 'on'
 
@@ -337,8 +337,9 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       // All other errors: log and redirect to form with message instead of crashing
       console.error('[submitContact] Unexpected error:', err)
       const errMsg = err instanceof Error ? err.message : String(err)
+      console.error('[submitContact] detail:', errMsg)
       redirect(
-        `/offer/contact?token=${encodeURIComponent(token ?? '')}&error=${encodeURIComponent(errMsg)}`
+        `/offer/contact?token=${encodeURIComponent(token ?? '')}&error=${encodeURIComponent('An unexpected error occurred. Please try again.')}`
       )
     }
   }
