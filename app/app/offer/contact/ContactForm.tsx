@@ -74,7 +74,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
 
   async function handleVerifyOtp() {
     if (!otpSessionId || !otpCode.trim()) {
-      setOtpError('Please enter the 6-digit code.')
+      setOtpError('Please enter the 4-digit code.')
       return
     }
 
@@ -163,23 +163,23 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
       {otpStep && !otpVerified && (
         <div className="rounded-md bg-blue-50 border border-blue-200 p-4 space-y-3">
           <p className="text-sm text-blue-700">
-            Enter the 6-digit code sent to your phone.
+            Enter the 4-digit code sent to your phone.
           </p>
           <div className="flex gap-2">
             <input
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              maxLength={6}
+              maxLength={4}
               value={otpCode}
               onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-              placeholder="000000"
+              placeholder="0000"
               className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-center tracking-widest font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
             />
             <button
               type="button"
               onClick={handleVerifyOtp}
-              disabled={otpVerifying || otpCode.length !== 6}
+              disabled={otpVerifying || otpCode.length !== 4}
               className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {otpVerifying ? 'Checking...' : 'Verify'}
