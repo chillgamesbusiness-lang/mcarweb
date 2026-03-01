@@ -1,6 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/** Service-role client for role lookups — bypasses RLS */
+function createServiceRoleClient() {
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies: { getAll: () => [], setAll: () => {} } }
+  )
+}
+
 export async function proxy(request: NextRequest) {
   // Guard: if Supabase env vars are missing, pass through without crashing
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -45,8 +54,9 @@ export async function proxy(request: NextRequest) {
 
   // ── Authenticated: enforce role-based access ─────────────────────────────────
   if (user) {
-    // Fetch role from users table
-    const { data: profile } = await supabase
+    // Fetch role using service-role client (bypasses RLS to avoid circular policy)
+    const svc = createServiceRoleClient()
+    const { data: profile } = await svc
       .from('users')
       .select('role')
       .eq('id', user.id)

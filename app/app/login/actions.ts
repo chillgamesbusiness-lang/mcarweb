@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkOtpRateLimit } from '@/lib/rateLimit'
 
 export async function login(formData: FormData) {
@@ -37,7 +37,9 @@ export async function login(formData: FormData) {
 
   if (!user) redirect('/login?error=no_user')
 
-  const { data: profile } = await supabase
+  // Use service client for role lookup — bypasses RLS circular policy on users table
+  const svc = createServiceClient()
+  const { data: profile } = await svc
     .from('users')
     .select('role')
     .eq('id', user.id)
