@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { logout } from '@/app/login/actions'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  // Use service client for role lookup — bypasses RLS circular dependency
+  const svc = createServiceClient()
+  const { data: profile } = await svc
     .from('users')
     .select('role')
     .eq('id', user.id)

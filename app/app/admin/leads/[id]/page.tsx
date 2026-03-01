@@ -50,7 +50,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     supabase.from('notes').select('*').eq('lead_id', id).order('created_at', { ascending: false }),
     supabase.from('audit_log').select('*').eq('lead_id', id).order('created_at', { ascending: false }),
     supabase.from('valuation_snapshots').select('*').eq('lead_id', id).maybeSingle(),
-    supabase.from('users').select('id, name, email').eq('role', 'inspector').eq('is_active', true),
+    createServiceClient().from('users').select('id, name, email').eq('role', 'inspector').eq('is_active', true),
   ])
 
   // Generate signed URLs for inspection photos
@@ -75,7 +75,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     const authClient = await createClient()
     const { data: { user: caller } } = await authClient.auth.getUser()
     if (!caller) redirect('/login')
-    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    const { data: callerProfile } = await createServiceClient().from('users').select('role').eq('id', caller.id).single()
     if (callerProfile?.role !== 'admin') redirect('/login')
     const leadId = formData.get('leadId') as string
     const outcome = formData.get('outcome') as string
@@ -149,7 +149,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     const authClient = await createClient()
     const { data: { user: caller } } = await authClient.auth.getUser()
     if (!caller) redirect('/login')
-    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    const { data: callerProfile } = await createServiceClient().from('users').select('role').eq('id', caller.id).single()
     if (callerProfile?.role !== 'admin') redirect('/login')
 
     const leadId = formData.get('leadId') as string
@@ -182,7 +182,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     const authClient = await createClient()
     const { data: { user: caller } } = await authClient.auth.getUser()
     if (!caller) redirect('/login')
-    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    const { data: callerProfile } = await createServiceClient().from('users').select('role').eq('id', caller.id).single()
     if (callerProfile?.role !== 'admin') redirect('/login')
 
     const leadId = formData.get('leadId') as string
@@ -228,7 +228,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     const authClient = await createClient()
     const { data: { user: caller } } = await authClient.auth.getUser()
     if (!caller) redirect('/login')
-    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    const { data: callerProfile } = await createServiceClient().from('users').select('role').eq('id', caller.id).single()
     if (callerProfile?.role !== 'admin') redirect('/login')
 
     const leadId = formData.get('leadId') as string
@@ -272,7 +272,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     const authClient = await createClient()
     const { data: { user: caller } } = await authClient.auth.getUser()
     if (!caller) redirect('/login')
-    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    const { data: callerProfile } = await createServiceClient().from('users').select('role').eq('id', caller.id).single()
     if (callerProfile?.role !== 'admin') redirect('/login')
     const leadId = formData.get('leadId') as string
     const newStatus = formData.get('status') as LeadStatus

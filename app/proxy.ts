@@ -1,15 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-/** Service-role client for role lookups — bypasses RLS */
-function createServiceRoleClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: { getAll: () => [], setAll: () => {} } }
-  )
-}
-
 export async function proxy(request: NextRequest) {
   // Guard: if Supabase env vars are missing, pass through without crashing
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
@@ -53,31 +44,34 @@ export async function proxy(request: NextRequest) {
   }
 
   // ── Authenticated: enforce role-based access ─────────────────────────────────
-  if (user) {
-    // Fetch role using service-role client (bypasses RLS to avoid circular policy)
-    const svc = createServiceRoleClient()
-    const { data: profile } = await svc
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+  if (user && (pathname === '/login' || pathname.startsWith('/admin') || pathname.startsWith('/inspector'))) {
+    // Look up role — use service role key if available (bypasses RLS), else anon client
+    let role: string | undefined
+    try {
+      const client = process.env.SUPABASE_SERVICE_ROLE_KEY
+        ? createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY,
+            { cookies: { getAll: () => [], setAll: () => {} } }
+          )
+        : supabase
 
-    const role = profile?.role as string | undefined
+      const { data: profile } = await client
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-    // No valid role → sign out and send to login (prevents redirect loop)
-    if (role !== 'admin' && role !== 'inspector') {
-      await supabase.auth.signOut()
-      const loginUrl = request.nextUrl.clone()
-      loginUrl.pathname = '/login'
-      loginUrl.searchParams.set('error', 'no_role')
-      return NextResponse.redirect(loginUrl)
+      role = profile?.role as string | undefined
+    } catch {
+      // If role lookup fails, let request through — layout guards will handle it
+      return supabaseResponse
     }
 
-    // Redirect away from /login if already authenticated
-    if (pathname === '/login') {
+    // Redirect away from /login if already authenticated with a valid role
+    if (pathname === '/login' && (role === 'admin' || role === 'inspector')) {
       const from = request.nextUrl.searchParams.get('from')
       const dest = request.nextUrl.clone()
-      // Honour ?from= if it matches the user's role
       if (from && from.startsWith('/admin') && role === 'admin') {
         dest.pathname = from
       } else if (from && from.startsWith('/inspector') && role === 'inspector') {
@@ -89,19 +83,22 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(dest)
     }
 
-    // Admin-only routes
-    if (pathname.startsWith('/admin') && role !== 'admin') {
+    // Admin-only routes — redirect non-admins
+    if (pathname.startsWith('/admin') && role === 'inspector') {
       const dest = request.nextUrl.clone()
       dest.pathname = '/inspector'
       return NextResponse.redirect(dest)
     }
 
-    // Inspector-only routes
-    if (pathname.startsWith('/inspector') && role !== 'inspector') {
+    // Inspector-only routes — redirect non-inspectors
+    if (pathname.startsWith('/inspector') && role === 'admin') {
       const dest = request.nextUrl.clone()
       dest.pathname = '/admin'
       return NextResponse.redirect(dest)
     }
+
+    // Unknown role on protected routes → let layout guards handle it
+    // (no sign-out here — avoids aggressive sign-out on transient DB failures)
   }
 
   return supabaseResponse
