@@ -336,8 +336,9 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       }
       // All other errors: log and redirect to form with message instead of crashing
       console.error('[submitContact] Unexpected error:', err)
+      const errMsg = err instanceof Error ? err.message : String(err)
       redirect(
-        `/offer/contact?token=${encodeURIComponent(token ?? '')}&error=${encodeURIComponent('An unexpected error occurred. Please try again.')}`
+        `/offer/contact?token=${encodeURIComponent(token ?? '')}&error=${encodeURIComponent(errMsg)}`
       )
     }
   }
