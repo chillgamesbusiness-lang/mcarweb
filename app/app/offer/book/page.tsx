@@ -185,6 +185,17 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
                 Final offer confirmed at appointment after vehicle inspection
               </p>
             )}
+            {/* Customer explanation bullets */}
+            {valuation?.customerBullets && valuation.customerBullets.length > 0 && (
+              <ul className="mt-3 text-left space-y-1">
+                {valuation.customerBullets.map((b: string, i: number) => (
+                  <li key={i} className="text-xs text-green-700 flex items-start gap-1.5">
+                    <span className="mt-0.5 shrink-0">•</span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         ) : (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6 text-center">

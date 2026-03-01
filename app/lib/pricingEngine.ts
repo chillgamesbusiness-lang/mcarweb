@@ -42,6 +42,10 @@ import type {
   MultiplierBreakdown,
   ValuationResult,
   MarketMatchQuality,
+  QuoteExplanation,
+  AdminExplanationItem,
+  ProfitSimulation,
+  ProfitRiskBand,
 } from '@/lib/types'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -294,6 +298,28 @@ export function calculateValuation(input: {
   const calculatedAt = now.toISOString()
   const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
+  // ── Explanation payloads ─────────────────────────────────────────────
+  const customerExplanation = buildCustomerExplanation(
+    vp, condition, normFuel, vehicleAge, volatility, matchQuality,
+    reconEstimate, motMultiplier, mileageMultiplier, fuelMultiplier,
+    ulezMultiplier, consistencyMultiplier, sornMultiplier, quoteMode
+  )
+  const adminExplanation = buildAdminExplanation(
+    vp, condition, vehicleAge, normFuel, volatility, matchQuality,
+    reconEstimate, tradeBase, motMultiplier, fuelMultiplier,
+    mileageMultiplier, consistencyMultiplier, ulezMultiplier,
+    inputTrustMultiplier, marketConfidenceMultiplier, keeperMultiplier,
+    sornMultiplier, reconMultiplier, liabilityResult
+  )
+  const profitSimulation = buildProfitSimulation(
+    estimatedRetail, reconEstimate, min, max, midpoint, quoteMode
+  )
+
+  // ── Profit guardrail: if expectedProfitMid < £300 → manual_review ──
+  if (profitSimulation.guardrailTriggered && quoteMode === 'auto') {
+    quoteMode = 'manual_review'
+  }
+
   return {
     min,
     max,
@@ -333,6 +359,9 @@ export function calculateValuation(input: {
     spreadApplied,
     calculatedAt,
     expiresAt,
+    customerExplanation,
+    adminExplanation,
+    profitSimulation,
   }
 }
 
@@ -695,6 +724,27 @@ function buildManualResult(
     spreadApplied: 0,
     calculatedAt: now.toISOString(),
     expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    customerExplanation: {
+      bullets: ['This vehicle requires a specialist review before we can provide an offer.'],
+      summary: 'We need to take a closer look at this one.',
+    },
+    adminExplanation: flags.map(f => ({
+      rule: 'MANUAL_BLOCKED',
+      severity: 'critical' as const,
+      description: f,
+      impact: 'blocked',
+    })),
+    profitSimulation: {
+      estimatedRetail: 0,
+      sellCostPct: 0.05,
+      reconEstimate: 0,
+      expectedProfitMin: 0,
+      expectedProfitMid: 0,
+      expectedProfitMax: 0,
+      profitRiskBand: 'red',
+      guardrailTriggered: true,
+      guardrailReason: 'Vehicle blocked — no auto-quote',
+    },
   }
 }
 
@@ -827,6 +877,258 @@ function applyLiabilityOverrides(
   }
 
   return { blocked, manualReview }
+}
+
+// ── Customer-facing explanation builder ──────────────────────────────────────
+
+/**
+ * Generate 3–5 neutral, customer-safe explanation bullets.
+ *
+ * Rules: NEVER use words like "fraud", "rollback", "gaming", "suspicious",
+ * "blocked", "liability". Customers should understand the range, not feel accused.
+ */
+function buildCustomerExplanation(
+  vp: VehicleProfile, condition: Condition, fuel: FuelType,
+  vehicleAge: number, volatility: Volatility, matchQuality: MarketMatchQuality,
+  reconEstimate: number, motMult: number, mileageMult: number, fuelMult: number,
+  ulezMult: number, consistencyMult: number, sornMult: number, quoteMode: QuoteMode
+): QuoteExplanation {
+  const bullets: string[] = []
+
+  // Age
+  if (vehicleAge <= 3) {
+    bullets.push('Recent model year helps your valuation.')
+  } else if (vehicleAge >= 10) {
+    bullets.push('Older vehicles typically attract lower offers due to wear expectations.')
+  }
+
+  // Mileage
+  if (mileageMult < 0.95) {
+    bullets.push('Higher-than-average mileage for this vehicle\'s age has been factored in.')
+  } else if (mileageMult > 1.0) {
+    bullets.push('Lower-than-average mileage supports a stronger offer.')
+  }
+
+  // MOT / repair expectations
+  if (reconEstimate > 500) {
+    bullets.push('Expected service and repair costs have been considered.')
+  } else if (motMult < 0.97) {
+    bullets.push('MOT status has been factored into the valuation.')
+  }
+
+  // Fuel type
+  if (fuel === 'diesel' && vehicleAge > 5) {
+    bullets.push('Diesel vehicles of this age have lower market demand currently.')
+  } else if (fuel === 'electric' && vehicleAge > 6) {
+    bullets.push('Battery technology age has been considered in the valuation.')
+  } else if (fuel === 'hybrid') {
+    bullets.push('Hybrid vehicles enjoy strong current demand.')
+  }
+
+  // ULEZ
+  if (ulezMult < 1.0) {
+    bullets.push('Emissions compliance affects demand in some regions.')
+  }
+
+  // Market data quality
+  if (matchQuality === 'partial' || matchQuality === 'year_fuzzy') {
+    bullets.push('Limited market data for this exact specification — range may be wider.')
+  }
+
+  // Volatility
+  if (volatility === 'volatile') {
+    bullets.push('This market segment is experiencing price fluctuations.')
+  }
+
+  // SORN
+  if (sornMult < 1.0) {
+    bullets.push('The vehicle\'s current registration status has been factored in.')
+  }
+
+  // Mileage consistency
+  if (consistencyMult < 0.98) {
+    bullets.push('Mileage records require further verification at inspection.')
+  }
+
+  // Condition
+  if (condition === 'poor') {
+    bullets.push('Condition assessment suggests significant reconditioning may be needed.')
+  } else if (condition === 'fair') {
+    bullets.push('Some reconditioning may be needed based on the condition described.')
+  }
+
+  // Manual review mode
+  if (quoteMode === 'manual_review') {
+    bullets.push('A specialist will confirm this valuation at your appointment.')
+  }
+
+  // Cap at 5 bullets
+  const selected = bullets.slice(0, 5)
+
+  // If somehow empty, add a default
+  if (selected.length === 0) {
+    selected.push('Your offer is based on current market conditions for this vehicle.')
+  }
+
+  const summary = quoteMode === 'manual_review'
+    ? 'This vehicle needs a specialist review to finalise the offer.'
+    : 'Your offer range is based on market data, vehicle history, and condition.'
+
+  return { bullets: selected, summary }
+}
+
+// ── Admin-facing deep explanation builder ────────────────────────────────────
+
+function buildAdminExplanation(
+  vp: VehicleProfile, condition: Condition, vehicleAge: number,
+  fuel: FuelType, volatility: Volatility, matchQuality: MarketMatchQuality,
+  reconEstimate: number, tradeBase: number,
+  motMult: number, fuelMult: number, mileageMult: number,
+  consistencyMult: number, ulezMult: number, inputTrustMult: number,
+  marketConfMult: number, keeperMult: number, sornMult: number,
+  reconMult: number,
+  liabilityResult: { blocked: boolean; manualReview: boolean }
+): AdminExplanationItem[] {
+  const items: AdminExplanationItem[] = []
+
+  // Age
+  if (vehicleAge > 10) {
+    items.push({ rule: 'AGE_10PLUS', severity: 'warning', description: `Vehicle age ${vehicleAge}yr — deep depreciation curve`, impact: `age floor hit` })
+  } else if (vehicleAge > 7) {
+    items.push({ rule: 'AGE_7PLUS', severity: 'info', description: `Vehicle age ${vehicleAge}yr — mid depreciation`, impact: `${((1 - mileageMult) * 100).toFixed(0)}%` })
+  }
+
+  // Mileage
+  if (mileageMult < 0.90) {
+    items.push({ rule: 'MILEAGE_EXCESS', severity: 'warning', description: `Mileage multiplier ${mileageMult} — significantly over expected`, impact: `-${((1 - mileageMult) * 100).toFixed(0)}%` })
+  } else if (mileageMult < 1.0) {
+    items.push({ rule: 'MILEAGE_HIGH', severity: 'info', description: `Mileage multiplier ${mileageMult}`, impact: `-${((1 - mileageMult) * 100).toFixed(0)}%` })
+  }
+
+  // MOT
+  if (vp.motAnalysis.motExpired) {
+    items.push({ rule: 'MOT_EXPIRED', severity: 'critical', description: 'MOT expired — inspection cost + risk', impact: `-${((1 - motMult) * 100).toFixed(0)}%` })
+  } else if (motMult < 0.95) {
+    items.push({ rule: 'MOT_RISK', severity: 'warning', description: `MOT multiplier ${motMult} — advisories/failures`, impact: `-${((1 - motMult) * 100).toFixed(0)}%` })
+  }
+
+  // Structural
+  if (vp.motAnalysis.structuralAdvisories) {
+    items.push({ rule: 'STRUCTURAL', severity: 'critical', description: `${vp.motAnalysis.structuralAdvisoryCount} structural/corrosion advisories`, impact: `structural penalty` })
+  }
+
+  // Dangerous
+  if (vp.motAnalysis.dangerousDefects) {
+    items.push({ rule: 'DANGEROUS_DEFECT', severity: 'critical', description: 'Dangerous defect recorded in MOT history', impact: 'manual_review' })
+  }
+
+  // Rollback
+  if (vp.motAnalysis.mileageConsistency === 'rollback_detected') {
+    items.push({ rule: 'ROLLBACK', severity: 'critical', description: `Mileage rollback detected (${vp.motAnalysis.rollbackAmount?.toLocaleString()} mi)`, impact: 'blocked' })
+  } else if (vp.motAnalysis.mileageConsistency === 'suspicious') {
+    items.push({ rule: 'SUSPICIOUS_MILEAGE', severity: 'warning', description: 'Mileage pattern irregular', impact: `-${((1 - consistencyMult) * 100).toFixed(0)}%` })
+  }
+
+  // Discrepancy
+  if (vp.mileageDiscrepancy) {
+    items.push({ rule: 'MILEAGE_DISCREPANCY', severity: 'warning', description: `User mileage differs from MOT by ${Math.abs(vp.mileageDiscrepancyAmount).toLocaleString()} mi`, impact: `consistency penalty` })
+  }
+
+  // Recon
+  if (reconEstimate > 0) {
+    items.push({
+      rule: 'RECON_ESTIMATE',
+      severity: reconEstimate > 1500 ? 'critical' : reconEstimate > 500 ? 'warning' : 'info',
+      description: `Estimated recon: £${reconEstimate.toLocaleString()} (${Math.round(reconEstimate / tradeBase * 100)}% of trade base)`,
+      impact: `£${reconEstimate.toLocaleString()} recon`,
+    })
+  }
+
+  // Fuel
+  if (fuel === 'electric' && vehicleAge > 8) {
+    items.push({ rule: 'EV_BATTERY_8PLUS', severity: 'warning', description: `EV battery ${vehicleAge}yr — 0.85 multiplier`, impact: '-15%' })
+  } else if (fuel === 'electric' && vehicleAge > 6) {
+    items.push({ rule: 'EV_BATTERY_MID', severity: 'info', description: `EV battery ${vehicleAge}yr — degradation risk`, impact: `-${((1 - fuelMult) * 100).toFixed(0)}%` })
+  } else if (fuel === 'diesel' && fuelMult < 1.0) {
+    items.push({ rule: 'DIESEL_SOFTNESS', severity: 'info', description: `Diesel market softness (${vehicleAge > 5 ? '>5yr' : '≤5yr'})`, impact: `-${((1 - fuelMult) * 100).toFixed(0)}%` })
+  }
+
+  // ULEZ
+  if (ulezMult < 1.0) {
+    items.push({ rule: 'ULEZ_NON_COMPLIANT', severity: 'info', description: 'Non-ULEZ compliant', impact: '-5%' })
+  }
+
+  // SORN
+  if (sornMult < 1.0) {
+    items.push({ rule: 'SORN', severity: 'warning', description: 'SORN registered', impact: '-10%' })
+  }
+
+  // Input trust
+  if (inputTrustMult < 1.0) {
+    items.push({ rule: 'INPUT_TRUST', severity: 'info', description: `Input trust model penalty (${inputTrustMult})`, impact: `-${((1 - inputTrustMult) * 100).toFixed(1)}%` })
+  }
+
+  // Market confidence
+  if (marketConfMult < 1.0) {
+    items.push({ rule: 'MARKET_MATCH_WEAK', severity: 'info', description: `Market match: ${matchQuality} (confidence ${marketConfMult})`, impact: `-${((1 - marketConfMult) * 100).toFixed(1)}%` })
+  }
+
+  // Keeper
+  if (keeperMult < 1.0) {
+    items.push({ rule: 'KEEPER_FLIP', severity: 'info', description: 'Recent keeper change on older vehicle', impact: '-2%' })
+  }
+
+  // Volatility
+  if (volatility === 'volatile') {
+    items.push({ rule: 'VOLATILE_MARKET', severity: 'warning', description: 'Volatile market segment', impact: '-5%' })
+  }
+
+  // Liability overrides
+  if (liabilityResult.blocked) {
+    items.push({ rule: 'LIABILITY_BLOCKED', severity: 'critical', description: 'Hard rule gate triggered — vehicle blocked', impact: 'blocked' })
+  } else if (liabilityResult.manualReview) {
+    items.push({ rule: 'LIABILITY_REVIEW', severity: 'warning', description: 'Liability override triggered manual review', impact: 'manual_review' })
+  }
+
+  return items
+}
+
+// ── Profit simulation builder ───────────────────────────────────────────────
+
+const SELL_COST_PCT = 0.05  // 5% auction/prep/transport
+
+function buildProfitSimulation(
+  estimatedRetail: number, reconEstimate: number,
+  min: number, max: number, midpoint: number,
+  quoteMode: QuoteMode
+): ProfitSimulation {
+  const sellCost = Math.round(estimatedRetail * SELL_COST_PCT)
+  const netRetail = estimatedRetail - sellCost
+
+  const expectedProfitMin = netRetail - reconEstimate - max  // worst case: paid max
+  const expectedProfitMid = netRetail - reconEstimate - midpoint
+  const expectedProfitMax = netRetail - reconEstimate - min  // best case: paid min
+
+  let band: ProfitRiskBand = 'green'
+  if (expectedProfitMid < 300) band = 'amber'
+  if (expectedProfitMid < 0) band = 'red'
+
+  const guardrailTriggered = quoteMode !== 'blocked' && expectedProfitMid < 300
+  const guardrailReason = guardrailTriggered
+    ? `Expected profit £${expectedProfitMid} < £300 threshold`
+    : null
+
+  return {
+    estimatedRetail,
+    sellCostPct: SELL_COST_PCT,
+    reconEstimate: Math.round(reconEstimate),
+    expectedProfitMin: Math.round(expectedProfitMin),
+    expectedProfitMid: Math.round(expectedProfitMid),
+    expectedProfitMax: Math.round(expectedProfitMax),
+    profitRiskBand: band,
+    guardrailTriggered,
+    guardrailReason,
+  }
 }
 
 // ── Utilities ──────────────────────────────────────────────────────────────────

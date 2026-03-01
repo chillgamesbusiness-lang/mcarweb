@@ -7,6 +7,8 @@ import { normaliseFuel, checkUlezCompliance } from '@/lib/dvlaService'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendAdminNewLeadAlert } from '@/lib/email'
 import { isValidEmail, isValidPostcode } from '@/lib/leadVerification'
+import { getCandidateCoefficients, logShadowComparison } from '@/lib/coefficientStore'
+import { validateMileage, validateCondition, capRiskFlags, capBullets } from '@/lib/inputHardening'
 import ContactForm from './ContactForm'
 
 interface ContactPageProps {
@@ -95,6 +97,16 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     }
 
     // ── Build VehicleProfile for pricing engine ─────────────────────────
+    // Validate engine-critical inputs (defense-in-depth)
+    const mileageCheck = validateMileage(p.mileage)
+    if (!mileageCheck.valid) {
+      redirect(`/offer?error=${encodeURIComponent(mileageCheck.error)}`)
+    }
+    const conditionCheck = validateCondition(p.condition)
+    if (!conditionCheck.valid) {
+      redirect(`/offer?error=${encodeURIComponent(conditionCheck.error)}`)
+    }
+
     const mot = p.motSummary
     const normFuel = normaliseFuel(p.vehicle.fuel)
     const ulezCompliant = checkUlezCompliance(normFuel, p.vehicle.euroStatus ?? '')
@@ -264,10 +276,38 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       market_value_used: valuation.marketValueUsed,
       all_multipliers: valuation.allMultipliers,
       region_used: valuation.regionUsed,
-      engine_version: 'v2',
+      customer_explanation: valuation.customerExplanation,
+      admin_explanation: valuation.adminExplanation,
+      profit_simulation: valuation.profitSimulation,
+      engine_version: 'v3',
     }).then(({ error: snapErr }) => {
       if (snapErr) console.error('[valuation-snapshot] insert failed:', snapErr.message)
     })
+
+    // ── Shadow mode: compare candidate coefficients (fire-and-forget) ──
+    getCandidateCoefficients().then(async (candidate) => {
+      if (!candidate) return
+      try {
+        const shadowVal = calculateValuation({
+          vehicleProfile,
+          condition: p.condition!,
+          postcode: postcode.toUpperCase().replace(/\s+/g, ''),
+        })
+        await logShadowComparison({
+          leadId: lead.id,
+          currentVersion: 'v3.0.0-default',
+          candidateVersion: candidate.versionId,
+          currentMidpoint: valuation.midpoint,
+          candidateMidpoint: shadowVal.midpoint,
+          currentMin: valuation.min,
+          candidateMin: shadowVal.min,
+          currentMax: valuation.max,
+          candidateMax: shadowVal.max,
+        })
+      } catch (err) {
+        console.error('[shadow-compare] failed:', err)
+      }
+    }).catch(() => {})
 
     // Write audit log entry
     await serviceClient.from('audit_log').insert({
@@ -316,10 +356,12 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
         adjustedValue: valuation.adjustedValue,
         confidenceScore: valuation.confidenceScore,
         riskTier: valuation.riskTier,
-        riskFlags: valuation.riskFlags.slice(0, 5),
+        riskFlags: capRiskFlags(valuation.riskFlags),
         quoteMode: valuation.quoteMode,
         marketValueUsed: valuation.marketValueUsed,
         spreadApplied: valuation.spreadApplied,
+        customerBullets: capBullets(valuation.customerExplanation.bullets),
+        customerSummary: valuation.customerExplanation.summary,
       },
     })
 

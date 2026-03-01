@@ -61,6 +61,8 @@ export interface ValuationSummary {
   quoteMode: 'auto' | 'manual_review' | 'blocked'
   marketValueUsed: number
   spreadApplied: number
+  customerBullets: string[]   // customer-safe explanation
+  customerSummary: string
 }
 
 export interface OfferTokenPayload {

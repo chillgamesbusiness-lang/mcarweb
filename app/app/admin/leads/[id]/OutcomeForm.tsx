@@ -8,6 +8,10 @@ interface OutcomeFormProps {
   currentOutcome: string | null
   currentReason: string | null
   currentFinalOffer: number | null
+  currentActualPurchase: number | null
+  currentActualResale: number | null
+  currentReconCost: number | null
+  currentDaysToSale: number | null
   submitOutcome: (formData: FormData) => Promise<void>
 }
 
@@ -25,6 +29,10 @@ export default function OutcomeForm({
   currentOutcome,
   currentReason,
   currentFinalOffer,
+  currentActualPurchase,
+  currentActualResale,
+  currentReconCost,
+  currentDaysToSale,
   submitOutcome,
 }: OutcomeFormProps) {
   const [outcome, setOutcome] = useState(currentOutcome ?? '')
@@ -69,19 +77,81 @@ export default function OutcomeForm({
       </div>
 
       {outcome === 'won' && (
-        <div>
-          <label htmlFor="final_offer" className="block text-sm font-medium text-gray-700 mb-1">
-            Final Agreed Price (£)
-          </label>
-          <input
-            id="final_offer"
-            name="final_offer"
-            type="number"
-            min={0}
-            defaultValue={currentFinalOffer ?? ''}
-            placeholder="e.g. 4500"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-          />
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="final_offer" className="block text-sm font-medium text-gray-700 mb-1">
+              Final Agreed Price (£) <span className="text-red-500">*</span>
+            </label>
+            <input
+              id="final_offer"
+              name="final_offer"
+              type="number"
+              min={0}
+              defaultValue={currentFinalOffer ?? ''}
+              placeholder="e.g. 4500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="actual_purchase_price" className="block text-sm font-medium text-gray-700 mb-1">
+              Actual Purchase Price (£)
+            </label>
+            <input
+              id="actual_purchase_price"
+              name="actual_purchase_price"
+              type="number"
+              min={0}
+              defaultValue={currentActualPurchase ?? ''}
+              placeholder="What was paid to seller"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="actual_recon_cost" className="block text-sm font-medium text-gray-700 mb-1">
+              Recon Cost (£)
+            </label>
+            <input
+              id="actual_recon_cost"
+              name="actual_recon_cost"
+              type="number"
+              min={0}
+              defaultValue={currentReconCost ?? ''}
+              placeholder="Actual recon spend"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="actual_resale_price" className="block text-sm font-medium text-gray-700 mb-1">
+              Resale Price (£)
+            </label>
+            <input
+              id="actual_resale_price"
+              name="actual_resale_price"
+              type="number"
+              min={0}
+              defaultValue={currentActualResale ?? ''}
+              placeholder="What the car sold for"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div>
+            <label htmlFor="days_to_sale" className="block text-sm font-medium text-gray-700 mb-1">
+              Days to Sale
+            </label>
+            <input
+              id="days_to_sale"
+              name="days_to_sale"
+              type="number"
+              min={0}
+              defaultValue={currentDaysToSale ?? ''}
+              placeholder="Days from purchase to resale"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <p className="text-xs text-gray-400">
+            Purchase/recon/resale data feeds the calibration engine. Fill in as data becomes available.
+          </p>
         </div>
       )}
 

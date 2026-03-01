@@ -144,6 +144,37 @@ export type Volatility = 'stable' | 'moderate' | 'volatile'
 
 export type MarketMatchQuality = 'exact' | 'fuel_fuzzy' | 'year_fuzzy' | 'partial' | 'none'
 
+// ── Quote Explanation ──────────────────────────────────────────────────────────
+
+/** Customer-safe explanation bullets — neutral language, no "fraud" wording */
+export interface QuoteExplanation {
+  bullets: string[]            // 3–5 customer-facing lines
+  summary: string              // one-line summary, e.g. "Your offer is based on…"
+}
+
+/** Admin-facing deep explanation — severity, rule, recon breakdown */
+export interface AdminExplanationItem {
+  rule: string                 // e.g. 'MOT_EXPIRED', 'EV_BATTERY_8PLUS'
+  severity: 'info' | 'warning' | 'critical'
+  description: string          // human-readable
+  impact: string               // e.g. '-7%', 'blocked', '£2,170 recon'
+}
+
+/** Profit simulation (admin-only) */
+export type ProfitRiskBand = 'green' | 'amber' | 'red'
+
+export interface ProfitSimulation {
+  estimatedRetail: number
+  sellCostPct: number          // default 5% (auction/prep/transport)
+  reconEstimate: number
+  expectedProfitMin: number
+  expectedProfitMid: number
+  expectedProfitMax: number
+  profitRiskBand: ProfitRiskBand
+  guardrailTriggered: boolean  // true if profit < threshold → manual_review
+  guardrailReason: string | null
+}
+
 // ── Valuation Result ──────────────────────────────────────────────────────────
 
 export interface MultiplierBreakdown {
@@ -187,6 +218,10 @@ export interface ValuationResult {
   spreadApplied: number
   calculatedAt: string
   expiresAt: string
+  // Explanation payloads
+  customerExplanation: QuoteExplanation
+  adminExplanation: AdminExplanationItem[]
+  profitSimulation: ProfitSimulation
 }
 
 // ── Lead Submission ───────────────────────────────────────────────────────────

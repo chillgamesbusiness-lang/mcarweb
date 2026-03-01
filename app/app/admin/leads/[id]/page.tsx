@@ -4,6 +4,8 @@ import { isValidStatusTransition, VALID_STATUS_TRANSITIONS } from '@/lib/types'
 import type { LeadStatus } from '@/lib/types'
 import OutcomeForm from './OutcomeForm'
 import { SubmitButton } from '@/app/components/SubmitButton'
+import { recordTransaction } from '@/lib/calibrationStore'
+import { validateUuid } from '@/lib/inputHardening'
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>
@@ -12,26 +14,33 @@ interface LeadDetailPageProps {
 // Multiplier display names for the breakdown table
 const MULTIPLIER_LABELS: Record<string, string> = {
   tradeBase: 'Trade Base (£)',
-  ageMultiplier: 'ageMultiplier',
-  mileageMultiplier: 'mileageMultiplier',
-  motMultiplier: 'motMultiplier',
-  fuelMultiplier: 'fuelMultiplier',
+  ageMultiplier: 'Age',
+  mileageMultiplier: 'Mileage',
+  motMultiplier: 'MOT Risk',
+  fuelMultiplier: 'Fuel Type',
   conditionMultiplier: 'Condition',
-  regionMultiplier: 'regionMultiplier',
-  ulezMultiplier: 'ulezMultiplier',
-  mileageConsistencyMultiplier: 'mileageConsistencyMultiplier',
-  volatilityMultiplier: 'volatilityMultiplier',
-  keeperMultiplier: 'keeperMultiplier',
-  sornMultiplier: 'sornMultiplier',
-  reconMultiplier: 'reconMultiplier',
+  regionMultiplier: 'Region',
+  ulezMultiplier: 'ULEZ',
+  mileageConsistencyMultiplier: 'Mileage Consistency',
+  volatilityMultiplier: 'Volatility',
+  keeperMultiplier: 'Keeper History',
+  sornMultiplier: 'SORN',
+  reconMultiplier: 'Recon Impact',
   reconEstimate: 'Recon Estimate (£)',
+  marketConfidenceMultiplier: 'Market Confidence',
+  inputTrustMultiplier: 'Input Trust',
   liquidityBuffer: 'Liquidity Buffer',
-  combinedAdjustment: 'combinedAdjustment',
-  rawValue: 'rawValue',
+  combinedAdjustment: 'Combined Adj.',
+  rawValue: 'Raw Value (£)',
 }
 
 export default async function AdminLeadDetailPage({ params }: LeadDetailPageProps) {
   const { id } = await params
+
+  // Validate UUID format before querying DB
+  const idCheck = validateUuid(id)
+  if (!idCheck.valid) notFound()
+
   const authClient = await createClient()
   const supabase = createServiceClient()
 
@@ -76,6 +85,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   // Parse snapshot multipliers
   const multipliers = snapshot?.all_multipliers as Record<string, number> | null
   const riskFlags = snapshot?.risk_flags as string[] | null
+  const adminExplanation = (snapshot as Record<string, unknown>)?.admin_explanation as { rule: string; severity: string; description: string; impact: string }[] | null
+  const profitSim = (snapshot as Record<string, unknown>)?.profit_simulation as {
+    estimatedRetail: number; sellCostPct: number; reconEstimate: number;
+    expectedProfitMin: number; expectedProfitMid: number; expectedProfitMax: number;
+    profitRiskBand: string; guardrailTriggered: boolean; guardrailReason: string | null;
+  } | null
 
   // ── Outcome server action ─────────────────────────────────────────────
   async function submitOutcome(formData: FormData) {
@@ -90,6 +105,10 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     const outcome = formData.get('outcome') as string
     const reason = formData.get('reason_if_lost') as string | null
     const finalOfferRaw = formData.get('final_offer') as string | null
+    const actualPurchaseRaw = formData.get('actual_purchase_price') as string | null
+    const actualResaleRaw = formData.get('actual_resale_price') as string | null
+    const actualReconRaw = formData.get('actual_recon_cost') as string | null
+    const daysToSaleRaw = formData.get('days_to_sale') as string | null
 
     if (!outcome || !['won', 'lost'].includes(outcome)) return
 
@@ -126,11 +145,27 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       status: outcome as 'won' | 'lost',
     }
 
-    if (outcome === 'won' && finalOfferRaw) {
-      const finalOffer = parseInt(finalOfferRaw, 10)
-      if (!isNaN(finalOffer) && finalOffer > 0) {
-        updateData.final_offer = finalOffer
-      }
+    const parseIntSafe = (v: string | null): number | null => {
+      if (!v) return null
+      const n = parseInt(v, 10)
+      return !isNaN(n) && n >= 0 ? n : null
+    }
+
+    if (outcome === 'won') {
+      const finalOffer = parseIntSafe(finalOfferRaw)
+      if (finalOffer !== null) updateData.final_offer = finalOffer
+
+      const actualPurchase = parseIntSafe(actualPurchaseRaw)
+      if (actualPurchase !== null) updateData.actual_purchase_price = actualPurchase
+
+      const actualResale = parseIntSafe(actualResaleRaw)
+      if (actualResale !== null) updateData.actual_resale_price = actualResale
+
+      const actualRecon = parseIntSafe(actualReconRaw)
+      if (actualRecon !== null) updateData.actual_recon_cost = actualRecon
+
+      const daysToSale = parseIntSafe(daysToSaleRaw)
+      if (daysToSale !== null) updateData.days_to_sale = daysToSale
     }
 
     if (outcome === 'lost' && reason) {
@@ -138,6 +173,33 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     }
 
     await svc.from('leads').update(updateData).eq('id', leadId)
+
+    // ── Record calibration transaction if purchase price available ──────
+    if (outcome === 'won' && updateData.actual_purchase_price) {
+      // Fetch snapshot for calibration context
+      const { data: snap } = await svc
+        .from('valuation_snapshots')
+        .select('input_vehicle, input_condition, input_postcode, result_midpoint')
+        .eq('lead_id', leadId)
+        .maybeSingle()
+
+      if (snap) {
+        const vp = snap.input_vehicle as { make: string; model: string; year: number; fuel: string }
+        recordTransaction({
+          id: leadId,
+          submission: {
+            vehicleProfile: vp,
+            condition: snap.input_condition as string,
+            postcode: snap.input_postcode as string,
+          },
+          valuation: { midpoint: snap.result_midpoint as number },
+          actual_purchase_price: updateData.actual_purchase_price as number,
+          actual_resale_price: (updateData.actual_resale_price as number) ?? null,
+          recon_cost: (updateData.actual_recon_cost as number) ?? null,
+          days_to_sale: (updateData.days_to_sale as number) ?? null,
+        }).catch(err => console.error('[calibration-record] failed:', err))
+      }
+    }
 
     // Audit log
     await svc.from('audit_log').insert({
@@ -453,6 +515,68 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 </ul>
               </div>
             )}
+
+            {/* Admin Explanation (engine v3) */}
+            {adminExplanation && adminExplanation.length > 0 && (
+              <div className="mt-4">
+                <span className="text-xs text-gray-400 block mb-2">Engine Explanation ({adminExplanation.length})</span>
+                <div className="space-y-1">
+                  {adminExplanation.map((item, i) => (
+                    <div key={i} className={`text-sm rounded px-3 py-1.5 flex justify-between items-center ${
+                      item.severity === 'critical' ? 'bg-red-50 text-red-800' :
+                      item.severity === 'warning' ? 'bg-amber-50 text-amber-800' :
+                      'bg-blue-50 text-blue-800'
+                    }`}>
+                      <span><span className="font-mono text-xs mr-2">{item.rule}</span>{item.description}</span>
+                      <span className="font-mono text-xs shrink-0 ml-2">{item.impact}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Profit Simulation (engine v3) */}
+            {profitSim && (
+              <div className="mt-4">
+                <span className="text-xs text-gray-400 block mb-2">Profit Simulation</span>
+                <div className={`rounded-lg p-4 ${
+                  profitSim.profitRiskBand === 'green' ? 'bg-green-50 border border-green-200' :
+                  profitSim.profitRiskBand === 'amber' ? 'bg-amber-50 border border-amber-200' :
+                  'bg-red-50 border border-red-200'
+                }`}>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Profit (Min)</p>
+                      <p className={`text-sm font-bold ${profitSim.expectedProfitMin < 0 ? 'text-red-700' : 'text-green-700'}`}>
+                        £{profitSim.expectedProfitMin?.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Profit (Mid)</p>
+                      <p className={`text-lg font-bold ${profitSim.expectedProfitMid < 0 ? 'text-red-700' : 'text-green-700'}`}>
+                        £{profitSim.expectedProfitMid?.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">Profit (Max)</p>
+                      <p className={`text-sm font-bold ${profitSim.expectedProfitMax < 0 ? 'text-red-700' : 'text-green-700'}`}>
+                        £{profitSim.expectedProfitMax?.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <span>Retail: £{profitSim.estimatedRetail?.toLocaleString()}</span>
+                    <span>Recon: £{profitSim.reconEstimate?.toLocaleString()}</span>
+                    <span>Sell cost: {((profitSim.sellCostPct ?? 0.05) * 100).toFixed(0)}%</span>
+                  </div>
+                  {profitSim.guardrailTriggered && (
+                    <p className="mt-2 text-xs text-red-700 font-medium">
+                      ⚠ Guardrail: {profitSim.guardrailReason}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </>
         ) : (
           <p className="text-sm text-gray-400">No valuation snapshot recorded for this lead.</p>
@@ -498,6 +622,10 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             currentOutcome={lead.outcome}
             currentReason={lead.reason_if_lost}
             currentFinalOffer={lead.final_offer}
+            currentActualPurchase={lead.actual_purchase_price ?? null}
+            currentActualResale={lead.actual_resale_price ?? null}
+            currentReconCost={lead.actual_recon_cost ?? null}
+            currentDaysToSale={lead.days_to_sale ?? null}
             submitOutcome={submitOutcome}
           />
         )}
