@@ -23,7 +23,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
 
   const { data: lead, error } = await serviceClient
     .from('leads')
-    .select('*')
+    .select('id, reg, make, model, year, seller_name, seller_email, seller_phone, seller_postcode, status, estimated_min, estimated_max, finance_status')
     .eq('id', leadId)
     .single()
 
@@ -64,6 +64,9 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
     }
 
     const svc = createServiceClient()
+
+    // Guard: lead must exist (captured from outer scope)
+    if (!lead) redirect('/offer?error=Lead+not+found')
 
     // ── Re-check quote expiry at submit time ──────────────────────────
     const { data: snap } = await svc

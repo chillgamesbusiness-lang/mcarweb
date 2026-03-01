@@ -6,7 +6,7 @@ import { checkMileageDiscrepancy } from '@/lib/mileageAnalyser'
 import { normaliseFuel, checkUlezCompliance } from '@/lib/dvlaService'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendAdminNewLeadAlert } from '@/lib/email'
-import { verifyOTP } from '@/lib/leadVerification'
+import { isValidEmail, isValidPostcode } from '@/lib/leadVerification'
 import ContactForm from './ContactForm'
 
 interface ContactPageProps {
@@ -48,14 +48,14 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       errors.push('Phone must be 10-11 digits')
     }
 
-    // Email: must contain @
-    if (!email || !email.includes('@')) {
+    // Email: proper validation
+    if (!email || !isValidEmail(email)) {
       errors.push('Valid email is required')
     }
 
-    // Postcode: 5-8 chars
-    if (!postcode || postcode.length < 5 || postcode.length > 8) {
-      errors.push('Valid postcode is required')
+    // Postcode: proper validation
+    if (!postcode || !isValidPostcode(postcode)) {
+      errors.push('Valid UK postcode is required')
     }
 
     // Consent: data processing consent is required
@@ -76,25 +76,21 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     }
 
     // Double-check OTP session is actually verified in the DB (tamper-proof)
-    try {
-      const verified = await verifyOTP(otpSessionId, 'already_verified_check')
-      // verifyOTP returns true if session.verified is already true
-      if (!verified) {
-        redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification failed. Please verify again.')}`)
-      }
-    } catch {
-      // If the session is already verified, verifyOTP returns true above.
-      // If it throws (expired, etc.), we check the DB directly
-      const svcCheck = createServiceClient()
-      const { data: otpSession } = await svcCheck
-        .from('otp_sessions')
-        .select('verified')
-        .eq('id', otpSessionId)
-        .single()
+    // Also verify the OTP session phone matches the submitted phone
+    const svcCheck = createServiceClient()
+    const { data: otpSession } = await svcCheck
+      .from('otp_sessions')
+      .select('verified, phone')
+      .eq('id', otpSessionId)
+      .single()
 
-      if (!otpSession?.verified) {
-        redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification expired. Please try again.')}`)
-      }
+    if (!otpSession?.verified) {
+      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification failed. Please verify again.')}`)
+    }
+
+    // Ensure OTP was verified for the same phone number being submitted
+    if (otpSession.phone !== phoneDigits) {
+      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone number does not match verification. Please verify the correct number.')}`)
     }
 
     // ── Build VehicleProfile for pricing engine ─────────────────────────
@@ -184,7 +180,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       postcode: postcode.toUpperCase().replace(/\s+/g, ''),
     })
     const valuationMs = Math.round(performance.now() - t0)
-    console.log(`[valuation] ${p.reg} completed in ${valuationMs}ms — mid £${valuation.midpoint} risk=${valuation.riskTier} mode=${valuation.quoteMode}`)
+    console.log(`[valuation] ${p.reg} completed in ${valuationMs}ms risk=${valuation.riskTier} mode=${valuation.quoteMode}`)
 
     // ── Create lead ─────────────────────────────────────────────────────
     const serviceClient = createServiceClient()

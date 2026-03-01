@@ -16,6 +16,17 @@ export async function submitInspection(formData: FormData) {
   const recommendedOffer = formData.get('recommended_offer')
   const notes = formData.get('notes') as string
 
+  // Validate leadId is UUID format
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!leadId || !UUID_RE.test(leadId)) {
+    throw new Error('Invalid lead ID')
+  }
+
+  // Validate notes length
+  if (notes && notes.length > 2000) {
+    throw new Error('Notes must be 2000 characters or fewer')
+  }
+
   // 1. Verify lead is assigned to this inspector (via session client = RLS)
   const { data: lead, error: leadError } = await supabase
     .from('leads')
@@ -114,7 +125,8 @@ export async function submitInspection(formData: FormData) {
   }
 
   if (dbError) {
-    throw new Error(`Failed to submit inspection: ${dbError.message}`)
+    console.error('[inspection] DB error:', dbError)
+    throw new Error('Failed to submit inspection. Please try again.')
   }
 
   // 6. Update lead: status = inspected, clear pending photos

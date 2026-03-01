@@ -9,14 +9,19 @@
  * Requires Supabase table: calibration_records
  */
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { extractPostcodePrefix } from '@/lib/regionPricing'
 import type { CalibrationRecord, Lead, ValuationResult } from '@/lib/types'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let _supabase: SupabaseClient | null = null
+function getSupabase(): SupabaseClient {
+  if (_supabase) return _supabase
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Supabase env vars not configured for calibration store')
+  _supabase = createClient(url, key)
+  return _supabase
+}
 
 // ── Record a transaction ───────────────────────────────────────────────────────
 
@@ -60,7 +65,7 @@ export async function recordTransaction(lead: {
     created_at: new Date().toISOString(),
   }
 
-  const { error } = await supabase
+  const { error } = await getSupabase()
     .from('calibration_records')
     .insert(record)
 
@@ -85,7 +90,7 @@ export async function getAverageDeviation(): Promise<{
   pct: number
   count: number
 }> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('calibration_records')
     .select('deviation, deviation_pct')
 
@@ -109,7 +114,7 @@ export async function getAverageDeviation(): Promise<{
 export async function getDeviationByMakeModel(): Promise<
   { make: string; model: string; avgDev: number; count: number }[]
 > {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('calibration_records')
     .select('make, model, deviation')
 
@@ -135,7 +140,7 @@ export async function getDeviationByMakeModel(): Promise<
 export async function getDeviationByCondition(): Promise<
   { condition: string; avgDev: number; count: number }[]
 > {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('calibration_records')
     .select('condition, deviation')
 
@@ -162,7 +167,7 @@ export async function getDeviationByCondition(): Promise<
 export async function getDeviationByRegion(): Promise<
   { region: string; avgDev: number; count: number }[]
 > {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('calibration_records')
     .select('region, deviation')
 
@@ -192,7 +197,7 @@ export async function getMarginAnalysis(): Promise<{
   avgDaysToSale: number
   profitableRate: number
 }> {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from('calibration_records')
     .select('actual_purchase_price, actual_resale_price, recon_cost, days_to_sale')
     .not('actual_resale_price', 'is', null)
@@ -236,7 +241,7 @@ export async function getConversionFunnel(): Promise<{
   purchased: number
   conversionRate: number
 }> {
-  const { data: leads, error } = await supabase
+  const { data: leads, error } = await getSupabase()
     .from('leads')
     .select('status, otp_verified')
 

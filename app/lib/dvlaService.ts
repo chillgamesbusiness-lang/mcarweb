@@ -150,7 +150,7 @@ async function setCache(
 
 // ── DVLA API call ──────────────────────────────────────────────────────────────
 
-async function callDvlaApi(reg: string): Promise<DvlaRawResponse> {
+async function callDvlaApi(reg: string, _retryCount = 0): Promise<DvlaRawResponse> {
   const apiKey = process.env.DVLA_VES_API_KEY
   if (!apiKey) throw new Error('DVLA_VES_API_KEY not configured')
 
@@ -209,8 +209,11 @@ async function callDvlaApi(reg: string): Promise<DvlaRawResponse> {
     throw new Error("We couldn't find that registration.")
   }
   if (res!.status === 429) {
+    if (_retryCount >= 1) {
+      throw new Error('Service temporarily unavailable, please try again.')
+    }
     await sleep(1000)
-    return callDvlaApi(reg) // retry once
+    return callDvlaApi(reg, _retryCount + 1)
   }
   if (!res!.ok) {
     const text = await res!.text().catch(() => '')

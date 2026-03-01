@@ -16,13 +16,18 @@
  */
 
 import crypto from 'crypto'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { checkOtpRateLimit } from '@/lib/rateLimit'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+let _supabase: SupabaseClient | null = null
+function getSupabase(): SupabaseClient {
+  if (_supabase) return _supabase
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !key) throw new Error('Supabase env vars not configured for OTP service')
+  _supabase = createClient(url, key)
+  return _supabase
+}
 
 // ── Input validation ───────────────────────────────────────────────────────────
 
@@ -157,7 +162,7 @@ export async function sendOTP(
   const sessionId = crypto.randomUUID()
 
   // Store hashed code + metadata (never store plaintext OTP)
-  const { error: storeError } = await supabase
+  const { error: storeError } = await getSupabase()
     .from('otp_sessions')
     .insert({
       id: sessionId,
@@ -229,7 +234,7 @@ export async function verifyOTP(
   sessionId: string,
   userCode: string
 ): Promise<boolean> {
-  const { data: session, error } = await supabase
+  const { data: session, error } = await getSupabase()
     .from('otp_sessions')
     .select('*')
     .eq('id', sessionId)
@@ -257,7 +262,7 @@ export async function verifyOTP(
 
   if (session.code_hash === inputHash) {
     // Verified
-    await supabase
+    await getSupabase()
       .from('otp_sessions')
       .update({ verified: true, attempts: newAttempts })
       .eq('id', sessionId)
@@ -265,7 +270,7 @@ export async function verifyOTP(
   }
 
   // Wrong code
-  await supabase
+  await getSupabase()
     .from('otp_sessions')
     .update({ attempts: newAttempts })
     .eq('id', sessionId)

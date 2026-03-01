@@ -8,7 +8,7 @@
  *   /offer/details  → v1: + mileage + condition
  */
 
-import { createHmac } from 'crypto'
+import { createHmac, timingSafeEqual } from 'crypto'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -116,7 +116,11 @@ export function createOfferToken(
     exp: now + TOKEN_TTL_MS,
     ...data,
   }
-  const payloadB64 = base64url(Buffer.from(JSON.stringify(payload), 'utf-8'))
+  const serialised = JSON.stringify(payload)
+  if (serialised.length > 4096) {
+    throw new Error('Token payload exceeds maximum size (4KB)')
+  }
+  const payloadB64 = base64url(Buffer.from(serialised, 'utf-8'))
   const sig = sign(payloadB64)
   return `${payloadB64}.${sig}`
 }
@@ -133,9 +137,15 @@ export function verifyOfferToken(token: string): OfferTokenPayload | null {
 
   const [payloadB64, sig] = parts
 
-  // Verify signature
+  // Verify signature (constant-time comparison to prevent timing attacks)
   const expectedSig = sign(payloadB64)
-  if (sig !== expectedSig) return null
+  try {
+    const sigBuf = Buffer.from(sig, 'base64url')
+    const expectedBuf = Buffer.from(expectedSig, 'base64url')
+    if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null
+  } catch {
+    return null
+  }
 
   // Decode payload
   try {

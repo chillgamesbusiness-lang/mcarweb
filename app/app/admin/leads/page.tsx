@@ -58,8 +58,12 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   }
 
   // Search filter — search across reg, seller_name, seller_email
+  // Sanitise to prevent PostgREST filter injection (strip commas, dots, parens, operators)
   if (q) {
-    query = query.or(`reg.ilike.%${q}%,seller_name.ilike.%${q}%,seller_email.ilike.%${q}%`)
+    const safeQ = q.replace(/[,\.()%*]/g, '').slice(0, 100)
+    if (safeQ.length > 0) {
+      query = query.or(`reg.ilike.%${safeQ}%,seller_name.ilike.%${safeQ}%,seller_email.ilike.%${safeQ}%`)
+    }
   }
 
   // Pagination
@@ -70,7 +74,8 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   const { data: leads, error, count } = await query
 
   if (error) {
-    return <div className="p-8 text-red-600">Error loading leads: {error.message}</div>
+    console.error('[admin/leads] Query error:', error)
+    return <div className="p-8 text-red-600">Error loading leads. Please try refreshing the page.</div>
   }
 
   const totalCount = count ?? 0

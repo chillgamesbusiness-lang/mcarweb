@@ -9,8 +9,8 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // HSTS — tell browsers to only ever use HTTPS (2 years)
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-  // Disable browser features the app doesn't use
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=()' },
+  // Disable browser features the app doesn't use (camera allowed for self — inspector photo capture)
+  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(), payment=()' },
   // Content Security Policy
   // - script-src: self + Cloudflare Turnstile + Next.js needs unsafe-inline for RSC hydration
   // - style-src: self + unsafe-inline (Tailwind inline styles)

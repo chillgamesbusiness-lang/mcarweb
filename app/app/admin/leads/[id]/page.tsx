@@ -71,7 +71,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   // ── Outcome server action ─────────────────────────────────────────────
   async function submitOutcome(formData: FormData) {
     'use server'
-
+    // Re-verify auth at invocation time (session may have expired since render)
+    const authClient = await createClient()
+    const { data: { user: caller } } = await authClient.auth.getUser()
+    if (!caller) redirect('/login')
+    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    if (callerProfile?.role !== 'admin') redirect('/login')
     const leadId = formData.get('leadId') as string
     const outcome = formData.get('outcome') as string
     const reason = formData.get('reason_if_lost') as string | null
@@ -141,10 +146,16 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   async function submitNote(formData: FormData) {
     'use server'
 
+    const authClient = await createClient()
+    const { data: { user: caller } } = await authClient.auth.getUser()
+    if (!caller) redirect('/login')
+    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    if (callerProfile?.role !== 'admin') redirect('/login')
+
     const leadId = formData.get('leadId') as string
     const body = (formData.get('body') as string)?.trim()
 
-    if (!leadId || !body || body.length < 1) return
+    if (!leadId || !body || body.length < 1 || body.length > 5000) return
 
     const svc = createServiceClient()
 
@@ -167,6 +178,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   // ── Assign inspector server action ───────────────────────────────────
   async function submitAssignInspector(formData: FormData) {
     'use server'
+
+    const authClient = await createClient()
+    const { data: { user: caller } } = await authClient.auth.getUser()
+    if (!caller) redirect('/login')
+    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    if (callerProfile?.role !== 'admin') redirect('/login')
 
     const leadId = formData.get('leadId') as string
     const inspectorId = formData.get('inspector_id') as string
@@ -208,6 +225,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   async function submitFinanceStatus(formData: FormData) {
     'use server'
 
+    const authClient = await createClient()
+    const { data: { user: caller } } = await authClient.auth.getUser()
+    if (!caller) redirect('/login')
+    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    if (callerProfile?.role !== 'admin') redirect('/login')
+
     const leadId = formData.get('leadId') as string
     const newFinanceStatus = formData.get('finance_status') as string
 
@@ -246,7 +269,11 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   // ── Status change server action ───────────────────────────────────────
   async function submitStatusChange(formData: FormData) {
     'use server'
-
+    const authClient = await createClient()
+    const { data: { user: caller } } = await authClient.auth.getUser()
+    if (!caller) redirect('/login')
+    const { data: callerProfile } = await authClient.from('users').select('role').eq('id', caller.id).single()
+    if (callerProfile?.role !== 'admin') redirect('/login')
     const leadId = formData.get('leadId') as string
     const newStatus = formData.get('status') as LeadStatus
 

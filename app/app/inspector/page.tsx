@@ -19,7 +19,8 @@ export default async function InspectorIndexPage() {
     .order('created_at', { ascending: false })
 
   if (error) {
-    return <div className="p-8 text-red-600">Error loading assignments: {error.message}</div>
+    console.error('[inspector] Query error:', error)
+    return <div className="p-8 text-red-600">Error loading assignments. Please try refreshing the page.</div>
   }
 
   return (

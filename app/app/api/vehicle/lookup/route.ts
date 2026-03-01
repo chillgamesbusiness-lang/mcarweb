@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
           status: 429,
           headers: {
             'Retry-After': String(Math.ceil((rl.resetMs - Date.now()) / 1000)),
-            'X-RateLimit-Remaining': String(rl.remaining),
           },
         }
       )
@@ -165,7 +164,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ vehicle, motSummary, token })
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Lookup failed'
-    return NextResponse.json({ error: message }, { status: 400 })
+    console.error('[vehicle-lookup] Error:', err)
+    return NextResponse.json({ error: 'Vehicle lookup failed. Please try again.' }, { status: 400 })
   }
 }
