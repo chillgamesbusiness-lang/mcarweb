@@ -24,6 +24,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
   async function submitContact(formData: FormData) {
     'use server'
 
+    try {
     // Re-verify token (could have expired between render and submit)
     const p = token ? verifyOfferToken(token) : null
     if (!p || !p.mileage || !p.condition) {
@@ -321,6 +322,24 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     })
 
     redirect(`/offer/book?leadId=${lead.id}&token=${encodeURIComponent(bookToken)}`)
+    } catch (err: unknown) {
+      // Re-throw Next.js internal redirect/notFound signals — they MUST propagate
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'digest' in err &&
+        typeof (err as { digest: unknown }).digest === 'string' &&
+        ((err as { digest: string }).digest.startsWith('NEXT_REDIRECT') ||
+          (err as { digest: string }).digest.startsWith('NEXT_NOT_FOUND'))
+      ) {
+        throw err
+      }
+      // All other errors: log and redirect to form with message instead of crashing
+      console.error('[submitContact] Unexpected error:', err)
+      redirect(
+        `/offer/contact?token=${encodeURIComponent(token ?? '')}&error=${encodeURIComponent('An unexpected error occurred. Please try again.')}`
+      )
+    }
   }
 
   return (
