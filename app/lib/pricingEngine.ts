@@ -126,11 +126,11 @@ export function calculateValuation(input: {
     riskFlags.push('Diesel — market softness')
   }
   if (normFuel === 'electric' && vehicleAge > 8) {
-    riskFlags.push('Older electric — battery pack uncertainty (8+ years)')
+    riskFlags.push(`Older electric (${vehicleAge}yr) — battery pack uncertainty`)
   } else if (normFuel === 'electric' && vehicleAge > 6) {
-    riskFlags.push('Older electric — battery degradation uncertainty')
+    riskFlags.push(`Older electric (${vehicleAge}yr) — battery degradation uncertainty`)
   } else if (normFuel === 'electric' && vehicleAge > 4) {
-    riskFlags.push('Electric 5-6yr — battery warranty concerns')
+    riskFlags.push(`Electric (${vehicleAge}yr) — battery warranty concerns`)
   }
 
   // ── Step 6: ULEZ penalty ───────────────────────────────────────────────
@@ -605,6 +605,12 @@ function calculateSpread(
   // Cap spread at 15% of adjustedValue
   const maxSpread = Math.round(adjustedValue * 0.15)
   spread = Math.min(spread, maxSpread)
+
+  // Volatile market segments floor at medium — spread widening happens above,
+  // but the displayed tier should also reflect market resale uncertainty.
+  if (volatility === 'volatile' && tier === 'low') {
+    tier = 'medium'
+  }
 
   // Round to nearest £25
   spread = Math.round(spread / 25) * 25
