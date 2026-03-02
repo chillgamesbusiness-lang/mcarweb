@@ -847,20 +847,20 @@ function getInputTrustMultiplier(
   if (condition === 'excellent') {
     if (vehicleAge >= 12) {
       m *= 0.97 // Equivalent to downgrading toward "good"
-      flags.push('Excellent condition claim on 12+ year vehicle — auto-discounted')
+      flags.push('Condition adjusted for vehicle age (12+ years) based on market norms')
     } else if (vehicleAge >= 8 && vp.fuel === 'diesel') {
       m *= 0.98
-      flags.push('Excellent condition claim on older diesel — auto-discounted')
+      flags.push('Condition adjusted for older diesel based on age + market norms')
     } else if (vp.resolvedMileage > 100000) {
       m *= 0.98
-      flags.push('Excellent condition claim on 100k+ mileage vehicle — auto-discounted')
+      flags.push('Condition adjusted for high mileage (100k+) based on market norms')
     }
   }
 
   // "Excellent" with multiple MOT advisories = contradiction
   if (condition === 'excellent' && vp.motAnalysis.advisoryCount >= 5) {
     m *= 0.97
-    flags.push('Excellent condition contradicts 5+ MOT advisories — auto-discounted')
+    flags.push('Condition adjusted — MOT history shows 5+ advisories')
   }
 
   return { multiplier: m, flags }

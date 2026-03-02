@@ -408,7 +408,7 @@ function s20() {
   }), 'excellent')
   console.log(`    mode=${r.quoteMode} inputTrust=${r.allMultipliers.inputTrustMultiplier}`)
   assert(r.allMultipliers.inputTrustMultiplier < 1.0, 'input trust penalty for excellent on old car')
-  assert(r.riskFlags.some(f => f.includes('Excellent condition claim on 12+')), 'auto-discounted flag')
+  assert(r.riskFlags.some(f => f.includes('Condition adjusted for vehicle age')), 'auto-discounted flag')
 }
 
 // ============================================================================

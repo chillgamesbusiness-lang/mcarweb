@@ -516,22 +516,57 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
               </div>
             )}
 
-            {/* Admin Explanation (engine v3) */}
+            {/* Admin Explanation (engine v3) — color-coded by impact direction */}
             {adminExplanation && adminExplanation.length > 0 && (
               <div className="mt-4">
                 <span className="text-xs text-gray-400 block mb-2">Engine Explanation ({adminExplanation.length})</span>
                 <div className="space-y-1">
-                  {adminExplanation.map((item, i) => (
-                    <div key={i} className={`text-sm rounded px-3 py-1.5 flex justify-between items-center ${
-                      item.severity === 'critical' ? 'bg-red-50 text-red-800' :
-                      item.severity === 'warning' ? 'bg-amber-50 text-amber-800' :
-                      'bg-blue-50 text-blue-800'
-                    }`}>
-                      <span><span className="font-mono text-xs mr-2">{item.rule}</span>{item.description}</span>
-                      <span className="font-mono text-xs shrink-0 ml-2">{item.impact}</span>
-                    </div>
-                  ))}
+                  {adminExplanation.map((item, i) => {
+                    // Positive impacts = green, negative = severity gradient, neutral = blue
+                    const impactStr = item.impact ?? ''
+                    const isPositive = impactStr.startsWith('+') || impactStr === 'clear' || impactStr === 'bonus'
+                    const isNegative = impactStr.startsWith('-') || impactStr === 'blocked' || impactStr === 'manual_review'
+                    // Extract numeric % for severity scaling
+                    const pctMatch = impactStr.match(/-(\d+(?:\.\d+)?)%/)
+                    const pctVal = pctMatch ? parseFloat(pctMatch[1]) : 0
+
+                    let bgClass: string
+                    let textClass: string
+                    let impactClass: string
+
+                    if (isPositive) {
+                      bgClass = 'bg-green-50'
+                      textClass = 'text-green-800'
+                      impactClass = 'text-green-700 font-semibold'
+                    } else if (item.severity === 'critical' || pctVal >= 15) {
+                      bgClass = 'bg-red-50'
+                      textClass = 'text-red-800'
+                      impactClass = 'text-red-700 font-semibold'
+                    } else if (item.severity === 'warning' || pctVal >= 5) {
+                      bgClass = 'bg-amber-50'
+                      textClass = 'text-amber-800'
+                      impactClass = 'text-amber-700 font-semibold'
+                    } else if (isNegative) {
+                      bgClass = 'bg-orange-50'
+                      textClass = 'text-orange-800'
+                      impactClass = 'text-orange-600 font-medium'
+                    } else {
+                      bgClass = 'bg-blue-50'
+                      textClass = 'text-blue-800'
+                      impactClass = 'text-blue-600'
+                    }
+
+                    return (
+                      <div key={i} className={`text-sm rounded px-3 py-1.5 flex justify-between items-center ${bgClass} ${textClass}`}>
+                        <span><span className="font-mono text-xs mr-2">{item.rule}</span>{item.description}</span>
+                        <span className={`font-mono text-xs shrink-0 ml-2 ${impactClass}`}>{impactStr}</span>
+                      </div>
+                    )
+                  })}
                 </div>
+                <p className="text-[10px] text-gray-400 mt-1.5 italic">
+                  Percentages are compound multiplier impacts, not flat price cuts. Final value = base × all multipliers.
+                </p>
               </div>
             )}
 
@@ -569,6 +604,22 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                     <span>Recon: £{profitSim.reconEstimate?.toLocaleString()}</span>
                     <span>Sell cost: {((profitSim.sellCostPct ?? 0.05) * 100).toFixed(0)}%</span>
                   </div>
+                  {/* Margin % — the single most telling number */}
+                  {profitSim.estimatedRetail > 0 && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs text-gray-500">Margin vs retail:</span>
+                      <span className={`text-sm font-bold ${
+                        profitSim.expectedProfitMid / profitSim.estimatedRetail >= 0.3 ? 'text-green-700' :
+                        profitSim.expectedProfitMid / profitSim.estimatedRetail >= 0.1 ? 'text-amber-700' :
+                        'text-red-700'
+                      }`}>
+                        {Math.round((profitSim.expectedProfitMid / profitSim.estimatedRetail) * 100)}%
+                      </span>
+                    </div>
+                  )}
+                  <p className="mt-1 text-[10px] text-gray-400 italic">
+                    Projected from market retail anchor. Accuracy depends on market data quality.
+                  </p>
                   {profitSim.guardrailTriggered && (
                     <p className="mt-2 text-xs text-red-700 font-medium">
                       ⚠ Guardrail: {profitSim.guardrailReason}
