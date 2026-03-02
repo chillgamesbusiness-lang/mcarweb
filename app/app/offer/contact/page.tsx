@@ -7,8 +7,9 @@ import { normaliseFuel, checkUlezCompliance } from '@/lib/dvlaService'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendAdminNewLeadAlert } from '@/lib/email'
 import { isValidEmail, isValidPostcode } from '@/lib/leadVerification'
-import { getCandidateCoefficients, logShadowComparison } from '@/lib/coefficientStore'
+import { getCandidateCoefficients, getCurrentCoefficients, logShadowComparison } from '@/lib/coefficientStore'
 import { validateMileage, validateCondition, capRiskFlags, capBullets } from '@/lib/inputHardening'
+import { checkExposure } from '@/lib/exposureCap'
 import ContactForm from './ContactForm'
 
 interface ContactPageProps {
@@ -189,6 +190,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
 
     // ── Run pricing engine (with timing) ────────────────────────────────
     const t0 = performance.now()
+    const currentCoeffs = await getCurrentCoefficients()
     const valuation = calculateValuation({
       vehicleProfile,
       condition: p.condition!,
@@ -196,6 +198,15 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     })
     const valuationMs = Math.round(performance.now() - t0)
     console.log(`[valuation] ${p.reg} completed in ${valuationMs}ms risk=${valuation.riskTier} mode=${valuation.quoteMode}`)
+
+    // ── Capital exposure cap ────────────────────────────────────────────
+    const exposure = await checkExposure(
+      p.vehicle.make, p.vehicle.model || '', p.vehicle.fuel, p.vehicle.year
+    )
+    if (exposure.forceManualReview && valuation.quoteMode === 'auto') {
+      valuation.quoteMode = 'manual_review' as typeof valuation.quoteMode
+      valuation.riskFlags.push(...exposure.flags)
+    }
 
     // ── Create lead ─────────────────────────────────────────────────────
     const serviceClient = createServiceClient()
@@ -280,6 +291,8 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       admin_explanation: valuation.adminExplanation,
       profit_simulation: valuation.profitSimulation,
       engine_version: 'v3',
+      coefficient_version: currentCoeffs.versionId,
+      git_commit_hash: process.env.NEXT_PUBLIC_GIT_COMMIT_HASH ?? 'unknown',
     }).then(({ error: snapErr }) => {
       if (snapErr) console.error('[valuation-snapshot] insert failed:', snapErr.message)
     })
@@ -295,7 +308,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
         })
         await logShadowComparison({
           leadId: lead.id,
-          currentVersion: 'v3.0.0-default',
+          currentVersion: currentCoeffs.versionId,
           candidateVersion: candidate.versionId,
           currentMidpoint: valuation.midpoint,
           candidateMidpoint: shadowVal.midpoint,

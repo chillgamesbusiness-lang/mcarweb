@@ -1,4 +1,11 @@
 import type { NextConfig } from "next";
+import { execSync } from "child_process";
+
+// Capture git commit hash at build time for reproducibility
+let gitCommitHash = 'unknown';
+try {
+  gitCommitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
+} catch { /* not in a git repo or git not available */ }
 
 const securityHeaders = [
   // Never render inside an iframe — prevents clickjacking
@@ -37,6 +44,9 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_GIT_COMMIT_HASH: gitCommitHash,
+  },
   async headers() {
     return [
       {

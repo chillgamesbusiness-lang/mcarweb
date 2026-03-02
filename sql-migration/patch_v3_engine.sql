@@ -144,7 +144,34 @@ BEGIN
   END IF;
 END $$;
 
--- ─── 5. Expand audit_log action check for new actions ─────────────────────
+-- ─── 5. Engine version locking on valuation snapshots ─────────────────────
+-- coefficient_version: which coefficient set was active at quote time
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'valuation_snapshots'
+      AND column_name = 'coefficient_version'
+  ) THEN
+    ALTER TABLE valuation_snapshots ADD COLUMN coefficient_version text;
+  END IF;
+END $$;
+
+-- git_commit_hash: reproducibility — which build generated this
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'valuation_snapshots'
+      AND column_name = 'git_commit_hash'
+  ) THEN
+    ALTER TABLE valuation_snapshots ADD COLUMN git_commit_hash text;
+  END IF;
+END $$;
+
+-- ─── 6. Expand audit_log action check for new actions ─────────────────────
 ALTER TABLE audit_log DROP CONSTRAINT IF EXISTS audit_log_action_check;
 ALTER TABLE audit_log ADD CONSTRAINT audit_log_action_check CHECK (action IN (
   'status_change',

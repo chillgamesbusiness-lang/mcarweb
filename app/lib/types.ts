@@ -194,6 +194,7 @@ export interface MultiplierBreakdown {
   reconEstimate: number
   marketConfidenceMultiplier: number
   inputTrustMultiplier: number
+  segmentMultiplier: number
   liquidityBuffer: number
   // Debug fields: visible in admin breakdown
   combinedAdjustment: number

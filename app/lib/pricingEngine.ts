@@ -31,6 +31,8 @@ import { getMarketValue } from '@/lib/marketData'
 import { getRegionMultiplier } from '@/lib/regionPricing'
 import { calculateConfidence } from '@/lib/confidenceScorer'
 import { estimateReconCost } from '@/lib/mileageAnalyser'
+import { getSegmentProfile } from '@/lib/segmentPricing'
+import { calculateConfidenceDecay } from '@/lib/confidenceDecay'
 import type {
   VehicleProfile,
   Condition,
@@ -221,6 +223,18 @@ export function calculateValuation(input: {
     spreadSignals.push('high_recon')
   }
 
+  // ── Step 12d: Segment-specific pricing overlay ────────────────────────
+  const segmentProfile = getSegmentProfile(
+    normFuel, vehicleAge, postcode, volatility, matchQuality
+  )
+  const segmentMultiplier = segmentProfile.segmentMultiplier
+  if (segmentMultiplier < 1.0) {
+    riskFlags.push(`Segment: ${segmentProfile.note}`)
+  }
+  if (segmentProfile.forceManualReview) {
+    quoteMode = 'manual_review'
+  }
+
   // ── Step 12c: Liability overrides — hard rule gates ───────────────────
   // Explicit, predictable, explainable behaviour for high-liability vehicles.
   // These override quoteMode regardless of multiplier math.
@@ -248,7 +262,8 @@ export function calculateValuation(input: {
     sornMultiplier *
     reconMultiplier *
     marketConfidenceMultiplier *
-    inputTrustMultiplier
+    inputTrustMultiplier *
+    segmentMultiplier
 
   // Conditional compound floor: only protect if vehicle has no liability flags.
   // Rollback, structural damage, SORN, or expired MOT = liability, not just risk.
@@ -320,6 +335,23 @@ export function calculateValuation(input: {
     quoteMode = 'manual_review'
   }
 
+  // ── Confidence decay: elevated profit floor under uncertainty ────────
+  const decayResult = calculateConfidenceDecay({
+    expectedProfitMid: profitSimulation.expectedProfitMid,
+    volatility,
+    matchQuality,
+    reconEstimate,
+    tradeBase,
+    confidenceScore,
+    heatLevel: segmentProfile.heatLevel,
+  })
+  if (decayResult.floorBreached && quoteMode === 'auto') {
+    quoteMode = 'manual_review'
+    riskFlags.push(
+      `Confidence decay: profit £${profitSimulation.expectedProfitMid} < elevated floor £${decayResult.elevatedProfitFloor}`
+    )
+  }
+
   return {
     min,
     max,
@@ -348,6 +380,7 @@ export function calculateValuation(input: {
       reconEstimate: Math.round(reconEstimate),
       marketConfidenceMultiplier: round4(marketConfidenceMultiplier),
       inputTrustMultiplier: round4(inputTrustMultiplier),
+      segmentMultiplier: round4(segmentMultiplier),
       liquidityBuffer: LIQUIDITY_BUFFER,
       // Admin debug: full pipeline trace
       combinedAdjustment: round4(combinedAdjustment),
@@ -714,6 +747,7 @@ function buildManualResult(
       reconEstimate: 0,
       marketConfidenceMultiplier: 0,
       inputTrustMultiplier: 0,
+      segmentMultiplier: 0,
       liquidityBuffer: 0,
       combinedAdjustment: 0,
       rawValue: 0,
