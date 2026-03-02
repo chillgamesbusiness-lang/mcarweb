@@ -695,18 +695,22 @@ function calculateSpread(
   const minSpread = Math.round(adjustedValue * 0.04)
   spread = Math.max(spread, minSpread)
 
-  // Cap spread at 15% of adjustedValue
-  const maxSpread = Math.round(adjustedValue * 0.15)
-  spread = Math.min(spread, maxSpread)
-
   // Volatile market segments floor at medium — spread widening happens above,
   // but the displayed tier should also reflect market resale uncertainty.
   if (volatility === 'volatile' && tier === 'low') {
     tier = 'medium'
   }
 
-  // Round to nearest £25
+  // Round to nearest £25 BEFORE capping so rounding never breaches the cap
   spread = Math.round(spread / 25) * 25
+
+  // Cap spread at 15% of adjustedValue (rounded down to £25 boundary)
+  const maxSpread = Math.floor((adjustedValue * 0.15) / 25) * 25
+  spread = Math.min(spread, maxSpread)
+
+  // Floor at 4% (rounded up to £25 boundary)
+  const minSpreadPost = Math.ceil((adjustedValue * 0.04) / 25) * 25
+  spread = Math.max(spread, minSpreadPost)
 
   return { spread, riskTier: tier }
 }
