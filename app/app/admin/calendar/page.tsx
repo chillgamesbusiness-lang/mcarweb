@@ -1,5 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 
+export const metadata = { title: 'Calendar' }
+
 export default async function AdminCalendarPage() {
   const svc = createServiceClient()
 

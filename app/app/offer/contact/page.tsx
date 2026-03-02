@@ -12,6 +12,11 @@ import { validateMileage, validateCondition, capRiskFlags, capBullets } from '@/
 import { checkExposure } from '@/lib/exposureCap'
 import ContactForm from './ContactForm'
 
+export const metadata = {
+  title: 'Your Details',
+  description: 'Enter your contact information to receive your vehicle offer.',
+}
+
 interface ContactPageProps {
   searchParams: Promise<{ token?: string }>
 }

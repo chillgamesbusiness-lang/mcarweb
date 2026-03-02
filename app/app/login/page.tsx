@@ -1,6 +1,8 @@
 import { login } from './actions'
 import { SubmitButton } from '@/app/components/SubmitButton'
 
+export const metadata = { title: 'Staff Sign In' }
+
 interface LoginPageProps {
   searchParams: Promise<{ error?: string }>
 }

@@ -2,6 +2,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { fetchDashboardKPIs } from '@/lib/kpiAggregation'
 import DashboardClient from './DashboardClient'
 
+export const metadata = { title: 'Dashboard' }
+
 export default async function AdminDashboardPage() {
   const svc = createServiceClient()
 

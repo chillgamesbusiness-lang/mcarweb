@@ -1,8 +1,24 @@
 'use client'
 
+import { useFormStatus } from 'react-dom'
+
 interface DetailsFormProps {
   submitDetails: (formData: FormData) => Promise<void>
   defaultMileage?: number | null
+}
+
+/** Submit button with automatic pending state — prevents double-submit */
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Processing…' : 'Continue'}
+    </button>
+  )
 }
 
 export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFormProps) {
@@ -49,12 +65,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
         </select>
       </div>
 
-      <button
-        type="submit"
-        className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-      >
-        Continue
-      </button>
+      <SubmitButton />
     </form>
   )
 }

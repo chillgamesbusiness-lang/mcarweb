@@ -4,6 +4,11 @@ import { verifyOfferToken } from '@/lib/offerSession'
 import { sendBookingConfirmation } from '@/lib/email'
 import BookForm from './BookForm'
 
+export const metadata = {
+  title: 'Book Appointment',
+  description: 'Schedule your vehicle inspection appointment with MCar.',
+}
+
 interface BookPageProps {
   searchParams: Promise<{ leadId?: string; token?: string }>
 }

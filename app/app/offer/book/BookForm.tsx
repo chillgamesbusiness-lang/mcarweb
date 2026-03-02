@@ -2,9 +2,24 @@
 
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { useFormStatus } from 'react-dom'
 
 interface BookFormProps {
   submitBooking: (formData: FormData) => Promise<void>
+}
+
+/** Submit button with automatic pending state — prevents double-booking */
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      {pending ? 'Booking…' : 'Confirm Booking'}
+    </button>
+  )
 }
 
 /**
@@ -91,12 +106,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
         </select>
       </div>
 
-      <button
-        type="submit"
-        className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
-      >
-        Confirm Booking
-      </button>
+      <SubmitButton />
     </form>
   )
 }

@@ -1,0 +1,12 @@
+# MCar — robots.txt
+# Allow public offer funnel; block admin, inspector, and API routes
+
+User-agent: *
+Allow: /offer
+Allow: /privacy
+Disallow: /admin
+Disallow: /inspector
+Disallow: /api/
+Disallow: /login
+
+Sitemap: https://mcarweb.vercel.app/sitemap.xml

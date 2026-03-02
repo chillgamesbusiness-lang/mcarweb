@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/server'
 import type { Lead } from '@/lib/types'
 
+export const metadata = { title: 'Leads' }
+
 const PAGE_SIZE = 25
 
 const STATUS_LABELS: Record<Lead['status'], string> = {

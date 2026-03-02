@@ -2,6 +2,11 @@ import { redirect } from 'next/navigation'
 import { verifyOfferToken, createOfferToken } from '@/lib/offerSession'
 import DetailsForm from './DetailsForm'
 
+export const metadata = {
+  title: 'Vehicle Details',
+  description: 'Enter your vehicle mileage and condition for an accurate valuation.',
+}
+
 interface DetailsPageProps {
   searchParams: Promise<{ token?: string }>
 }

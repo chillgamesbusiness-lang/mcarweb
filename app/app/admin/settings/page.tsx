@@ -1,3 +1,5 @@
+export const metadata = { title: 'Settings' }
+
 export default function AdminSettingsPage() {
   return (
     <div className="p-8 max-w-2xl">
