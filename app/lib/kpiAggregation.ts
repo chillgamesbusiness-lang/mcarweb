@@ -57,11 +57,56 @@ export interface WeeklyTrend {
   manualReview: number
 }
 
+export interface ExposureKPIs {
+  totalOpenPositions: number
+  totalCapital: number
+  maxTotalCapital: number
+  sameModelBreaches: number       // leads with ≥3 same model open
+  evConcentration: number         // open EV count
+  oldDieselConcentration: number  // open >10yr diesel count
+  positions: { make: string; model: string; fuel: string; year: number; price: number }[]
+  segmentDistribution: { segment: string; count: number; capital: number }[]
+}
+
+export interface DecayKPIs {
+  totalSnapshotsWithDecay: number
+  totalSnapshots: number
+  decayPct: number
+  byReason: { reason: string; count: number }[]
+}
+
+export interface ShadowKPIs {
+  hasCandidiate: boolean
+  candidateVersion: string | null
+  currentVersion: string | null
+  comparisonCount: number
+  avgDeltaPct: number
+  maxDeltaPct: number
+  wouldIncrease: number
+  wouldDecrease: number
+  noChange: number
+}
+
+export interface WeeklySummary {
+  offersGenerated: number
+  acceptanceRate: number
+  avgRealisedProfit: number | null
+  liabilityBlocks: number
+  exposureCapTriggers: number
+  calibrationSampleSize: number
+  manualReviewCount: number
+  avgConfidence: number
+}
+
 export interface DashboardKPIs {
   acquisition: AcquisitionKPIs
   profit: ProfitKPIs
   risk: RiskKPIs
   weeklyTrends: WeeklyTrend[]
+  exposure: ExposureKPIs
+  decay: DecayKPIs
+  shadow: ShadowKPIs
+  weeklySummary: WeeklySummary
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -264,5 +309,190 @@ export async function fetchDashboardKPIs(): Promise<DashboardKPIs> {
     })
   }
 
-  return { acquisition, profit, risk, weeklyTrends }
+  // ── Exposure KPIs ─────────────────────────────────────────────────────────
+
+  const { data: openLeads } = await sb
+    .from('leads')
+    .select('make, model, year, fuel, actual_purchase_price')
+    .in('outcome', ['won'])
+    .is('actual_resale_price', null)
+
+  const openPos = openLeads || []
+  const currentYear = new Date().getFullYear()
+  const totalCapital = openPos.reduce((s, p) => s + (p.actual_purchase_price ?? 0), 0)
+
+  // Count same-model breaches (≥3 of same make+model)
+  const modelCounts = new Map<string, number>()
+  for (const p of openPos) {
+    const key = `${(p.make || '').toUpperCase()}|${(p.model || '').toUpperCase()}`
+    modelCounts.set(key, (modelCounts.get(key) || 0) + 1)
+  }
+  const sameModelBreaches = Array.from(modelCounts.values()).filter(c => c >= 3).length
+
+  const evCount = openPos.filter(p => (p.fuel || '').toUpperCase() === 'ELECTRIC').length
+  const oldDieselCount = openPos.filter(p =>
+    (p.fuel || '').toUpperCase() === 'DIESEL' && p.year != null && (currentYear - p.year) > 10
+  ).length
+
+  // Segment distribution for detail toggle
+  const segDist = new Map<string, { count: number; capital: number }>()
+  for (const p of openPos) {
+    const fuel = (p.fuel || 'unknown').toLowerCase()
+    const age = currentYear - (p.year || currentYear)
+    let seg = fuel
+    if (fuel === 'diesel') seg = age > 10 ? 'diesel_old' : age > 5 ? 'diesel_aging' : 'diesel_modern'
+    else if (fuel === 'electric') seg = age <= 4 ? 'ev_young' : age <= 7 ? 'ev_mid' : 'ev_aging'
+    else if (age > 10) seg = 'high_age'
+    const cur = segDist.get(seg) || { count: 0, capital: 0 }
+    cur.count++
+    cur.capital += p.actual_purchase_price ?? 0
+    segDist.set(seg, cur)
+  }
+
+  const exposure: ExposureKPIs = {
+    totalOpenPositions: openPos.length,
+    totalCapital,
+    maxTotalCapital: 150_000,
+    sameModelBreaches,
+    evConcentration: evCount,
+    oldDieselConcentration: oldDieselCount,
+    positions: openPos.map(p => ({
+      make: p.make || '?',
+      model: p.model || '?',
+      fuel: p.fuel || '?',
+      year: p.year || 0,
+      price: p.actual_purchase_price ?? 0,
+    })),
+    segmentDistribution: Array.from(segDist.entries()).map(([segment, d]) => ({
+      segment,
+      count: d.count,
+      capital: d.capital,
+    })),
+  }
+
+  // ── Confidence Decay KPIs ───────────────────────────────────────────────
+
+  // Analyse snapshots for decay signals stored in profit_simulation
+  let decayCount = 0
+  const reasonCounts = new Map<string, number>()
+
+  for (const snap of snaps) {
+    const sim = snap.profit_simulation as {
+      decayApplied?: boolean
+      decaySignals?: string[]
+    } | null
+    if (sim?.decayApplied) {
+      decayCount++
+      for (const sig of sim.decaySignals || []) {
+        // Extract reason prefix (e.g. "Volatile market", "Fuzzy match")
+        const reason = sig.split(':')[0].trim()
+        reasonCounts.set(reason, (reasonCounts.get(reason) || 0) + 1)
+      }
+    }
+  }
+
+  // Fallback: if no decayApplied field, check risk_flags for known decay indicators
+  if (decayCount === 0 && snaps.length > 0) {
+    for (const snap of snaps) {
+      const flags = snap.risk_flags as string[] | null
+      if (flags?.some(f =>
+        f.toLowerCase().includes('volatile') ||
+        f.toLowerCase().includes('fuzzy') ||
+        f.toLowerCase().includes('low confidence') ||
+        f.toLowerCase().includes('elevated floor')
+      )) {
+        decayCount++
+        for (const f of flags) {
+          if (f.toLowerCase().includes('volatile')) reasonCounts.set('Volatile market', (reasonCounts.get('Volatile market') || 0) + 1)
+          if (f.toLowerCase().includes('fuzzy')) reasonCounts.set('Fuzzy match', (reasonCounts.get('Fuzzy match') || 0) + 1)
+          if (f.toLowerCase().includes('recon')) reasonCounts.set('Recon uncertainty', (reasonCounts.get('Recon uncertainty') || 0) + 1)
+        }
+      }
+    }
+  }
+
+  const decay: DecayKPIs = {
+    totalSnapshotsWithDecay: decayCount,
+    totalSnapshots: snaps.length,
+    decayPct: snaps.length > 0 ? Math.round((decayCount / snaps.length) * 100) : 0,
+    byReason: Array.from(reasonCounts.entries())
+      .map(([reason, count]) => ({ reason, count }))
+      .sort((a, b) => b.count - a.count),
+  }
+
+  // ── Shadow Comparison KPIs ──────────────────────────────────────────────
+
+  let shadow: ShadowKPIs = {
+    hasCandidiate: false,
+    candidateVersion: null,
+    currentVersion: null,
+    comparisonCount: 0,
+    avgDeltaPct: 0,
+    maxDeltaPct: 0,
+    wouldIncrease: 0,
+    wouldDecrease: 0,
+    noChange: 0,
+  }
+
+  try {
+    // Check if there's a candidate coefficient set
+    const { data: candidate } = await sb
+      .from('engine_coefficients')
+      .select('version_id')
+      .eq('status', 'candidate')
+      .eq('shadow_mode', true)
+      .limit(1)
+      .maybeSingle()
+
+    const { data: current } = await sb
+      .from('engine_coefficients')
+      .select('version_id')
+      .eq('status', 'current')
+      .limit(1)
+      .maybeSingle()
+
+    if (candidate) {
+      const { data: comparisons } = await sb
+        .from('shadow_comparison_log')
+        .select('delta_midpoint, delta_pct')
+        .eq('candidate_version', candidate.version_id)
+
+      const comps = comparisons || []
+      shadow = {
+        hasCandidiate: true,
+        candidateVersion: candidate.version_id,
+        currentVersion: current?.version_id ?? null,
+        comparisonCount: comps.length,
+        avgDeltaPct: comps.length > 0
+          ? Math.round(comps.reduce((s, r) => s + Number(r.delta_pct), 0) / comps.length * 100) / 100
+          : 0,
+        maxDeltaPct: comps.length > 0
+          ? Math.round(Math.max(...comps.map(r => Math.abs(Number(r.delta_pct)))) * 100) / 100
+          : 0,
+        wouldIncrease: comps.filter(r => r.delta_midpoint > 0).length,
+        wouldDecrease: comps.filter(r => r.delta_midpoint < 0).length,
+        noChange: comps.filter(r => r.delta_midpoint === 0).length,
+      }
+    } else if (current) {
+      shadow = { ...shadow, currentVersion: current.version_id }
+    }
+  } catch {
+    // Shadow tables may not exist yet — graceful fallback
+  }
+
+  // ── Weekly Summary ──────────────────────────────────────────────────────
+
+  const thisWeekTrend = weeklyTrends.find(t => t.weekLabel === 'This week')
+  const weeklySummary: WeeklySummary = {
+    offersGenerated: safe(offersThisWeek),
+    acceptanceRate: acquisition.acceptanceRate,
+    avgRealisedProfit: profit.avgRealisedProfit,
+    liabilityBlocks: blockedCount,
+    exposureCapTriggers: sameModelBreaches + (evCount >= 5 ? 1 : 0) + (oldDieselCount >= 4 ? 1 : 0) + (totalCapital >= 150_000 ? 1 : 0),
+    calibrationSampleSize: snaps.length,
+    manualReviewCount: thisWeekTrend?.manualReview ?? manualReviewCount,
+    avgConfidence: acquisition.avgConfidence,
+  }
+
+  return { acquisition, profit, risk, weeklyTrends, exposure, decay, shadow, weeklySummary }
 }
