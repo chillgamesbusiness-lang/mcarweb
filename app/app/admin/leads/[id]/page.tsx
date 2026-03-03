@@ -684,6 +684,51 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                             <p key={i} className="text-[10px] text-gray-400 ml-2">• {s}</p>
                           ))}
                         </div>
+
+                        {/* TCO Analysis */}
+                        {profitSimV4.costsAndTime?.tco && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">TCO Prep Costs</p>
+                            {profitSimV4.costsAndTime.tco.breakdown?.map((line: string, i: number) => (
+                              <p key={i} className="text-[10px] text-gray-500">{line}</p>
+                            ))}
+                            {profitSimV4.costsAndTime.tco.riskNote && (
+                              <p className="text-[10px] text-amber-600 font-medium mt-1">{profitSimV4.costsAndTime.tco.riskNote}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Auction vs Retail Spread */}
+                        {profitSimV4.costsAndTime?.auctionRetailSpread?.spreadPct !== null && profitSimV4.costsAndTime?.auctionRetailSpread?.spreadPct !== undefined && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Auction → Retail Spread</p>
+                            <div className="flex items-center gap-2">
+                              {profitSimV4.costsAndTime.auctionRetailSpread.auctionEstimate && (
+                                <span className="text-xs text-gray-600">Auction: £{profitSimV4.costsAndTime.auctionRetailSpread.auctionEstimate.toLocaleString()}</span>
+                              )}
+                              <span className="text-[10px] text-gray-400">→</span>
+                              {profitSimV4.costsAndTime.auctionRetailSpread.retailEstimate && (
+                                <span className="text-xs text-gray-600">Retail: £{profitSimV4.costsAndTime.auctionRetailSpread.retailEstimate.toLocaleString()}</span>
+                              )}
+                              <span className={`text-xs font-semibold ${
+                                (profitSimV4.costsAndTime.auctionRetailSpread.spreadPct ?? 0) > 15 ? 'text-green-600' : 'text-gray-600'
+                              }`}>({profitSimV4.costsAndTime.auctionRetailSpread.spreadPct}%)</span>
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-0.5">{profitSimV4.costsAndTime.auctionRetailSpread.note}</p>
+                          </div>
+                        )}
+
+                        {/* Regional Weighting */}
+                        {profitSimV4.costsAndTime?.regionalWeighting && (
+                          <div className="mt-2 pt-2 border-t border-gray-100">
+                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Regional Pricing</p>
+                            <p className="text-xs text-gray-600">{profitSimV4.costsAndTime.regionalWeighting.note}</p>
+                            <div className="flex gap-3 mt-1">
+                              <span className="text-[10px] text-gray-400">Demand: <span className="font-medium text-gray-600">{profitSimV4.costsAndTime.regionalWeighting.demandLevel}</span></span>
+                              <span className="text-[10px] text-gray-400">Supply: <span className="font-medium text-gray-600">{profitSimV4.costsAndTime.regionalWeighting.supplyLevel}</span></span>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       {/* ── Resale Range ──────────────────────────────────── */}

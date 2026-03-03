@@ -225,9 +225,44 @@ export interface TimeToSellResultV4 {
   signals: string[]
 }
 
+export interface TCOBreakdownV4 {
+  serviceCostGBP: number
+  brakeCostGBP: number
+  tyreCostGBP: number
+  motPrepCostGBP: number
+  cosmeticCostGBP: number
+  adminCostGBP: number
+  totalGBP: number
+  totalAsPctOfValue: number
+  breakdown: string[]
+  riskNote: string | null
+}
+
+export interface AuctionRetailSpread {
+  auctionEstimate: number | null
+  retailEstimate: number | null
+  spreadGBP: number | null
+  spreadPct: number | null
+  auctionSources: string[]
+  retailSources: string[]
+  note: string
+}
+
+export interface RegionalWeighting {
+  regionBand: string
+  regionMultiplier: number
+  demandLevel: string          // 'high' | 'moderate' | 'low'
+  supplyLevel: string          // 'high' | 'moderate' | 'low'
+  adjustmentPct: number
+  note: string
+}
+
 export interface CostsAndTimePayload {
   sellCostBreakdown: SellCostBreakdownV4
   timeToSell: TimeToSellResultV4
+  tco: TCOBreakdownV4 | null
+  auctionRetailSpread: AuctionRetailSpread | null
+  regionalWeighting: RegionalWeighting | null
 }
 
 export interface CompListingV4 {

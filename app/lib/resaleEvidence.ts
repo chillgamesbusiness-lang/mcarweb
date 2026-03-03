@@ -18,13 +18,15 @@
  * to use based on promotion rules.
  */
 
-import type { RiskTier, Volatility, QuoteMode, MarketMatchQuality } from '@/lib/types'
-import type { VehicleSegment, HeatLevel } from '@/lib/segmentPricing'
-import { ebayProvider } from '@/lib/providers/ebayProvider'
+import type { RiskTier, Volatility, QuoteMode, MarketMatchQuality, Condition, FuelType } from '@/lib/types'
+import type { VehicleSegment, HeatLevel, RegionBand } from '@/lib/segmentPricing'
+import { detectRegionBand } from '@/lib/segmentPricing'
+import { fetchAllProviders } from '@/lib/providers/providerManager'
 import type { CompProviderQuery, MergedCompsResult, ProviderResult, CompListing } from '@/lib/providers/providerTypes'
 import { scoreAndFilterComps, type SpecVector } from '@/lib/specSimilarity'
 import { estimateTimeToSell, type TimeToSellResult } from '@/lib/timeToSell'
 import { estimateSellCosts, type SellCostBreakdown } from '@/lib/sellCostModel'
+import { estimateTCO, type TCOBreakdown } from '@/lib/tcoModel'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -59,6 +61,32 @@ export interface AdjustmentDriver {
 export interface CostsAndTimePayload {
   sellCostBreakdown: SellCostBreakdown
   timeToSell: TimeToSellResult
+  tco: TCOBreakdown | null
+  auctionRetailSpread: AuctionRetailSpread | null
+  regionalWeighting: RegionalWeightingResult | null
+}
+
+// ── Auction vs Retail Spread ───────────────────────────────────────────────────
+
+export interface AuctionRetailSpread {
+  auctionEstimate: number | null
+  retailEstimate: number | null
+  spreadGBP: number | null
+  spreadPct: number | null
+  auctionSources: string[]
+  retailSources: string[]
+  note: string
+}
+
+// ── Regional Weighting ─────────────────────────────────────────────────────────
+
+export interface RegionalWeightingResult {
+  regionBand: RegionBand
+  regionMultiplier: number
+  demandLevel: 'high' | 'moderate' | 'low'
+  supplyLevel: 'high' | 'moderate' | 'low'
+  adjustmentPct: number
+  note: string
 }
 
 export interface ProfitSimulationV4 {
@@ -235,6 +263,12 @@ export async function buildProfitSimulationV4(input: {
   ulezCompliant: boolean
   colour: string | null
   postcode: string
+  condition: Condition
+  // MOT data (for TCO)
+  advisoryCount: number
+  structuralAdvisoryCount: number
+  brakeAdvisories: boolean
+  motExpired: boolean
   // Engine outputs
   adjustedValue: number
   tradeBase: number
@@ -273,16 +307,13 @@ export async function buildProfitSimulationV4(input: {
     postcode: input.postcode,
   }
 
-  const providerResults: ProviderResult[] = []
-
-  // Fetch from all enabled providers in parallel
+  // Fetch from ALL enabled providers in parallel (provider manager handles isolation)
+  let providerResults: ProviderResult[] = []
   try {
-    if (ebayProvider.enabled) {
-      const ebayResult = await ebayProvider.fetchComps(providerQuery)
-      providerResults.push(ebayResult)
-    }
+    const { results } = await fetchAllProviders(providerQuery)
+    providerResults = results
   } catch {
-    // Provider failure = graceful degradation to baseline
+    // Total provider failure = graceful degradation to baseline
   }
 
   const merged = mergeProviderResults(providerResults)
@@ -331,6 +362,14 @@ export async function buildProfitSimulationV4(input: {
   if (resaleHigh < resaleMid) resaleHigh = Math.round(resaleMid * 1.08)
 
   // ── 4. Time-to-Sell Discounting ──────────────────────────────────────
+  // Use the best listing age median across all providers (not just first)
+  const allListingAgeMedians = providerResults
+    .map(p => p.listingAgeDaysMedian)
+    .filter((a): a is number => a !== null)
+  const bestListingAgeMedian = allListingAgeMedians.length > 0
+    ? allListingAgeMedians.sort((a, b) => a - b)[Math.floor(allListingAgeMedians.length / 2)]
+    : null
+
   const timeToSell = estimateTimeToSell({
     volatility: input.volatility,
     heatLevel: input.heatLevel,
@@ -340,7 +379,7 @@ export async function buildProfitSimulationV4(input: {
     ulezCompliant: input.ulezCompliant,
     reconEstimate: input.reconEstimate,
     tradeBase: input.tradeBase,
-    listingAgeDaysMedian: merged.providers[0]?.listingAgeDaysMedian ?? null,
+    listingAgeDaysMedian: bestListingAgeMedian,
   })
 
   // Apply time risk discount to resale
@@ -349,17 +388,61 @@ export async function buildProfitSimulationV4(input: {
   resaleMid = Math.round(resaleMid * timeDiscount)
   resaleHigh = Math.round(resaleHigh * timeDiscount)
 
+  // ── 4b. Regional Weighting ──────────────────────────────────────────
+  const regionBand = detectRegionBand(input.postcode)
+  const regionalWeighting = computeRegionalWeighting(
+    regionBand,
+    input.segment,
+    input.heatLevel,
+    merged.allListings,
+    input.postcode,
+  )
+
+  // Apply regional adjustment to resale
+  if (regionalWeighting.adjustmentPct !== 0) {
+    const regionFactor = 1 + (regionalWeighting.adjustmentPct / 100)
+    resaleLow = Math.round(resaleLow * regionFactor)
+    resaleMid = Math.round(resaleMid * regionFactor)
+    resaleHigh = Math.round(resaleHigh * regionFactor)
+  }
+
   // ── 5. Sell Costs ────────────────────────────────────────────────────
   const sellCosts = estimateSellCosts(resaleMid, input.segment)
 
-  // ── 6. Profit Calculation ────────────────────────────────────────────
-  // Profit = net resale - recon - purchase price
-  // purchase price = what we pay the seller (min/mid/max from engine)
-  const recon = Math.round(input.reconEstimate)
+  // ── 5b. TCO Analysis ────────────────────────────────────────────────
+  let tcoBreakdown: TCOBreakdown | null = null
+  try {
+    tcoBreakdown = estimateTCO({
+      mileage: input.mileage,
+      year: input.year,
+      fuel: input.fuel as FuelType,
+      condition: input.condition,
+      segment: input.segment,
+      adjustedValue: input.adjustedValue,
+      reconEstimate: input.reconEstimate,
+      advisoryCount: input.advisoryCount,
+      structuralAdvisoryCount: input.structuralAdvisoryCount,
+      brakeAdvisories: input.brakeAdvisories,
+      motExpired: input.motExpired,
+    })
+  } catch {
+    // TCO failure is non-critical
+  }
 
-  const profitLow = (resaleLow - sellCosts.totalGBP) - recon - input.max    // worst: low resale, paid max
-  const profitMid = (resaleMid - sellCosts.totalGBP) - recon - input.midpoint
-  const profitHigh = (resaleHigh - sellCosts.totalGBP) - recon - input.min   // best: high resale, paid min
+  // ── 5c. Auction vs Retail Spread ────────────────────────────────────
+  const auctionRetailSpread = computeAuctionRetailSpread(providerResults, merged.allListings)
+
+  // ── 6. Profit Calculation ────────────────────────────────────────────
+  // Profit = net resale - recon - TCO prep - sell costs - purchase price
+  const recon = Math.round(input.reconEstimate)
+  const tcoCost = tcoBreakdown ? tcoBreakdown.totalGBP : 0
+
+  // TCO overlaps with recon — take the greater of the two to avoid double-counting
+  const prepCost = Math.max(recon, tcoCost)
+
+  const profitLow = (resaleLow - sellCosts.totalGBP) - prepCost - input.max
+  const profitMid = (resaleMid - sellCosts.totalGBP) - prepCost - input.midpoint
+  const profitHigh = (resaleHigh - sellCosts.totalGBP) - prepCost - input.min
 
   // Margin % (mid)
   const marginPctMid = resaleMid > 0 ? Math.round((profitMid / resaleMid) * 100) : 0
@@ -380,11 +463,19 @@ export async function buildProfitSimulationV4(input: {
     riskTier: input.riskTier,
   })
 
+  // Boost confidence when multiple providers agree
+  let confidenceBoost = 0
+  const contributingProviders = providerResults.filter(p => p.sampleCount > 0)
+  if (contributingProviders.length >= 3) confidenceBoost += 8
+  else if (contributingProviders.length >= 2) confidenceBoost += 4
+  const finalConfScore = Math.min(100, confScore + confidenceBoost)
+  const finalConfLevel: ConfidenceLevel = finalConfScore >= 70 ? 'high' : finalConfScore >= 45 ? 'medium' : 'low'
+
   // ── 8. Evidence Payload ──────────────────────────────────────────────
   const evidence: EvidencePayload = {
     compsSummary: similarityResult.keptComps.length > 0
-      ? `${similarityResult.keptComps.length} comparable listings (median £${(similarityResult.normalisedMedian ?? 0).toLocaleString()})`
-      : 'No market comps available — using baseline model only',
+      ? `${similarityResult.keptComps.length} comparable listings from ${contributingProviders.length} source${contributingProviders.length !== 1 ? 's' : ''} (median £${(similarityResult.normalisedMedian ?? 0).toLocaleString()})`
+      : `No market comps available — using baseline model only (${providerResults.length} provider${providerResults.length !== 1 ? 's' : ''} queried)`,
     variance: priceVariance === 'low' ? 'Low' : priceVariance === 'moderate' ? 'Moderate' : 'High',
     similarityThreshold: similarityResult.thresholdUsed,
     compCount: similarityResult.keptComps.length,
@@ -413,9 +504,12 @@ export async function buildProfitSimulationV4(input: {
     adjustmentDrivers.push({ factor: 'ULEZ', impact: 'Non-compliant — restricted demand', direction: 'negative' })
   }
 
-  // Recon
-  if (input.reconEstimate > 0) {
-    adjustmentDrivers.push({ factor: 'Recon', impact: `£${input.reconEstimate} estimated`, direction: 'negative' })
+  // Recon / TCO
+  if (prepCost > 0) {
+    const prepLabel = tcoCost > recon
+      ? `£${prepCost} TCO prep (exceeds £${recon} recon estimate)`
+      : `£${prepCost} recon estimated`
+    adjustmentDrivers.push({ factor: 'Prep Cost', impact: prepLabel, direction: 'negative' })
   }
 
   // Volatility
@@ -437,6 +531,33 @@ export async function buildProfitSimulationV4(input: {
     adjustmentDrivers.push({ factor: 'Segment', impact: `${input.segment} — reduced margin`, direction: 'negative' })
   }
 
+  // Regional adjustment
+  if (regionalWeighting.adjustmentPct !== 0) {
+    adjustmentDrivers.push({
+      factor: 'Region',
+      impact: `${regionBand} — ${regionalWeighting.adjustmentPct > 0 ? '+' : ''}${regionalWeighting.adjustmentPct.toFixed(1)}% (${regionalWeighting.demandLevel} demand)`,
+      direction: regionalWeighting.adjustmentPct > 0 ? 'positive' : 'negative',
+    })
+  }
+
+  // Auction/retail spread insight
+  if (auctionRetailSpread.spreadPct !== null && auctionRetailSpread.spreadPct > 15) {
+    adjustmentDrivers.push({
+      factor: 'Auction Spread',
+      impact: `${auctionRetailSpread.spreadPct.toFixed(0)}% auction→retail gap — margin opportunity`,
+      direction: 'positive',
+    })
+  }
+
+  // TCO risk warning
+  if (tcoBreakdown?.riskNote) {
+    adjustmentDrivers.push({
+      factor: 'TCO Risk',
+      impact: tcoBreakdown.riskNote,
+      direction: 'negative',
+    })
+  }
+
   // ── 10. Guardrails ──────────────────────────────────────────────────
   const guardrailTriggered = input.quoteMode !== 'blocked' && profitMid < 300
   const guardrailReason = guardrailTriggered
@@ -444,9 +565,15 @@ export async function buildProfitSimulationV4(input: {
     : null
 
   // ── 11. Compact note ─────────────────────────────────────────────────
+  const providerNote = contributingProviders.length > 1
+    ? `${contributingProviders.length} data sources`
+    : contributingProviders.length === 1
+    ? `${contributingProviders[0].source} data`
+    : 'baseline model'
+
   const compNote = similarityResult.keptComps.length >= 5
-    ? `Estimated from ${similarityResult.keptComps.length} market comps + risk-adjusted value.`
-    : 'Estimated from risk-adjusted value + segment model. Limited market data.'
+    ? `Estimated from ${similarityResult.keptComps.length} comps via ${providerNote} + risk-adjusted value.`
+    : `Estimated from risk-adjusted value + segment model. ${providerNote}. Limited market data.`
 
   // ── 12. v3 delta ─────────────────────────────────────────────────────
   const v3ProfitMidDelta = input.v3ProfitMid !== null
@@ -466,15 +593,227 @@ export async function buildProfitSimulationV4(input: {
     resale: { low: resaleLow, mid: resaleMid, high: resaleHigh },
     profit: { low: profitLow, mid: profitMid, high: profitHigh },
     marginPctMid,
-    confidence,
-    confidenceScore: confScore,
+    confidence: finalConfLevel,
+    confidenceScore: finalConfScore,
     compactNote: compNote,
     evidence,
     adjustmentDrivers,
-    costsAndTime: { sellCostBreakdown: sellCosts, timeToSell },
+    costsAndTime: {
+      sellCostBreakdown: sellCosts,
+      timeToSell,
+      tco: tcoBreakdown,
+      auctionRetailSpread,
+      regionalWeighting,
+    },
     topComps,
     guardrailTriggered,
     guardrailReason,
     v3ProfitMidDelta,
+  }
+}
+
+// ── Auction vs Retail Spread Analysis ──────────────────────────────────────────
+
+/**
+ * Analyses provider results to compute the gap between auction-grade
+ * and retail-grade prices. Wider spreads indicate more margin opportunity
+ * but also more risk.
+ */
+function computeAuctionRetailSpread(
+  providerResults: ProviderResult[],
+  allListings: CompListing[],
+): AuctionRetailSpread {
+  const auctionPrices: number[] = []
+  const retailPrices: number[] = []
+  const auctionSources: Set<string> = new Set()
+  const retailSources: Set<string> = new Set()
+
+  // Classify listings by source type
+  for (const listing of allListings) {
+    const titleLower = listing.title.toLowerCase()
+    const isAuction = titleLower.includes('auction') || titleLower.includes('trade')
+    const isRetail = titleLower.includes('retail') || titleLower.includes('private')
+
+    if (isAuction) {
+      auctionPrices.push(listing.price)
+      auctionSources.add(listing.source)
+    } else if (isRetail) {
+      retailPrices.push(listing.price)
+      retailSources.add(listing.source)
+    } else {
+      // eBay / Marketcheck listings are retail-like
+      if (listing.source === 'ebay' || listing.source === 'marketcheck') {
+        retailPrices.push(listing.price)
+        retailSources.add(listing.source)
+      }
+    }
+  }
+
+  // Also check provider-level stats
+  for (const pr of providerResults) {
+    if (pr.source === 'motorspecs' && pr.priceStats) {
+      // MotorSpecs min is typically auction, max is retail
+      if (pr.priceStats.min > 0) {
+        auctionPrices.push(pr.priceStats.min)
+        auctionSources.add('motorspecs')
+      }
+      if (pr.priceStats.max > 0) {
+        retailPrices.push(pr.priceStats.max)
+        retailSources.add('motorspecs')
+      }
+    }
+  }
+
+  const auctionMedian = auctionPrices.length > 0
+    ? auctionPrices.sort((a, b) => a - b)[Math.floor(auctionPrices.length / 2)]
+    : null
+  const retailMedian = retailPrices.length > 0
+    ? retailPrices.sort((a, b) => a - b)[Math.floor(retailPrices.length / 2)]
+    : null
+
+  const spreadGBP = auctionMedian !== null && retailMedian !== null
+    ? retailMedian - auctionMedian
+    : null
+  const spreadPct = spreadGBP !== null && auctionMedian !== null && auctionMedian > 0
+    ? Math.round((spreadGBP / auctionMedian) * 100)
+    : null
+
+  let note: string
+  if (spreadPct !== null) {
+    if (spreadPct > 25) note = `Wide ${spreadPct}% auction→retail gap — good flip margin but verify condition`
+    else if (spreadPct > 15) note = `Moderate ${spreadPct}% auction→retail spread — typical margin`
+    else if (spreadPct > 5) note = `Narrow ${spreadPct}% spread — tight margins`
+    else note = `Minimal spread (${spreadPct}%) — auction and retail very close`
+  } else {
+    note = 'Insufficient data for auction vs retail spread analysis'
+  }
+
+  return {
+    auctionEstimate: auctionMedian,
+    retailEstimate: retailMedian,
+    spreadGBP,
+    spreadPct,
+    auctionSources: [...auctionSources],
+    retailSources: [...retailSources],
+    note,
+  }
+}
+
+// ── Regional Weighting Model ───────────────────────────────────────────────────
+
+/**
+ * Enhanced regional weighting based on:
+ *   - Region band (London/SE/Midlands/North/Scotland-Wales-NI)
+ *   - Segment-level demand patterns
+ *   - Local supply signals from comp listings
+ *   - Heat level interactions
+ *
+ * This goes beyond the static postcode prefix multiplier in regionPricing.ts
+ * by incorporating live market signals from the comp data.
+ */
+
+// Regional demand multipliers by segment type
+const REGIONAL_DEMAND_MATRIX: Record<RegionBand, Partial<Record<VehicleSegment, number>>> = {
+  london: {
+    ev_aging: 1.05,       // London has strong EV demand
+    ev_mid: 1.04,
+    ev_young: 1.03,
+    diesel_old: 0.92,     // ULEZ kills old diesel demand in London
+    diesel_aging: 0.95,
+    petrol_standard: 1.03, // city cars do well
+    hybrid: 1.04,
+  },
+  south_east: {
+    hybrid: 1.03,
+    ev_aging: 1.02,
+    diesel_old: 0.96,
+    petrol_standard: 1.01,
+  },
+  midlands: {
+    diesel_aging: 1.01,
+    high_age: 0.99,
+    petrol_standard: 1.00,
+  },
+  north: {
+    diesel_aging: 1.02,   // diesels still popular up north
+    diesel_old: 1.00,     // no ULEZ impact
+    high_age: 0.97,
+    ev_aging: 0.96,       // lower EV adoption
+  },
+  scotland_wales_ni: {
+    diesel_aging: 1.03,
+    diesel_old: 1.01,
+    high_age: 0.96,
+    ev_aging: 0.94,
+    petrol_standard: 0.98,
+  },
+}
+
+// Base region demand levels
+const REGION_BASE_DEMAND: Record<RegionBand, 'high' | 'moderate' | 'low'> = {
+  london: 'high',
+  south_east: 'high',
+  midlands: 'moderate',
+  north: 'moderate',
+  scotland_wales_ni: 'low',
+}
+
+function computeRegionalWeighting(
+  regionBand: RegionBand,
+  segment: VehicleSegment,
+  heatLevel: HeatLevel,
+  comps: CompListing[],
+  _postcode: string,
+): RegionalWeightingResult {
+  // Base regional demand multiplier
+  const segmentDemand = REGIONAL_DEMAND_MATRIX[regionBand]?.[segment] ?? 1.00
+  const demandLevel = REGION_BASE_DEMAND[regionBand]
+
+  // Supply signal from comps: more local comps = more supply
+  const localComps = comps.filter(c => {
+    if (!c.location) return false
+    const loc = c.location.toLowerCase()
+    // Rough locality matching
+    if (regionBand === 'london') return loc.includes('london') || loc.includes('greater london')
+    if (regionBand === 'south_east') return loc.includes('south') || loc.includes('surrey') || loc.includes('kent') || loc.includes('sussex')
+    if (regionBand === 'midlands') return loc.includes('birmingham') || loc.includes('midlands') || loc.includes('coventry')
+    if (regionBand === 'north') return loc.includes('manchester') || loc.includes('leeds') || loc.includes('liverpool') || loc.includes('north')
+    return loc.includes('scotland') || loc.includes('wales') || loc.includes('belfast')
+  })
+
+  let supplyLevel: 'high' | 'moderate' | 'low'
+  if (comps.length === 0) supplyLevel = 'low'
+  else if (localComps.length / comps.length > 0.3) supplyLevel = 'high'
+  else if (localComps.length / comps.length > 0.1) supplyLevel = 'moderate'
+  else supplyLevel = 'low'
+
+  // Supply adjustment: high supply in region = slight price pressure
+  let supplyAdjust = 0
+  if (supplyLevel === 'high' && demandLevel !== 'high') supplyAdjust = -1.0
+  else if (supplyLevel === 'low' && demandLevel === 'high') supplyAdjust = 1.0
+
+  // Heat level interaction
+  let heatAdjust = 0
+  if (heatLevel === 'hot' && demandLevel === 'high') heatAdjust = 1.5
+  else if (heatLevel === 'cool' && demandLevel === 'low') heatAdjust = -1.5
+
+  // Total regional adjustment (%)
+  const baseAdjustment = (segmentDemand - 1.0) * 100
+  const adjustmentPct = Math.round((baseAdjustment + supplyAdjust + heatAdjust) * 10) / 10
+
+  // Clamp to ±5%
+  const clampedAdjustment = Math.max(-5, Math.min(5, adjustmentPct))
+
+  const note = clampedAdjustment === 0
+    ? `${regionBand} — neutral regional pricing`
+    : `${regionBand} — ${clampedAdjustment > 0 ? 'premium' : 'discount'} of ${Math.abs(clampedAdjustment).toFixed(1)}% (${demandLevel} demand, ${supplyLevel} supply)`
+
+  return {
+    regionBand,
+    regionMultiplier: 1 + (clampedAdjustment / 100),
+    demandLevel,
+    supplyLevel,
+    adjustmentPct: clampedAdjustment,
+    note,
   }
 }

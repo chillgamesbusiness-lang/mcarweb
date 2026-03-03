@@ -224,6 +224,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       segProfile.segment,
       segProfile.heatLevel,
       valuation.matchQuality === 'none' ? 'moderate' : 'stable',
+      p.condition!,
     )
 
     // ── Capital exposure cap ────────────────────────────────────────────

@@ -1196,6 +1196,7 @@ export async function enrichWithResaleEvidence(
   segment: VehicleSegment,
   heatLevel: HeatLevel,
   volatility: Volatility,
+  condition: Condition = 'good',
 ): Promise<ValuationResult> {
   try {
     const v4 = await buildProfitSimulationV4({
@@ -1208,6 +1209,13 @@ export async function enrichWithResaleEvidence(
       ulezCompliant: vp.ulezCompliant,
       colour: vp.colour,
       postcode,
+      condition,
+      // MOT data for TCO
+      advisoryCount: vp.motAnalysis.advisoryCount,
+      structuralAdvisoryCount: vp.motAnalysis.structuralAdvisoryCount,
+      brakeAdvisories: vp.motAnalysis.brakeAdvisories,
+      motExpired: vp.motAnalysis.motExpired,
+      // Engine outputs
       adjustedValue: result.adjustedValue,
       tradeBase: result.allMultipliers.tradeBase,
       reconEstimate: result.allMultipliers.reconEstimate,
