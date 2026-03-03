@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { verifyOfferToken, createOfferToken } from '@/lib/offerSession'
-import { calculateValuation } from '@/lib/pricingEngine'
+import { calculateValuation, enrichWithResaleEvidence } from '@/lib/pricingEngine'
 import type { VehicleProfile, MOTAnalysis } from '@/lib/types'
 import { checkMileageDiscrepancy } from '@/lib/mileageAnalyser'
 import { normaliseFuel, checkUlezCompliance } from '@/lib/dvlaService'
@@ -10,6 +10,7 @@ import { isValidEmail, isValidPostcode } from '@/lib/leadVerification'
 import { getCandidateCoefficients, getCurrentCoefficients, logShadowComparison } from '@/lib/coefficientStore'
 import { validateMileage, validateCondition, capRiskFlags, capBullets } from '@/lib/inputHardening'
 import { checkExposure } from '@/lib/exposureCap'
+import { getSegmentProfile } from '@/lib/segmentPricing'
 import ContactForm from './ContactForm'
 import OfferShell from '../OfferShell'
 import StepIndicator from '../StepIndicator'
@@ -207,6 +208,24 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     const valuationMs = Math.round(performance.now() - t0)
     console.log(`[valuation] ${p.reg} completed in ${valuationMs}ms risk=${valuation.riskTier} mode=${valuation.quoteMode}`)
 
+    // ── Enrich with v4 Resale Evidence Engine (async, non-blocking) ────
+    const cleanPostcode = postcode.toUpperCase().replace(/\s+/g, '')
+    const segProfile = getSegmentProfile(
+      vehicleProfile.fuel,
+      new Date().getFullYear() - vehicleProfile.year,
+      cleanPostcode,
+      valuation.matchQuality === 'none' ? 'moderate' : 'stable',
+      valuation.matchQuality,
+    )
+    const enrichedValuation = await enrichWithResaleEvidence(
+      valuation,
+      vehicleProfile,
+      cleanPostcode,
+      segProfile.segment,
+      segProfile.heatLevel,
+      valuation.matchQuality === 'none' ? 'moderate' : 'stable',
+    )
+
     // ── Capital exposure cap ────────────────────────────────────────────
     const exposure = await checkExposure(
       p.vehicle.make, p.vehicle.model || '', p.vehicle.fuel, p.vehicle.year
@@ -298,6 +317,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       customer_explanation: valuation.customerExplanation,
       admin_explanation: valuation.adminExplanation,
       profit_simulation: valuation.profitSimulation,
+      profit_simulation_v4: enrichedValuation.profitSimulationV4 ?? null,
       engine_version: 'v3',
       coefficient_version: currentCoeffs.versionId,
       git_commit_hash: process.env.NEXT_PUBLIC_GIT_COMMIT_HASH ?? 'unknown',

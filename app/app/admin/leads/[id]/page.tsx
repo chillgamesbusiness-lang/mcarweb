@@ -92,6 +92,9 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     profitRiskBand: string; guardrailTriggered: boolean; guardrailReason: string | null;
   } | null
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const profitSimV4 = (snapshot as Record<string, unknown>)?.profit_simulation_v4 as any | null
+
   // ── Outcome server action ─────────────────────────────────────────────
   async function submitOutcome(formData: FormData) {
     'use server'
@@ -570,14 +573,187 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
               </div>
             )}
 
-            {/* Profit Simulation (engine v3) */}
-            {profitSim && (
+            {/* ── Profit Simulation V4 (Resale Evidence Engine) ─────────── */}
+            {profitSimV4 ? (
               <div className="mt-4">
-                <span className="text-xs text-gray-400 block mb-2">Profit Simulation</span>
+                <span className="text-xs text-gray-400 block mb-2">Profit Simulation v4</span>
+
+                {/* ── Compact View (always visible) ──────────────────────── */}
                 <div className={`rounded-lg p-4 ${
-                  profitSim.profitRiskBand === 'green' ? 'bg-green-50 border border-green-200' :
-                  profitSim.profitRiskBand === 'amber' ? 'bg-amber-50 border border-amber-200' :
-                  'bg-red-50 border border-red-200'
+                  profitSimV4.profit?.mid >= 300 ? 'bg-green-50 ring-1 ring-green-200' :
+                  profitSimV4.profit?.mid >= 0 ? 'bg-amber-50 ring-1 ring-amber-200' :
+                  'bg-red-50 ring-1 ring-red-200'
+                }`}>
+                  {/* Big profit number */}
+                  <div className="text-center mb-3">
+                    <p className="text-xs text-gray-500 mb-0.5">Projected Profit (Mid)</p>
+                    <p className={`text-3xl font-extrabold tracking-tight ${
+                      profitSimV4.profit?.mid >= 300 ? 'text-green-700' :
+                      profitSimV4.profit?.mid >= 0 ? 'text-amber-700' : 'text-red-700'
+                    }`}>
+                      £{profitSimV4.profit?.mid?.toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* 4 compact stats */}
+                  <div className="grid grid-cols-4 gap-2 text-center mb-3">
+                    <div>
+                      <p className="text-[10px] text-gray-400">Est. Resale</p>
+                      <p className="text-sm font-semibold text-gray-800">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400">Profit Range</p>
+                      <p className="text-xs font-medium text-gray-600">
+                        £{profitSimV4.profit?.low?.toLocaleString()} – £{profitSimV4.profit?.high?.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400">Margin</p>
+                      <p className={`text-sm font-bold ${
+                        profitSimV4.marginPctMid >= 10 ? 'text-green-700' :
+                        profitSimV4.marginPctMid >= 5 ? 'text-amber-700' : 'text-red-700'
+                      }`}>{profitSimV4.marginPctMid}%</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-400">Confidence</p>
+                      <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        profitSimV4.confidence === 'high' ? 'bg-green-100 text-green-800' :
+                        profitSimV4.confidence === 'medium' ? 'bg-amber-100 text-amber-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>{profitSimV4.confidence}</span>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-gray-400 italic text-center">
+                    {profitSimV4.compactNote}
+                  </p>
+
+                  {profitSimV4.guardrailTriggered && (
+                    <p className="mt-2 text-xs text-red-700 font-medium text-center">
+                      ⚠ {profitSimV4.guardrailReason}
+                    </p>
+                  )}
+
+                  {/* ── Show Details Toggle ────────────────────────────────── */}
+                  <details className="mt-3">
+                    <summary className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-medium text-center">
+                      Show details
+                    </summary>
+
+                    <div className="mt-3 space-y-4">
+                      {/* ── Evidence Tab ────────────────────────────────── */}
+                      <div className="bg-white/60 rounded-lg p-3">
+                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Evidence</h4>
+                        <p className="text-xs text-gray-700">{profitSimV4.evidence?.compsSummary}</p>
+                        <div className="mt-1 flex gap-3 text-[10px] text-gray-400">
+                          <span>Variance: {profitSimV4.evidence?.variance}</span>
+                          <span>Threshold: {profitSimV4.evidence?.similarityThreshold?.toFixed(2)}</span>
+                          <span>Sources: {profitSimV4.evidence?.providers?.join(', ') || 'baseline'}</span>
+                        </div>
+                      </div>
+
+                      {/* ── Adjustments Tab ─────────────────────────────── */}
+                      {profitSimV4.adjustmentDrivers?.length > 0 && (
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Key Adjustments</h4>
+                          <div className="space-y-1">
+                            {profitSimV4.adjustmentDrivers.slice(0, 5).map((d: { factor: string; impact: string; direction: string }, i: number) => (
+                              <div key={i} className="flex justify-between text-xs">
+                                <span className="text-gray-700">{d.factor}</span>
+                                <span className={`font-medium ${
+                                  d.direction === 'negative' ? 'text-red-600' :
+                                  d.direction === 'positive' ? 'text-green-600' : 'text-gray-500'
+                                }`}>{d.impact}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ── Costs & Time Tab ─────────────────────────────── */}
+                      <div className="bg-white/60 rounded-lg p-3">
+                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Costs &amp; Time</h4>
+                        {profitSimV4.costsAndTime?.sellCostBreakdown?.breakdown?.map((line: string, i: number) => (
+                          <p key={i} className="text-xs text-gray-600">{line}</p>
+                        ))}
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-xs text-gray-600">
+                            {profitSimV4.costsAndTime?.timeToSell?.explanation}
+                          </p>
+                          {profitSimV4.costsAndTime?.timeToSell?.signals?.slice(0, 3).map((s: string, i: number) => (
+                            <p key={i} className="text-[10px] text-gray-400 ml-2">• {s}</p>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* ── Resale Range ──────────────────────────────────── */}
+                      <div className="bg-white/60 rounded-lg p-3">
+                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Resale Range</h4>
+                        <div className="grid grid-cols-3 gap-2 text-center">
+                          <div>
+                            <p className="text-[10px] text-gray-400">Low</p>
+                            <p className="text-sm font-semibold text-gray-700">£{profitSimV4.resale?.low?.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400">Mid</p>
+                            <p className="text-sm font-bold text-gray-900">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-gray-400">High</p>
+                            <p className="text-sm font-semibold text-gray-700">£{profitSimV4.resale?.high?.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ── Raw Comps (admin only) ────────────────────────── */}
+                      {profitSimV4.topComps?.length > 0 && (
+                        <div className="bg-white/60 rounded-lg p-3">
+                          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                            Market Comps ({profitSimV4.topComps.length})
+                          </h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-[10px]">
+                              <thead>
+                                <tr className="text-gray-400 border-b border-gray-100">
+                                  <th className="text-left py-1">Title</th>
+                                  <th className="text-right py-1">Price</th>
+                                  <th className="text-right py-1">Year</th>
+                                  <th className="text-right py-1">Miles</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {profitSimV4.topComps.map((c: { title: string; price: number; year: number; mileage: number | null }, i: number) => (
+                                  <tr key={i} className="border-b border-gray-50">
+                                    <td className="py-1 text-gray-600 max-w-[160px] truncate">{c.title}</td>
+                                    <td className="py-1 text-right font-medium text-gray-800">£{c.price?.toLocaleString()}</td>
+                                    <td className="py-1 text-right text-gray-500">{c.year || '—'}</td>
+                                    <td className="py-1 text-right text-gray-500">{c.mileage ? `${(c.mileage/1000).toFixed(0)}k` : '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ── v3 Delta (shadow mode) ─────────────────────────── */}
+                      {profitSimV4.v3ProfitMidDelta !== null && profitSimV4.v3ProfitMidDelta !== undefined && (
+                        <p className="text-[10px] text-gray-400 italic text-center">
+                          v4 vs v3 delta: {profitSimV4.v3ProfitMidDelta >= 0 ? '+' : ''}£{profitSimV4.v3ProfitMidDelta?.toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </details>
+                </div>
+              </div>
+            ) : profitSim ? (
+              /* ── Fallback: v3 Profit Simulation ─────────────────────────── */
+              <div className="mt-4">
+                <span className="text-xs text-gray-400 block mb-2">Profit Simulation (v3)</span>
+                <div className={`rounded-lg p-4 ${
+                  profitSim.profitRiskBand === 'green' ? 'bg-green-50 ring-1 ring-green-200' :
+                  profitSim.profitRiskBand === 'amber' ? 'bg-amber-50 ring-1 ring-amber-200' :
+                  'bg-red-50 ring-1 ring-red-200'
                 }`}>
                   <div className="grid grid-cols-3 gap-3 mb-3">
                     <div className="text-center">
@@ -600,25 +776,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                     </div>
                   </div>
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>Retail: £{profitSim.estimatedRetail?.toLocaleString()}</span>
+                    <span>Est. Resale: £{profitSim.estimatedRetail?.toLocaleString()}</span>
                     <span>Recon: £{profitSim.reconEstimate?.toLocaleString()}</span>
                     <span>Sell cost: {((profitSim.sellCostPct ?? 0.05) * 100).toFixed(0)}%</span>
                   </div>
-                  {/* Margin % — the single most telling number */}
-                  {profitSim.estimatedRetail > 0 && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-xs text-gray-500">Margin vs retail:</span>
-                      <span className={`text-sm font-bold ${
-                        profitSim.expectedProfitMid / profitSim.estimatedRetail >= 0.3 ? 'text-green-700' :
-                        profitSim.expectedProfitMid / profitSim.estimatedRetail >= 0.1 ? 'text-amber-700' :
-                        'text-red-700'
-                      }`}>
-                        {Math.round((profitSim.expectedProfitMid / profitSim.estimatedRetail) * 100)}%
-                      </span>
-                    </div>
-                  )}
                   <p className="mt-1 text-[10px] text-gray-400 italic">
-                    Projected from market retail anchor. Accuracy depends on market data quality.
+                    v3 baseline — 20% dealer markup. v4 not yet computed for this lead.
                   </p>
                   {profitSim.guardrailTriggered && (
                     <p className="mt-2 text-xs text-red-700 font-medium">
@@ -627,7 +790,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   )}
                 </div>
               </div>
-            )}
+            ) : null}
           </>
         ) : (
           <p className="text-sm text-gray-400">No valuation snapshot recorded for this lead.</p>

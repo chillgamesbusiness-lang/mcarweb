@@ -164,6 +164,7 @@ export interface AdminExplanationItem {
 export type ProfitRiskBand = 'green' | 'amber' | 'red'
 
 export interface ProfitSimulation {
+  /** @deprecated Use ProfitSimulationV4 when available */
   estimatedRetail: number
   sellCostPct: number          // default 5% (auction/prep/transport)
   reconEstimate: number
@@ -173,6 +174,96 @@ export interface ProfitSimulation {
   profitRiskBand: ProfitRiskBand
   guardrailTriggered: boolean  // true if profit < threshold → manual_review
   guardrailReason: string | null
+}
+
+// ── Profit Simulation V4 (Resale Evidence Engine) ─────────────────────────────
+
+export type ConfidenceLevelV4 = 'high' | 'medium' | 'low'
+
+export interface ResaleEstimate {
+  low: number
+  mid: number
+  high: number
+}
+
+export interface ProfitEstimate {
+  low: number
+  mid: number
+  high: number
+}
+
+export interface EvidencePayload {
+  compsSummary: string
+  variance: string
+  similarityThreshold: number
+  compCount: number
+  providers: string[]
+}
+
+export interface AdjustmentDriver {
+  factor: string
+  impact: string
+  direction: 'positive' | 'negative' | 'neutral'
+}
+
+export interface SellCostBreakdownV4 {
+  platformFeePct: number
+  valetingGBP: number
+  warrantyAllowanceGBP: number
+  adminGBP: number
+  totalPct: number
+  totalGBP: number
+  breakdown: string[]
+}
+
+export interface TimeToSellResultV4 {
+  expectedDaysMin: number
+  expectedDaysMid: number
+  expectedDaysMax: number
+  timeRiskDiscountPct: number
+  explanation: string
+  signals: string[]
+}
+
+export interface CostsAndTimePayload {
+  sellCostBreakdown: SellCostBreakdownV4
+  timeToSell: TimeToSellResultV4
+}
+
+export interface CompListingV4 {
+  source: string
+  title: string
+  price: number
+  year: number
+  mileage: number | null
+  fuel: string | null
+  engineCC: number | null
+  transmission: string | null
+  bodyType: string | null
+  colour: string | null
+  listingAgeDays: number | null
+  location: string | null
+  url: string | null
+}
+
+export interface ProfitSimulationV4 {
+  // Compact view
+  resale: ResaleEstimate
+  profit: ProfitEstimate
+  marginPctMid: number
+  confidence: ConfidenceLevelV4
+  confidenceScore: number
+  compactNote: string
+  // Detail payloads
+  evidence: EvidencePayload
+  adjustmentDrivers: AdjustmentDriver[]
+  costsAndTime: CostsAndTimePayload
+  topComps: CompListingV4[]
+  // Guardrails
+  guardrailTriggered: boolean
+  guardrailReason: string | null
+  // Shadow mode delta
+  v3ProfitMidDelta: number | null
 }
 
 // ── Valuation Result ──────────────────────────────────────────────────────────
@@ -223,6 +314,8 @@ export interface ValuationResult {
   customerExplanation: QuoteExplanation
   adminExplanation: AdminExplanationItem[]
   profitSimulation: ProfitSimulation
+  /** V4 profit simulation — async enrichment, null until enriched */
+  profitSimulationV4?: ProfitSimulationV4 | null
 }
 
 // ── Lead Submission ───────────────────────────────────────────────────────────

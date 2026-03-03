@@ -32,7 +32,9 @@ import { getRegionMultiplier } from '@/lib/regionPricing'
 import { calculateConfidence } from '@/lib/confidenceScorer'
 import { estimateReconCost } from '@/lib/mileageAnalyser'
 import { getSegmentProfile } from '@/lib/segmentPricing'
+import type { VehicleSegment, HeatLevel } from '@/lib/segmentPricing'
 import { calculateConfidenceDecay } from '@/lib/confidenceDecay'
+import { buildProfitSimulationV4 } from '@/lib/resaleEvidence'
 import type {
   VehicleProfile,
   Condition,
@@ -327,7 +329,7 @@ export function calculateValuation(input: {
     sornMultiplier, reconMultiplier, liabilityResult
   )
   const profitSimulation = buildProfitSimulation(
-    estimatedRetail, reconEstimate, min, max, midpoint, quoteMode
+    adjustedValue, reconEstimate, min, max, midpoint, quoteMode
   )
 
   // ── Profit guardrail: if expectedProfitMid < £300 → manual_review ──
@@ -1134,14 +1136,21 @@ function buildAdminExplanation(
 // ── Profit simulation builder ───────────────────────────────────────────────
 
 const SELL_COST_PCT = 0.05  // 5% auction/prep/transport
+const DEALER_RETAIL_MARGIN = 1.20  // dealer sells at ~20% above trade
 
 function buildProfitSimulation(
-  estimatedRetail: number, reconEstimate: number,
+  adjustedTradeValue: number, reconEstimate: number,
   min: number, max: number, midpoint: number,
   quoteMode: QuoteMode
 ): ProfitSimulation {
-  const sellCost = Math.round(estimatedRetail * SELL_COST_PCT)
-  const netRetail = estimatedRetail - sellCost
+  // Realistic retail = what a dealer could actually sell THIS specific car for.
+  // We mark up the adjusted trade value by a dealer margin (~20%).
+  // This captures all the depreciation already applied by the pricing engine
+  // (age, mileage, fuel, ULEZ, condition, etc.) so the profit estimate
+  // reflects reality rather than the raw market anchor for a pristine average.
+  const realisticRetail = Math.round(adjustedTradeValue * DEALER_RETAIL_MARGIN)
+  const sellCost = Math.round(realisticRetail * SELL_COST_PCT)
+  const netRetail = realisticRetail - sellCost
 
   const expectedProfitMin = netRetail - reconEstimate - max  // worst case: paid max
   const expectedProfitMid = netRetail - reconEstimate - midpoint
@@ -1157,7 +1166,7 @@ function buildProfitSimulation(
     : null
 
   return {
-    estimatedRetail,
+    estimatedRetail: realisticRetail,
     sellCostPct: SELL_COST_PCT,
     reconEstimate: Math.round(reconEstimate),
     expectedProfitMin: Math.round(expectedProfitMin),
@@ -1166,6 +1175,59 @@ function buildProfitSimulation(
     profitRiskBand: band,
     guardrailTriggered,
     guardrailReason,
+  }
+}
+
+// ── Resale Evidence Enrichment (v4 — async) ─────────────────────────────────
+
+/**
+ * Enrich a ValuationResult with the v4 Resale Evidence Engine.
+ *
+ * This is a separate async step because it may fetch external APIs (eBay, etc.).
+ * The core calculateValuation() remains synchronous and deterministic.
+ *
+ * Call this AFTER calculateValuation() in the submission flow.
+ * If it fails, the result.profitSimulationV4 stays null — graceful degradation.
+ */
+export async function enrichWithResaleEvidence(
+  result: ValuationResult,
+  vp: VehicleProfile,
+  postcode: string,
+  segment: VehicleSegment,
+  heatLevel: HeatLevel,
+  volatility: Volatility,
+): Promise<ValuationResult> {
+  try {
+    const v4 = await buildProfitSimulationV4({
+      make: vp.make,
+      model: vp.model,
+      year: vp.year,
+      fuel: vp.fuel,
+      engineCC: vp.engineCC,
+      mileage: vp.resolvedMileage,
+      ulezCompliant: vp.ulezCompliant,
+      colour: vp.colour,
+      postcode,
+      adjustedValue: result.adjustedValue,
+      tradeBase: result.allMultipliers.tradeBase,
+      reconEstimate: result.allMultipliers.reconEstimate,
+      min: result.min,
+      max: result.max,
+      midpoint: result.midpoint,
+      riskTier: result.riskTier,
+      quoteMode: result.quoteMode,
+      matchQuality: result.matchQuality,
+      volatility,
+      segment,
+      heatLevel,
+      confidenceScore: result.confidenceScore,
+      v3ProfitMid: result.profitSimulation.expectedProfitMid,
+    })
+
+    return { ...result, profitSimulationV4: v4 }
+  } catch {
+    // Graceful degradation — v4 stays null, v3 still works
+    return { ...result, profitSimulationV4: null }
   }
 }
 
