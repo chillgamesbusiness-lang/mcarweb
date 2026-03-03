@@ -299,7 +299,8 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
 
     // ── Store frozen valuation snapshot ─────────────────────────────────
     // Never recomputed. Legal + operational protection.
-    await serviceClient.from('valuation_snapshots').insert({
+    // Try with v4 column first; fall back without it if the migration hasn't run yet.
+    const snapPayloadBase = {
       lead_id: lead.id,
       input_vehicle: vehicleProfile,
       input_condition: p.condition,
@@ -317,13 +318,27 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       customer_explanation: valuation.customerExplanation,
       admin_explanation: valuation.adminExplanation,
       profit_simulation: valuation.profitSimulation,
-      profit_simulation_v4: enrichedValuation.profitSimulationV4 ?? null,
       engine_version: 'v3',
       coefficient_version: currentCoeffs.versionId,
       git_commit_hash: process.env.NEXT_PUBLIC_GIT_COMMIT_HASH ?? 'unknown',
-    }).then(({ error: snapErr }) => {
-      if (snapErr) console.error('[valuation-snapshot] insert failed:', snapErr.message)
-    })
+    }
+
+    const { error: snapErr } = await serviceClient
+      .from('valuation_snapshots')
+      .insert({ ...snapPayloadBase, profit_simulation_v4: enrichedValuation.profitSimulationV4 ?? null })
+
+    if (snapErr) {
+      // Likely the profit_simulation_v4 column doesn't exist yet — fall back without it
+      if (snapErr.message?.includes('profit_simulation_v4') || snapErr.code === '42703') {
+        const { error: snapErr2 } = await serviceClient
+          .from('valuation_snapshots')
+          .insert(snapPayloadBase)
+        if (snapErr2) console.error('[valuation-snapshot] insert failed (fallback):', snapErr2.message)
+        else console.warn('[valuation-snapshot] inserted without v4 field — run patch_profit_sim_v4.sql to enable it')
+      } else {
+        console.error('[valuation-snapshot] insert failed:', snapErr.message)
+      }
+    }
 
     // ── Shadow mode: compare candidate coefficients (fire-and-forget) ──
     getCandidateCoefficients().then(async (candidate) => {
