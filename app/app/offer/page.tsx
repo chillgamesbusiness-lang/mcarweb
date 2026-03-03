@@ -3,6 +3,7 @@
 import { useState, type FormEvent, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import OfferShell from './OfferShell'
 
 /**
  * Turnstile widget component.
@@ -34,7 +35,6 @@ function TurnstileWidget({ onToken }: { onToken: (token: string) => void }) {
   useEffect(() => {
     if (!siteKey) return
 
-    // Load Turnstile script if not already present
     const existingScript = document.querySelector('script[src*="turnstile"]')
     if (existingScript) {
       renderWidget()
@@ -93,55 +93,53 @@ function OfferForm() {
   const hasTurnstile = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Get Your Offer</h1>
-          <p className="mt-2 text-gray-500">
-            Enter your vehicle registration to get an instant valuation
-          </p>
+    <OfferShell>
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Get Your Offer</h1>
+        <p className="mt-2 text-gray-500 text-sm leading-relaxed">
+          Enter your registration below for an instant, no-obligation valuation
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6 space-y-5">
+        <div>
+          <label htmlFor="reg" className="block text-sm font-medium text-gray-700 mb-1.5">
+            Registration Number
+          </label>
+          <input
+            id="reg"
+            type="text"
+            value={reg}
+            onChange={(e) => setReg(e.target.value.toUpperCase())}
+            placeholder="e.g. AB12 CDE"
+            required
+            className="w-full rounded-lg border border-gray-200 px-4 py-3.5 text-lg font-mono tracking-wider text-center uppercase focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-shadow"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6 space-y-5">
-          <div>
-            <label htmlFor="reg" className="block text-sm font-medium text-gray-700 mb-1">
-              Registration Number
-            </label>
-            <input
-              id="reg"
-              type="text"
-              value={reg}
-              onChange={(e) => setReg(e.target.value.toUpperCase())}
-              placeholder="e.g. AB12 CDE"
-              required
-              className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg font-mono tracking-wider text-center uppercase focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
-            />
+        <TurnstileWidget onToken={setTurnstileToken} />
+
+        {error && (
+          <div className="rounded-lg bg-amber-50 ring-1 ring-amber-200 p-3 text-sm text-amber-700">
+            {error}
           </div>
+        )}
 
-          <TurnstileWidget onToken={setTurnstileToken} />
-
-          {error && (
-            <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || reg.trim().length < 2 || (hasTurnstile && !turnstileToken)}
-            className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors"
-          >
-            {loading ? 'Looking up...' : 'Get Valuation'}
-          </button>
-        </form>
-      </div>
-    </div>
+        <button
+          type="submit"
+          disabled={loading || reg.trim().length < 2 || (hasTurnstile && !turnstileToken)}
+          className="w-full rounded-lg bg-blue-600 px-4 py-3.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
+        >
+          {loading ? 'Looking up…' : 'Get Valuation'}
+        </button>
+      </form>
+    </OfferShell>
   )
 }
 
 export default function OfferPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-300">Loading…</div>}>
       <OfferForm />
     </Suspense>
   )

@@ -14,7 +14,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? 'Processing…' : 'Continue'}
     </button>
@@ -23,7 +23,7 @@ function SubmitButton() {
 
 export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFormProps) {
   return (
-    <form action={submitDetails} className="bg-white rounded-lg border border-gray-200 p-6 space-y-5">
+    <form action={submitDetails} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6 space-y-5">
       <div>
         <label htmlFor="mileage" className="block text-sm font-medium text-gray-700 mb-1">
           Current Mileage

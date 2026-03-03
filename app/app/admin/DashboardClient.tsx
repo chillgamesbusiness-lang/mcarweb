@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type {
   AcquisitionKPIs, ProfitKPIs, RiskKPIs, WeeklyTrend,
   ExposureKPIs, DecayKPIs, ShadowKPIs, WeeklySummary,
@@ -41,284 +41,392 @@ function dot(s: Signal) {
   return s === 'green' ? '🟢' : s === 'amber' ? '🟠' : '🔴'
 }
 
-function signalBorder(s: Signal) {
-  return s === 'green' ? 'border-green-200' : s === 'amber' ? 'border-yellow-200' : 'border-red-200'
+// ── Premium card styling (softer shadows, no heavy borders) ────────────────────
+
+function cardClass(highlight?: Signal) {
+  const base = 'bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5 transition-shadow hover:shadow-md'
+  if (!highlight) return base
+  const accent =
+    highlight === 'green' ? 'ring-green-200' :
+    highlight === 'amber' ? 'ring-amber-200' :
+    'ring-red-200'
+  return `${base} ${accent}`
 }
 
-function signalBg(s: Signal) {
-  return s === 'green' ? 'bg-green-50' : s === 'amber' ? 'bg-yellow-50' : 'bg-red-50'
+// ── Smooth Expand / Collapse ───────────────────────────────────────────────────
+
+function Expandable({ open, children }: { open: boolean; children: ReactNode }) {
+  return (
+    <div
+      className="grid transition-all duration-300 ease-in-out"
+      style={{ gridTemplateRows: open ? '1fr' : '0fr', opacity: open ? 1 : 0 }}
+    >
+      <div className="overflow-hidden">
+        {children}
+      </div>
+    </div>
+  )
 }
 
-// ── Toggle Button ──────────────────────────────────────────────────────────────
-
-function ToggleBtn({ open, onClick }: { open: boolean; onClick: () => void }) {
+function ShowDetailsBtn({ open, onClick }: { open: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="text-xs text-gray-400 hover:text-gray-700 transition-colors font-medium"
+      className="mt-3 inline-flex items-center gap-1 text-xs text-gray-400 hover:text-blue-600 transition-colors font-medium"
     >
-      {open ? '▾ Hide Details' : '▸ Show Details'}
+      <svg
+        className={`w-3.5 h-3.5 transition-transform duration-200 ${open ? 'rotate-90' : ''}`}
+        fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+      </svg>
+      {open ? 'Hide Details' : 'Show Details'}
     </button>
   )
 }
 
-// ── Main Dashboard Component ───────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRACK 1 ① — Business Status Banner  (green / amber / red)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function BusinessBanner({
+  acquisition, profit, exposure, weeklySummary,
+}: {
+  acquisition: AcquisitionKPIs
+  profit: ProfitKPIs
+  exposure: ExposureKPIs
+  weeklySummary: WeeklySummary
+}) {
+  const marginOk      = profit.avgPredictedProfitMid > 200
+  const pct = exposure.maxTotalCapital > 0
+    ? (exposure.totalCapital / exposure.maxTotalCapital) * 100 : 0
+  const exposureOk    = pct < 80
+  const manualOk      = acquisition.manualReviewRate < 30
+  const calibrationOk = weeklySummary.calibrationSampleSize >= 10
+
+  const passing = [marginOk, exposureOk, manualOk, calibrationOk].filter(Boolean).length
+  const status: Signal = passing === 4 ? 'green' : passing >= 2 ? 'amber' : 'red'
+
+  const label = status === 'green' ? 'Healthy' : status === 'amber' ? 'Monitor' : 'Action Required'
+  const bg = status === 'green'
+    ? 'bg-gradient-to-r from-green-500 to-green-600'
+    : status === 'amber'
+    ? 'bg-gradient-to-r from-amber-500 to-amber-600'
+    : 'bg-gradient-to-r from-red-500 to-red-600'
+
+  return (
+    <div className={`${bg} rounded-xl px-5 py-3.5 flex items-center justify-between shadow-sm`}>
+      <div className="flex items-center gap-3">
+        <span className="text-white text-lg">{dot(status)}</span>
+        <div>
+          <p className="text-white font-semibold text-sm">Business Status: {label}</p>
+          <p className="text-white/75 text-xs leading-relaxed">
+            {passing}/4 checks OK
+            {!marginOk && ' · Low margin'}
+            {!exposureOk && ' · High exposure'}
+            {!manualOk && ' · Manual spike'}
+            {!calibrationOk && ' · Low calibration'}
+          </p>
+        </div>
+      </div>
+      <span className="text-white/50 text-[10px] hidden sm:block uppercase tracking-wider">Auto-assessed</span>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRACK 1 ③ — Weekly Executive Summary (one sentence)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function ExecutiveSummary({ summary, exposure }: { summary: WeeklySummary; exposure: ExposureKPIs }) {
+  const pct = exposure.maxTotalCapital > 0
+    ? Math.round((exposure.totalCapital / exposure.maxTotalCapital) * 100) : 0
+  const profitStr = summary.avgRealisedProfit !== null
+    ? `£${summary.avgRealisedProfit} avg profit`
+    : 'no realised profit yet'
+
+  const sentence =
+    `This week: ${summary.offersGenerated} offers, ` +
+    `${summary.acceptanceRate}% accepted, ` +
+    `${profitStr}, ` +
+    `${summary.liabilityBlocks} liability blocks prevented, ` +
+    `exposure at ${pct}% capacity.`
+
+  return (
+    <div className={cardClass()}>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-300 mb-2">Weekly Executive Summary</p>
+      <p className="text-sm text-gray-700 leading-relaxed">{sentence}</p>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN DASHBOARD — compact front view + advanced behind toggle
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export default function DashboardClient(props: DashboardProps) {
   const { acquisition, profit, risk, exposure, decay, shadow, weeklySummary, weeklyTrends, quickStats, gitHash } = props
-
-  // Compute top-line signals
-  const acqSignal = signalAbove(acquisition.acceptanceRate, 30, 15)
-  const profitSignal = signalAbove(profit.avgPredictedProfitMid, 300, 0)
-  const riskSignal = signal(risk.avgRiskFlagCount, 2, 4)
-  const exposureSignal = exposure.totalCapital >= 150_000 ? 'red' as Signal
-    : exposure.totalCapital >= 100_000 ? 'amber' as Signal : 'green' as Signal
-  const decaySignal = signal(decay.decayPct, 10, 25)
-  const shadowSignal: Signal = !shadow.hasCandidiate ? 'green'
-    : Math.abs(shadow.avgDeltaPct) > 8 ? 'red'
-    : Math.abs(shadow.avgDeltaPct) > 4 ? 'amber' : 'green'
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   return (
-    <div className="p-6 max-w-7xl space-y-5">
-      {/* Header row */}
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
-        <span className="text-xs text-gray-400">Engine v3.1 · {gitHash}</span>
+        <span className="text-[10px] text-gray-300 font-mono">{gitHash}</span>
       </div>
 
-      {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* ① Business Status Banner */}
+      <BusinessBanner
+        acquisition={acquisition}
+        profit={profit}
+        exposure={exposure}
+        weeklySummary={weeklySummary}
+      />
+
+      {/* Quick stats — soft pills */}
+      <div className="grid grid-cols-3 gap-4">
         {quickStats.map(s => (
-          <div key={s.label} className="bg-white rounded border border-gray-200 px-4 py-3">
-            <p className="text-xs text-gray-400">{s.label}</p>
+          <div key={s.label} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 px-5 py-4">
+            <p className="text-[10px] text-gray-300 uppercase tracking-wide mb-0.5">{s.label}</p>
             <p className="text-2xl font-bold text-gray-900">{s.value}</p>
           </div>
         ))}
       </div>
 
-      {/* 3-column compact signal row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <AcquisitionCard kpi={acquisition} sig={acqSignal} />
-        <ProfitCard kpi={profit} sig={profitSignal} />
-        <RiskCard kpi={risk} sig={riskSignal} />
+      {/* ② 5 Core Signals — compact front view (3-col) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <AcquisitionSignal kpi={acquisition} />
+        <ProfitSignal kpi={profit} />
+        <RiskSignal kpi={risk} exposure={exposure} weeklySummary={weeklySummary} />
       </div>
 
-      {/* Bottom row: Shadow, Exposure, Decay */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <ShadowCard kpi={shadow} sig={shadowSignal} />
-        <ExposureCard kpi={exposure} sig={exposureSignal} />
-        <DecayCard kpi={decay} sig={decaySignal} />
+      {/* ③ Weekly Executive Summary */}
+      <ExecutiveSummary summary={weeklySummary} exposure={exposure} />
+
+      {/* ── Everything else behind "Show Details" ── */}
+      <div className="text-center pt-1">
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 transition-colors font-medium"
+        >
+          <svg
+            className={`w-4 h-4 transition-transform duration-200 ${showAdvanced ? 'rotate-90' : ''}`}
+            fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+          {showAdvanced ? 'Hide Advanced Details' : 'Show Advanced Details'}
+        </button>
       </div>
 
-      {/* Weekly Summary */}
-      <WeeklySummaryCard summary={weeklySummary} trends={weeklyTrends} />
+      <Expandable open={showAdvanced}>
+        <div className="space-y-4 pb-1">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <ShadowCard kpi={shadow} />
+            <ExposureCard kpi={exposure} />
+            <DecayCard kpi={decay} />
+          </div>
+          <WeeklyTrendsCard trends={weeklyTrends} summary={weeklySummary} />
+        </div>
+      </Expandable>
     </div>
   )
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CARD COMPONENTS — Compact first, detail behind toggle
+// SIGNAL CARDS — No multipliers, segments, coefficients.  Just signals.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── Acquisition Card ───────────────────────────────────────────────────────────
-
-function AcquisitionCard({ kpi, sig }: { kpi: AcquisitionKPIs; sig: Signal }) {
+function AcquisitionSignal({ kpi }: { kpi: AcquisitionKPIs }) {
   const [open, setOpen] = useState(false)
   const delta = kpi.offersThisWeek - kpi.offersLastWeek
+  const sig = signalAbove(kpi.acceptanceRate, 30, 15)
 
   return (
-    <div className={`bg-white rounded-lg border ${signalBorder(sig)} p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Acquisition</h2>
-        <span className="text-lg">{dot(sig)}</span>
+    <div className={cardClass(sig)}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Acquisition</h2>
+        <span className="text-base">{dot(sig)}</span>
       </div>
-      {/* Compact */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        <Stat label="This week" value={kpi.offersThisWeek} suffix={delta !== 0 ? ` (${delta > 0 ? '+' : ''}${delta})` : ''} />
-        <Stat label="Acceptance" value={`${kpi.acceptanceRate}%`} color={signalAbove(kpi.acceptanceRate, 30, 15)} />
-        <Stat label="Manual" value={`${kpi.manualReviewRate}%`} color={signal(kpi.manualReviewRate, 20, 40)} />
-        <Stat label="Blocked" value={`${kpi.blockedRate}%`} />
+      <div className="space-y-2.5">
+        <MetricRow label="Offers this week" value={kpi.offersThisWeek}
+          badge={delta !== 0 ? `${delta > 0 ? '+' : ''}${delta}` : undefined}
+          badgeColor={delta > 0 ? 'green' : delta < 0 ? 'amber' : undefined} />
+        <MetricRow label="Acceptance %" value={`${kpi.acceptanceRate}%`} signal={sig} />
+        <MetricRow label="Manual review %" value={`${kpi.manualReviewRate}%`}
+          signal={signal(kpi.manualReviewRate, 20, 40)} />
+        <MetricRow label="Blocked %" value={`${kpi.blockedRate}%`}
+          signal={kpi.blockedRate > 15 ? 'red' : kpi.blockedRate > 5 ? 'amber' : undefined} />
       </div>
 
-      <div className="mt-2"><ToggleBtn open={open} onClick={() => setOpen(!open)} /></div>
-
-      {open && (
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-1 text-sm text-gray-600">
-          <Row label="Total offers (all time)" value={kpi.totalOffers} />
-          <Row label="Last week offers" value={kpi.offersLastWeek} />
-          <Row label="Avg confidence" value={kpi.avgConfidence} />
+      <ShowDetailsBtn open={open} onClick={() => setOpen(!open)} />
+      <Expandable open={open}>
+        <div className="mt-3 pt-3 border-t border-gray-50 space-y-1.5">
+          <DetailRow label="Total offers (all time)" value={kpi.totalOffers} />
+          <DetailRow label="Last week offers" value={kpi.offersLastWeek} />
+          <DetailRow label="Avg confidence" value={kpi.avgConfidence} />
         </div>
-      )}
+      </Expandable>
     </div>
   )
 }
 
-// ── Profit Card ────────────────────────────────────────────────────────────────
-
-function ProfitCard({ kpi, sig }: { kpi: ProfitKPIs; sig: Signal }) {
+function ProfitSignal({ kpi }: { kpi: ProfitKPIs }) {
   const [open, setOpen] = useState(false)
+  const sig = signalAbove(kpi.avgPredictedProfitMid, 300, 0)
+
+  const marginPct = kpi.avgRealisedProfit !== null && kpi.avgPredictedProfitMid > 0
+    ? Math.round((kpi.avgRealisedProfit / kpi.avgPredictedProfitMid) * 100) : null
 
   return (
-    <div className={`bg-white rounded-lg border ${signalBorder(sig)} p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Profit</h2>
-        <span className="text-lg">{dot(sig)}</span>
+    <div className={cardClass(sig)}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Profit</h2>
+        <span className="text-base">{dot(sig)}</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        <Stat label="Predicted (mid)" value={`£${kpi.avgPredictedProfitMid}`} color={signalAbove(kpi.avgPredictedProfitMid, 300, 0)} />
-        <Stat label="Realised" value={kpi.avgRealisedProfit !== null ? `£${kpi.avgRealisedProfit}` : '—'} />
-        <Stat label="Variance" value={kpi.profitVariance !== null ? `${kpi.profitVariance > 0 ? '+' : ''}${kpi.profitVariance}%` : '—'}
-          color={kpi.profitVariance !== null ? (Math.abs(kpi.profitVariance) <= 10 ? 'green' : Math.abs(kpi.profitVariance) <= 25 ? 'amber' : 'red') : undefined} />
-        <Stat label="Guardrail" value={`${kpi.guardrailTriggerPct}%`} color={signal(kpi.guardrailTriggerPct, 10, 25)} />
+      <div className="space-y-2.5">
+        <MetricRow label="Avg predicted profit" value={`£${kpi.avgPredictedProfitMid}`} signal={sig} />
+        <MetricRow label="Avg realised profit"
+          value={kpi.avgRealisedProfit !== null ? `£${kpi.avgRealisedProfit}` : '—'} />
+        <MetricRow label="Margin %"
+          value={marginPct !== null ? `${marginPct}%` : '—'}
+          signal={marginPct !== null ? (marginPct >= 80 ? 'green' : marginPct >= 50 ? 'amber' : 'red') : undefined} />
+        <MetricRow label="Guardrail triggers %" value={`${kpi.guardrailTriggerPct}%`}
+          signal={signal(kpi.guardrailTriggerPct, 10, 25)} />
       </div>
 
-      <div className="mt-2"><ToggleBtn open={open} onClick={() => setOpen(!open)} /></div>
-
-      {open && (
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-1 text-sm text-gray-600">
-          <Row label="Won deals" value={kpi.totalWonDeals} />
-          <Row label="Realised deals" value={kpi.totalRealisedDeals} />
-          <Row label="Profit variance" value={kpi.profitVariance !== null ? `${kpi.profitVariance}%` : 'n/a'} />
+      <ShowDetailsBtn open={open} onClick={() => setOpen(!open)} />
+      <Expandable open={open}>
+        <div className="mt-3 pt-3 border-t border-gray-50 space-y-1.5">
+          <DetailRow label="Won deals" value={kpi.totalWonDeals} />
+          <DetailRow label="Realised deals" value={kpi.totalRealisedDeals} />
+          <DetailRow label="Profit variance"
+            value={kpi.profitVariance !== null ? `${kpi.profitVariance > 0 ? '+' : ''}${kpi.profitVariance}%` : 'n/a'} />
         </div>
-      )}
+      </Expandable>
     </div>
   )
 }
 
-// ── Risk Card ──────────────────────────────────────────────────────────────────
-
-function RiskCard({ kpi, sig }: { kpi: RiskKPIs; sig: Signal }) {
+function RiskSignal({ kpi, exposure, weeklySummary }: {
+  kpi: RiskKPIs; exposure: ExposureKPIs; weeklySummary: WeeklySummary
+}) {
   const [open, setOpen] = useState(false)
+  const sig = signal(kpi.avgRiskFlagCount, 2, 4)
+
+  const exposurePct = exposure.maxTotalCapital > 0
+    ? Math.round((exposure.totalCapital / exposure.maxTotalCapital) * 100) : 0
 
   return (
-    <div className={`bg-white rounded-lg border ${signalBorder(sig)} p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Risk</h2>
-        <span className="text-lg">{dot(sig)}</span>
+    <div className={cardClass(sig)}>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Risk</h2>
+        <span className="text-base">{dot(sig)}</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        <Stat label="Rollback blocked" value={`${kpi.rollbackBlockedPct}%`} />
-        <Stat label="Dangerous" value={`${kpi.dangerousDefectPct}%`} />
-        <Stat label="Recon % trade" value={`${kpi.avgReconEstimatePct}%`} color={signal(kpi.avgReconEstimatePct, 10, 20)} />
-        <Stat label="Avg flags" value={kpi.avgRiskFlagCount} />
+      <div className="space-y-2.5">
+        <MetricRow label="Recon error %"
+          value={kpi.reconErrorPct !== null ? `${kpi.reconErrorPct}%` : 'No data'}
+          signal={kpi.reconErrorPct !== null ? signal(kpi.reconErrorPct, 10, 25) : undefined} />
+        <MetricRow label="Exposure utilisation" value={`${exposurePct}%`}
+          signal={exposurePct >= 80 ? 'red' : exposurePct >= 60 ? 'amber' : 'green'} />
+        <MetricRow label="Confidence floor %" value={`${weeklySummary.avgConfidence}%`}
+          signal={signalAbove(weeklySummary.avgConfidence, 70, 50)} />
       </div>
 
-      <div className="mt-2"><ToggleBtn open={open} onClick={() => setOpen(!open)} /></div>
-
-      {open && (
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-1 text-sm text-gray-600">
-          <Row label="Recon error %" value={kpi.reconErrorPct !== null ? `${kpi.reconErrorPct}%` : 'no data'} />
+      <ShowDetailsBtn open={open} onClick={() => setOpen(!open)} />
+      <Expandable open={open}>
+        <div className="mt-3 pt-3 border-t border-gray-50 space-y-1.5">
+          <DetailRow label="Rollback blocked %" value={`${kpi.rollbackBlockedPct}%`} />
+          <DetailRow label="Dangerous defect %" value={`${kpi.dangerousDefectPct}%`} />
+          <DetailRow label="Avg recon % of trade" value={`${kpi.avgReconEstimatePct}%`} />
+          <DetailRow label="Avg risk flags" value={kpi.avgRiskFlagCount} />
         </div>
-      )}
+      </Expandable>
     </div>
   )
 }
 
-// ── Shadow vs Active Card ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// ADVANCED CARDS (behind "Show Advanced Details")
+// ═══════════════════════════════════════════════════════════════════════════════
 
-function ShadowCard({ kpi, sig }: { kpi: ShadowKPIs; sig: Signal }) {
-  const [open, setOpen] = useState(false)
-
+function ShadowCard({ kpi }: { kpi: ShadowKPIs }) {
   if (!kpi.hasCandidiate) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Shadow vs Active</h2>
-          <span className="text-lg">🟢</span>
-        </div>
-        <p className="text-sm text-gray-400">No candidate in shadow mode</p>
-        {kpi.currentVersion && (
-          <p className="text-xs text-gray-300 mt-1">Active: {kpi.currentVersion}</p>
-        )}
+      <div className={cardClass()}>
+        <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-2">Shadow vs Active</h2>
+        <p className="text-sm text-gray-300">No candidate in shadow mode</p>
       </div>
     )
   }
 
+  const sig: Signal = Math.abs(kpi.avgDeltaPct) > 8 ? 'red' : Math.abs(kpi.avgDeltaPct) > 4 ? 'amber' : 'green'
+
   return (
-    <div className={`bg-white rounded-lg border ${signalBorder(sig)} p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Shadow vs Active</h2>
-        <span className="text-lg">{dot(sig)}</span>
+    <div className={cardClass(sig)}>
+      <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-3">Shadow vs Active</h2>
+      <div className="space-y-1.5">
+        <DetailRow label="Comparisons" value={kpi.comparisonCount} />
+        <DetailRow label="Avg delta" value={`${kpi.avgDeltaPct > 0 ? '+' : ''}${kpi.avgDeltaPct}%`} />
+        <DetailRow label="Would increase" value={kpi.wouldIncrease} />
+        <DetailRow label="Would decrease" value={kpi.wouldDecrease} />
       </div>
-      {/* Compact */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        <Stat label="Comparisons" value={kpi.comparisonCount} />
-        <Stat label="Avg delta" value={`${kpi.avgDeltaPct > 0 ? '+' : ''}${kpi.avgDeltaPct}%`}
-          color={Math.abs(kpi.avgDeltaPct) <= 4 ? 'green' : Math.abs(kpi.avgDeltaPct) <= 8 ? 'amber' : 'red'} />
-        <Stat label="↑ increase" value={kpi.wouldIncrease} />
-        <Stat label="↓ decrease" value={kpi.wouldDecrease} />
-      </div>
-
-      <div className="mt-2"><ToggleBtn open={open} onClick={() => setOpen(!open)} /></div>
-
-      {open && (
-        <div className="mt-3 pt-3 border-t border-gray-100 space-y-1 text-sm text-gray-600">
-          <Row label="Active version" value={kpi.currentVersion ?? '—'} />
-          <Row label="Candidate version" value={kpi.candidateVersion ?? '—'} />
-          <Row label="Max delta" value={`±${kpi.maxDeltaPct}%`} />
-          <Row label="No change" value={kpi.noChange} />
-        </div>
-      )}
     </div>
   )
 }
 
-// ── Exposure Cap Card ──────────────────────────────────────────────────────────
-
-function ExposureCard({ kpi, sig }: { kpi: ExposureKPIs; sig: Signal }) {
+function ExposureCard({ kpi }: { kpi: ExposureKPIs }) {
   const [open, setOpen] = useState(false)
   const pct = kpi.maxTotalCapital > 0 ? Math.round((kpi.totalCapital / kpi.maxTotalCapital) * 100) : 0
+  const sig: Signal = pct >= 80 ? 'red' : pct >= 60 ? 'amber' : 'green'
 
   return (
-    <div className={`bg-white rounded-lg border ${signalBorder(sig)} p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Exposure</h2>
-        <span className="text-lg">{dot(sig)}</span>
-      </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-        <Stat label="Open capital" value={`£${kpi.totalCapital.toLocaleString()}`} />
-        <Stat label="Utilisation" value={`${pct}%`}
-          color={pct >= 100 ? 'red' : pct >= 67 ? 'amber' : 'green'} />
-        <Stat label="Model breaches" value={kpi.sameModelBreaches} color={kpi.sameModelBreaches > 0 ? 'red' : 'green'} />
-        <Stat label="EV open" value={kpi.evConcentration} color={kpi.evConcentration >= 5 ? 'amber' : 'green'} />
+    <div className={cardClass(sig)}>
+      <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-3">Exposure</h2>
+      <div className="space-y-1.5">
+        <DetailRow label="Open capital" value={`£${kpi.totalCapital.toLocaleString()}`} />
+        <DetailRow label="Utilisation" value={`${pct}%`} />
       </div>
 
-      {/* Mini bar */}
-      <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      {/* Mini utilisation bar */}
+      <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${pct >= 100 ? 'bg-red-500' : pct >= 67 ? 'bg-yellow-400' : 'bg-green-400'}`}
+          className={`h-full rounded-full transition-all duration-500 ${
+            pct >= 80 ? 'bg-red-400' : pct >= 60 ? 'bg-amber-400' : 'bg-green-400'
+          }`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
-      <p className="text-[10px] text-gray-400 mt-0.5 text-right">
+      <p className="text-[10px] text-gray-300 mt-1 text-right">
         £{kpi.totalCapital.toLocaleString()} / £{kpi.maxTotalCapital.toLocaleString()}
       </p>
 
-      <ToggleBtn open={open} onClick={() => setOpen(!open)} />
+      <ShowDetailsBtn open={open} onClick={() => setOpen(!open)} />
+      <Expandable open={open}>
+        <div className="mt-3 pt-3 border-t border-gray-50 space-y-1.5">
+          <DetailRow label="Open positions" value={kpi.totalOpenPositions} />
+          <DetailRow label="Model breaches" value={kpi.sameModelBreaches} />
+          <DetailRow label="EV open" value={kpi.evConcentration} />
+          <DetailRow label="Old diesel open" value={kpi.oldDieselConcentration} />
 
-      {open && (
-        <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600 space-y-3">
-          <Row label="Total open positions" value={kpi.totalOpenPositions} />
-          <Row label="Old diesel open" value={kpi.oldDieselConcentration} />
-
-          {/* Segment distribution */}
           {kpi.segmentDistribution.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-1">Segment Distribution</p>
+            <div className="mt-2">
+              <p className="text-[10px] font-semibold text-gray-400 mb-1 uppercase tracking-wide">Segment</p>
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="text-gray-400">
+                  <tr className="text-gray-300">
                     <th className="text-left py-0.5">Segment</th>
-                    <th className="text-right py-0.5">Count</th>
+                    <th className="text-right py-0.5">Qty</th>
                     <th className="text-right py-0.5">Capital</th>
                   </tr>
                 </thead>
                 <tbody>
                   {kpi.segmentDistribution.map(s => (
                     <tr key={s.segment} className="border-t border-gray-50">
-                      <td className="py-0.5">{s.segment}</td>
-                      <td className="text-right">{s.count}</td>
-                      <td className="text-right">£{s.capital.toLocaleString()}</td>
+                      <td className="py-0.5 text-gray-500">{s.segment}</td>
+                      <td className="text-right text-gray-500">{s.count}</td>
+                      <td className="text-right text-gray-500">£{s.capital.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -326,14 +434,13 @@ function ExposureCard({ kpi, sig }: { kpi: ExposureKPIs; sig: Signal }) {
             </div>
           )}
 
-          {/* Open positions list */}
           {kpi.positions.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-1">Open Positions</p>
-              <div className="max-h-40 overflow-y-auto">
+            <div className="mt-2">
+              <p className="text-[10px] font-semibold text-gray-400 mb-1 uppercase tracking-wide">Positions</p>
+              <div className="max-h-36 overflow-y-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-gray-400">
+                    <tr className="text-gray-300">
                       <th className="text-left py-0.5">Vehicle</th>
                       <th className="text-right py-0.5">Year</th>
                       <th className="text-right py-0.5">Price</th>
@@ -342,9 +449,9 @@ function ExposureCard({ kpi, sig }: { kpi: ExposureKPIs; sig: Signal }) {
                   <tbody>
                     {kpi.positions.map((p, i) => (
                       <tr key={i} className="border-t border-gray-50">
-                        <td className="py-0.5">{p.make} {p.model} ({p.fuel})</td>
-                        <td className="text-right">{p.year}</td>
-                        <td className="text-right">£{p.price.toLocaleString()}</td>
+                        <td className="py-0.5 text-gray-500">{p.make} {p.model}</td>
+                        <td className="text-right text-gray-500">{p.year}</td>
+                        <td className="text-right text-gray-500">£{p.price.toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -353,153 +460,132 @@ function ExposureCard({ kpi, sig }: { kpi: ExposureKPIs; sig: Signal }) {
             </div>
           )}
         </div>
-      )}
+      </Expandable>
     </div>
   )
 }
 
-// ── Confidence Decay Card ──────────────────────────────────────────────────────
-
-function DecayCard({ kpi, sig }: { kpi: DecayKPIs; sig: Signal }) {
+function DecayCard({ kpi }: { kpi: DecayKPIs }) {
   const [open, setOpen] = useState(false)
+  const sig = signal(kpi.decayPct, 10, 25)
 
   return (
-    <div className={`bg-white rounded-lg border ${signalBorder(sig)} p-4`}>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Confidence Decay</h2>
-        <span className="text-lg">{dot(sig)}</span>
-      </div>
-      <div className="text-sm">
-        <p className="text-gray-700">
-          Elevated profit floor applied to <span className="font-semibold">{kpi.decayPct}%</span> of quotes
-          <span className="text-gray-400 text-xs ml-1">({kpi.totalSnapshotsWithDecay}/{kpi.totalSnapshots})</span>
-        </p>
-      </div>
+    <div className={cardClass(sig)}>
+      <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-3">Confidence Decay</h2>
+      <p className="text-sm text-gray-600">
+        Elevated floor on <span className="font-semibold text-gray-900">{kpi.decayPct}%</span> of quotes
+        <span className="text-gray-300 text-xs ml-1">({kpi.totalSnapshotsWithDecay}/{kpi.totalSnapshots})</span>
+      </p>
 
-      <div className="mt-2"><ToggleBtn open={open} onClick={() => setOpen(!open)} /></div>
-
-      {open && (
-        <div className="mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600">
+      <ShowDetailsBtn open={open} onClick={() => setOpen(!open)} />
+      <Expandable open={open}>
+        <div className="mt-3 pt-3 border-t border-gray-50 space-y-1.5">
           {kpi.byReason.length > 0 ? (
-            <div>
-              <p className="text-xs font-semibold text-gray-500 mb-1">Breakdown by Trigger</p>
-              {kpi.byReason.map(r => (
-                <div key={r.reason} className="flex justify-between py-0.5">
-                  <span className="text-xs">{r.reason}</span>
-                  <span className="text-xs font-medium">{r.count}</span>
-                </div>
-              ))}
-            </div>
+            kpi.byReason.map(r => <DetailRow key={r.reason} label={r.reason} value={r.count} />)
           ) : (
-            <p className="text-xs text-gray-400">No decay triggers recorded yet</p>
+            <p className="text-xs text-gray-300">No decay triggers recorded</p>
           )}
         </div>
-      )}
+      </Expandable>
     </div>
   )
 }
 
-// ── Weekly Summary Card ────────────────────────────────────────────────────────
-
-function WeeklySummaryCard({ summary, trends }: { summary: WeeklySummary; trends: WeeklyTrend[] }) {
-  const [open, setOpen] = useState(false)
-
+function WeeklyTrendsCard({ trends, summary }: { trends: WeeklyTrend[]; summary: WeeklySummary }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Weekly Digest</h2>
-        <span className="text-xs text-gray-400">Auto-generated</span>
-      </div>
+    <div className={cardClass()}>
+      <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-3">8-Week Trend</h2>
 
-      {/* Compact 2-col summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-2 text-sm">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
         <MiniStat label="Offers" value={summary.offersGenerated} />
         <MiniStat label="Acceptance" value={`${summary.acceptanceRate}%`} />
-        <MiniStat label="Avg Profit" value={summary.avgRealisedProfit !== null ? `£${summary.avgRealisedProfit}` : '—'} />
-        <MiniStat label="Liability blocks" value={summary.liabilityBlocks} />
-        <MiniStat label="Exposure triggers" value={summary.exposureCapTriggers} />
         <MiniStat label="Manual reviews" value={summary.manualReviewCount} />
-        <MiniStat label="Calibration size" value={summary.calibrationSampleSize} />
-        <MiniStat label="Avg confidence" value={summary.avgConfidence} />
+        <MiniStat label="Calibration" value={summary.calibrationSampleSize} />
       </div>
 
-      <div className="mt-3"><ToggleBtn open={open} onClick={() => setOpen(!open)} /></div>
-
-      {open && (
-        <div className="mt-3 pt-3 border-t border-gray-100 overflow-x-auto">
-          <p className="text-xs font-semibold text-gray-500 mb-2">8-Week Trend</p>
-          <table className="min-w-full text-xs">
-            <thead>
-              <tr className="text-gray-400 uppercase tracking-wider">
-                <th className="text-left py-1 pr-4">Week</th>
-                <th className="text-right py-1 px-2">Offers</th>
-                <th className="text-right py-1 px-2">Won</th>
-                <th className="text-right py-1 px-2">Lost</th>
-                <th className="text-right py-1 px-2">Manual</th>
-                <th className="text-right py-1 px-2">Win %</th>
-              </tr>
-            </thead>
-            <tbody>
-              {trends.map(t => {
-                const total = t.won + t.lost
-                const winRate = total > 0 ? Math.round((t.won / total) * 100) : 0
-                return (
-                  <tr key={t.weekLabel} className="border-t border-gray-50 hover:bg-gray-50">
-                    <td className="py-1 pr-4 font-medium text-gray-700">{t.weekLabel}</td>
-                    <td className="text-right px-2">{t.offers}</td>
-                    <td className="text-right px-2 text-green-700">{t.won}</td>
-                    <td className="text-right px-2 text-red-500">{t.lost}</td>
-                    <td className="text-right px-2 text-yellow-600">{t.manualReview}</td>
-                    <td className="text-right px-2">
-                      {total > 0 ? (
-                        <span className={winRate >= 30 ? 'text-green-700 font-medium' : 'text-gray-500'}>
-                          {winRate}%
-                        </span>
-                      ) : (
-                        <span className="text-gray-300">—</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-xs">
+          <thead>
+            <tr className="text-gray-300 uppercase tracking-wider text-[10px]">
+              <th className="text-left py-1.5 pr-3">Week</th>
+              <th className="text-right py-1.5 px-2">Offers</th>
+              <th className="text-right py-1.5 px-2">Won</th>
+              <th className="text-right py-1.5 px-2">Lost</th>
+              <th className="text-right py-1.5 px-2">Manual</th>
+              <th className="text-right py-1.5 px-2">Win&nbsp;%</th>
+            </tr>
+          </thead>
+          <tbody>
+            {trends.map(t => {
+              const total = t.won + t.lost
+              const winRate = total > 0 ? Math.round((t.won / total) * 100) : 0
+              return (
+                <tr key={t.weekLabel} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  <td className="py-1.5 pr-3 font-medium text-gray-500">{t.weekLabel}</td>
+                  <td className="text-right px-2 text-gray-500">{t.offers}</td>
+                  <td className="text-right px-2 text-green-600">{t.won}</td>
+                  <td className="text-right px-2 text-amber-600">{t.lost}</td>
+                  <td className="text-right px-2 text-gray-400">{t.manualReview}</td>
+                  <td className="text-right px-2">
+                    {total > 0 ? (
+                      <span className={winRate >= 30 ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                        {winRate}%
+                      </span>
+                    ) : (
+                      <span className="text-gray-200">—</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Primitives
+// Primitives — clean, minimal, premium feel
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function Stat({ label, value, suffix, color }: {
+function MetricRow({ label, value, signal: sig, badge, badgeColor }: {
   label: string
   value: string | number
-  suffix?: string
-  color?: Signal
+  signal?: Signal
+  badge?: string
+  badgeColor?: Signal
 }) {
-  const cls = color === 'green' ? 'text-green-700'
-    : color === 'amber' ? 'text-yellow-700'
-    : color === 'red' ? 'text-red-600'
-    : 'text-gray-900'
+  const valCls =
+    sig === 'green' ? 'text-green-600' :
+    sig === 'amber' ? 'text-amber-600' :
+    sig === 'red' ? 'text-red-500' :
+    'text-gray-900'
+
+  const badgeCls =
+    badgeColor === 'green' ? 'bg-green-50 text-green-600' :
+    badgeColor === 'amber' ? 'bg-amber-50 text-amber-600' :
+    badgeColor === 'red' ? 'bg-red-50 text-red-500' :
+    'bg-gray-50 text-gray-400'
 
   return (
-    <div>
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
-      <p className={`text-base font-semibold ${cls}`}>
-        {value}{suffix && <span className="text-xs text-gray-400 font-normal">{suffix}</span>}
-      </p>
+    <div className="flex items-center justify-between">
+      <span className="text-xs text-gray-400">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className={`text-sm font-semibold ${valCls}`}>{value}</span>
+        {badge && (
+          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${badgeCls}`}>{badge}</span>
+        )}
+      </div>
     </div>
   )
 }
 
-function Row({ label, value }: { label: string; value: string | number }) {
+function DetailRow({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="flex justify-between text-xs">
-      <span className="text-gray-500">{label}</span>
-      <span className="text-gray-700 font-medium">{value}</span>
+      <span className="text-gray-400">{label}</span>
+      <span className="text-gray-600 font-medium">{value}</span>
     </div>
   )
 }
@@ -507,8 +593,8 @@ function Row({ label, value }: { label: string; value: string | number }) {
 function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
     <div>
-      <p className="text-[10px] text-gray-400">{label}</p>
-      <p className="text-sm font-semibold text-gray-900">{value}</p>
+      <p className="text-[10px] text-gray-300 uppercase tracking-wide">{label}</p>
+      <p className="text-sm font-semibold text-gray-800">{value}</p>
     </div>
   )
 }

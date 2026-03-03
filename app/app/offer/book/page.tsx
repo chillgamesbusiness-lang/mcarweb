@@ -3,10 +3,14 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { verifyOfferToken } from '@/lib/offerSession'
 import { sendBookingConfirmation } from '@/lib/email'
 import BookForm from './BookForm'
+import TrackEvent from '@/app/components/TrackEvent'
+import OfferShell from '../OfferShell'
+import StepIndicator from '../StepIndicator'
 
 export const metadata = {
   title: 'Book Appointment',
   description: 'Schedule your vehicle inspection appointment with MCar.',
+  robots: { index: false, follow: false },
 }
 
 interface BookPageProps {
@@ -168,69 +172,76 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Book Appointment</h1>
-          <p className="mt-2 text-gray-500">Choose how and when you would like to meet</p>
-        </div>
+    <OfferShell>
+      {/* Fire once on mount — user passed contact + OTP step */}
+      <TrackEvent event="contact_submitted" />
+      <StepIndicator current={3} />
 
-        {/* Offer summary — varies based on autoQuote */}
-        {autoQuote && lead.estimated_min > 0 ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-5 mb-6 text-center">
-            <p className="text-sm text-green-700 mb-1">Your estimated offer range</p>
-            <p className="text-2xl font-bold text-green-800">
-              £{lead.estimated_min?.toLocaleString()} – £{lead.estimated_max?.toLocaleString()}
-            </p>
-            <p className="text-xs text-green-600 mt-1">
-              {lead.reg} — {lead.make} {lead.model} ({lead.year})
-            </p>
-            {valuation && valuation.riskTier !== 'low' && (
-              <p className="text-xs text-green-500 mt-2">
-                Final offer confirmed at appointment after vehicle inspection
-              </p>
-            )}
-            {/* Customer explanation bullets */}
-            {valuation?.customerBullets && valuation.customerBullets.length > 0 && (
-              <ul className="mt-3 text-left space-y-1">
-                {valuation.customerBullets.map((b: string, i: number) => (
-                  <li key={i} className="text-xs text-green-700 flex items-start gap-1.5">
-                    <span className="mt-0.5 shrink-0">•</span>
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ) : (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6 text-center">
-            <p className="text-sm text-amber-700 mb-1">Valuation requires review</p>
-            <p className="text-lg font-semibold text-amber-800">
-              We&apos;ll provide a personalised offer at your appointment
-            </p>
-            <p className="text-xs text-amber-600 mt-1">
-              {lead.reg} — {lead.make} {lead.model} ({lead.year})
-            </p>
-            <p className="text-xs text-amber-500 mt-2">
-              Our specialist will assess your vehicle and provide a competitive offer
-            </p>
-          </div>
-        )}
-
-        {/* Quote expiry notice */}
-        {snapshot && (
-          <p className="text-xs text-gray-400 text-center mb-4">
-            This quote is valid until{' '}
-            {new Date(new Date(snapshot.created_at).getTime() + QUOTE_TTL_MS).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
-          </p>
-        )}
-
-        <BookForm submitBooking={submitBooking} />
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Book Appointment</h1>
+        <p className="mt-2 text-gray-500 text-sm">Choose how and when you would like to meet</p>
       </div>
-    </div>
+
+      {/* Offer summary — profit simulation centrepiece */}
+      {autoQuote && lead.estimated_min > 0 ? (
+        <div className="bg-white rounded-xl shadow-md ring-1 ring-green-100 p-6 mb-6 text-center">
+          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Your Estimated Offer</p>
+          {/* Big bold midpoint */}
+          <p className="text-4xl font-extrabold text-gray-900 mb-1">
+            £{Math.round(((lead.estimated_min ?? 0) + (lead.estimated_max ?? 0)) / 2).toLocaleString()}
+          </p>
+          {/* Smaller min/max range */}
+          <p className="text-sm text-gray-400">
+            £{lead.estimated_min?.toLocaleString()} – £{lead.estimated_max?.toLocaleString()}
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            {lead.reg} — {lead.make} {lead.model} ({lead.year})
+          </p>
+          {valuation && valuation.riskTier !== 'low' && (
+            <p className="text-xs text-gray-400 mt-3">
+              Final offer confirmed at appointment after inspection
+            </p>
+          )}
+          {/* Customer explanation bullets */}
+          {valuation?.customerBullets && valuation.customerBullets.length > 0 && (
+            <ul className="mt-4 text-left space-y-1.5 border-t border-gray-50 pt-4">
+              {valuation.customerBullets.map((b: string, i: number) => (
+                <li key={i} className="text-xs text-gray-500 flex items-start gap-1.5">
+                  <span className="mt-0.5 shrink-0 text-green-500">✓</span>
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm ring-1 ring-amber-100 p-6 mb-6 text-center">
+          <p className="text-xs text-amber-500 uppercase tracking-wider mb-2">Review Required</p>
+          <p className="text-lg font-semibold text-gray-900">
+            We&apos;ll provide a personalised offer at your appointment
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            {lead.reg} — {lead.make} {lead.model} ({lead.year})
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            Our specialist will assess your vehicle and provide a competitive offer
+          </p>
+        </div>
+      )}
+
+      {/* Quote expiry notice */}
+      {snapshot && (
+        <p className="text-xs text-gray-300 text-center mb-4">
+          Quote valid until{' '}
+          {new Date(new Date(snapshot.created_at).getTime() + QUOTE_TTL_MS).toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })}
+        </p>
+      )}
+
+      <BookForm submitBooking={submitBooking} />
+    </OfferShell>
   )
 }

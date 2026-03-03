@@ -11,10 +11,13 @@ import { getCandidateCoefficients, getCurrentCoefficients, logShadowComparison }
 import { validateMileage, validateCondition, capRiskFlags, capBullets } from '@/lib/inputHardening'
 import { checkExposure } from '@/lib/exposureCap'
 import ContactForm from './ContactForm'
+import OfferShell from '../OfferShell'
+import StepIndicator from '../StepIndicator'
 
 export const metadata = {
   title: 'Your Details',
   description: 'Enter your contact information to receive your vehicle offer.',
+  robots: { index: false, follow: false },
 }
 
 interface ContactPageProps {
@@ -407,26 +410,26 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Your Details</h1>
-          <p className="mt-2 text-gray-500">
-            Almost there! We need your contact information.
-          </p>
-        </div>
+    <OfferShell>
+      <StepIndicator current={2} />
 
-        {/* Vehicle summary */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 text-sm text-gray-600">
-          <span className="font-mono font-bold text-gray-900">{payload.reg}</span>
-          {' - '}
-          {payload.vehicle.make} {payload.vehicle.model} ({payload.vehicle.year})
-          {' | '}
-          {payload.mileage!.toLocaleString()} miles | {payload.condition}
-        </div>
-
-        <ContactForm submitContact={submitContact} />
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Your Details</h1>
+        <p className="mt-2 text-gray-500 text-sm">
+          Almost there! We need your contact information.
+        </p>
       </div>
-    </div>
+
+      {/* Vehicle summary */}
+      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-4 mb-6 text-sm text-gray-600">
+        <span className="font-mono font-bold text-gray-900">{payload.reg}</span>
+        {' — '}
+        {payload.vehicle.make} {payload.vehicle.model} ({payload.vehicle.year})
+        {' · '}
+        {payload.mileage!.toLocaleString()} miles · {payload.condition}
+      </div>
+
+      <ContactForm submitContact={submitContact} />
+    </OfferShell>
   )
 }

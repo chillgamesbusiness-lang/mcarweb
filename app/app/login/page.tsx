@@ -1,7 +1,10 @@
 import { login } from './actions'
 import { SubmitButton } from '@/app/components/SubmitButton'
 
-export const metadata = { title: 'Staff Sign In' }
+export const metadata = {
+  title: 'Staff Sign In',
+  robots: { index: false, follow: false },
+}
 
 interface LoginPageProps {
   searchParams: Promise<{ error?: string }>

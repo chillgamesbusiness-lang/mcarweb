@@ -1,10 +1,13 @@
 import { redirect } from 'next/navigation'
 import { verifyOfferToken, createOfferToken } from '@/lib/offerSession'
 import DetailsForm from './DetailsForm'
+import OfferShell from '../OfferShell'
+import StepIndicator from '../StepIndicator'
 
 export const metadata = {
   title: 'Vehicle Details',
   description: 'Enter your vehicle mileage and condition for an accurate valuation.',
+  robots: { index: false, follow: false },
 }
 
 interface DetailsPageProps {
@@ -50,21 +53,22 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Vehicle Details</h1>
-          <p className="mt-2 text-gray-500">Confirm your vehicle info below</p>
-        </div>
+    <OfferShell>
+      <StepIndicator current={1} />
 
-        {/* Vehicle summary card */}
-        <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
-          <div className="text-center">
-            <span className="inline-block bg-yellow-100 text-yellow-800 font-mono text-lg font-bold px-4 py-1 rounded mb-3">
-              {payload.reg}
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Vehicle Details</h1>
+        <p className="mt-2 text-gray-500 text-sm">Confirm your vehicle info below</p>
+      </div>
+
+      {/* Vehicle summary card */}
+      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5 mb-6">
+        <div className="text-center">
+          <span className="inline-block bg-yellow-50 text-yellow-700 font-mono text-lg font-bold px-4 py-1.5 rounded-lg mb-3 ring-1 ring-yellow-200">
+            {payload.reg}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 text-sm">
             <Field label="Make" value={payload.vehicle.make} />
             <Field label="Model" value={payload.vehicle.model || '—'} />
             <Field label="Year" value={payload.vehicle.year.toString()} />
@@ -88,11 +92,11 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
           </div>
         </div>
 
-        {/* MOT summary card (if available) */}
-        {payload.motSummary && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm">
-            <h3 className="font-semibold text-blue-900 mb-2">MOT Summary</h3>
-            <div className="grid grid-cols-2 gap-2 text-blue-800">
+      {/* MOT summary card (if available) */}
+      {payload.motSummary && (
+        <div className="bg-blue-50/60 rounded-xl ring-1 ring-blue-100 p-4 mb-6 text-sm">
+          <h3 className="font-semibold text-blue-900 mb-2">MOT Summary</h3>
+          <div className="grid grid-cols-2 gap-2.5 text-blue-800">
               <div>
                 <span className="text-blue-500 text-xs">MOT Remaining</span>
                 <p className="font-medium">
@@ -117,7 +121,7 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
               </div>
             </div>
             {payload.motSummary.mileageConsistency !== 'consistent' && (
-              <div className="mt-2 rounded bg-amber-100 border border-amber-300 px-3 py-1.5 text-xs text-amber-800">
+              <div className="mt-2 rounded-lg bg-amber-50 ring-1 ring-amber-200 px-3 py-1.5 text-xs text-amber-700">
                 {payload.motSummary.mileageConsistency === 'rollback_detected'
                   ? '⚠️ Mileage discrepancy detected in MOT history'
                   : '⚠️ Unusual mileage pattern detected'}
@@ -126,9 +130,8 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
           </div>
         )}
 
-        <DetailsForm submitDetails={submitDetails} defaultMileage={defaultMileage} />
-      </div>
-    </div>
+      <DetailsForm submitDetails={submitDetails} defaultMileage={defaultMileage} />
+    </OfferShell>
   )
 }
 

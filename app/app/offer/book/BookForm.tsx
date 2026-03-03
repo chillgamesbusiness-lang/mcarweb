@@ -15,7 +15,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? 'Booking…' : 'Confirm Booking'}
     </button>
@@ -64,9 +64,9 @@ function BookFormInner({ submitBooking }: BookFormProps) {
   const slots = generateSlots()
 
   return (
-    <form action={submitBooking} className="bg-white rounded-lg border border-gray-200 p-6 space-y-5">
+    <form action={submitBooking} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6 space-y-5">
       {error && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className="rounded-lg bg-amber-50 ring-1 ring-amber-200 p-3 text-sm text-amber-700">
           {error}
         </div>
       )}
