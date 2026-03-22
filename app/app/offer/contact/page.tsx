@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { verifyOfferToken, createOfferToken } from '@/lib/offerSession'
 import { calculateValuation, enrichWithResaleEvidence } from '@/lib/pricingEngine'
 import type { VehicleProfile, MOTAnalysis } from '@/lib/types'
@@ -26,10 +27,16 @@ interface ContactPageProps {
 }
 
 export default async function OfferContactPage({ searchParams }: ContactPageProps) {
-  const { token } = await searchParams
-  console.log(`[offer/contact] token present=${!!token}, length=${token?.length ?? 0}, parts=${token?.split('.').length ?? 0}`)
+  const { token: urlToken } = await searchParams
+  const cookieStore = await cookies()
+  const cookieToken = cookieStore.get('offer_token')?.value
+
+  // Try URL param first, fall back to cookie (immune to URL encoding/redirect issues)
+  const token = urlToken || cookieToken || null
+  console.log(`[offer/contact] urlToken=${!!urlToken}(${urlToken?.length ?? 0}), cookieToken=${!!cookieToken}(${cookieToken?.length ?? 0}), using=${urlToken ? 'url' : cookieToken ? 'cookie' : 'none'}`)
+
   const payload = token ? verifyOfferToken(token) : null
-  console.log(`[offer/contact] verify result: ${payload ? 'OK' : 'NULL'}, mileage=${payload?.mileage}, condition=${payload?.condition}`)
+  console.log(`[offer/contact] verify: ${payload ? 'OK' : 'NULL'}, mileage=${payload?.mileage}, condition=${payload?.condition}`)
 
   if (!payload || !payload.mileage || !payload.condition) {
     console.error(`[offer/contact] REDIRECTING: payload=${!!payload}, mileage=${payload?.mileage}, condition=${payload?.condition}`)

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
 import { verifyOfferToken, createOfferToken } from '@/lib/offerSession'
 import DetailsForm from './DetailsForm'
 import OfferShell from '../OfferShell'
@@ -51,13 +52,19 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
       condition: condition as 'excellent' | 'good' | 'fair' | 'poor',
     })
 
-    const encoded = encodeURIComponent(newToken)
-    console.log(`[offer/details] submitDetails: newToken length=${newToken.length}, encoded length=${encoded.length}, parts=${newToken.split('.').length}`)
-    // Quick roundtrip check
-    const decoded = decodeURIComponent(encoded)
-    const roundtrip = verifyOfferToken(decoded)
-    console.log(`[offer/details] submitDetails: roundtrip verify=${roundtrip ? 'OK' : 'FAIL'}, mileage=${roundtrip?.mileage}, condition=${roundtrip?.condition}`)
-    redirect(`/offer/contact?token=${encoded}`)
+    console.log(`[offer/details] submitDetails: newToken length=${newToken.length}, parts=${newToken.split('.').length}`)
+
+    // Store token in cookie as primary transport (immune to URL encoding issues)
+    const cookieStore = await cookies()
+    cookieStore.set('offer_token', newToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/offer',
+      maxAge: 7200, // 2 hours
+    })
+
+    redirect(`/offer/contact?token=${encodeURIComponent(newToken)}`)
   }
 
   return (
