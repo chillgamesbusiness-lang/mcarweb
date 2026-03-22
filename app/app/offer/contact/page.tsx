@@ -27,9 +27,12 @@ interface ContactPageProps {
 
 export default async function OfferContactPage({ searchParams }: ContactPageProps) {
   const { token } = await searchParams
+  console.log(`[offer/contact] token present=${!!token}, length=${token?.length ?? 0}, parts=${token?.split('.').length ?? 0}`)
   const payload = token ? verifyOfferToken(token) : null
+  console.log(`[offer/contact] verify result: ${payload ? 'OK' : 'NULL'}, mileage=${payload?.mileage}, condition=${payload?.condition}`)
 
   if (!payload || !payload.mileage || !payload.condition) {
+    console.error(`[offer/contact] REDIRECTING: payload=${!!payload}, mileage=${payload?.mileage}, condition=${payload?.condition}`)
     redirect('/offer?error=Session+expired+or+invalid.+Please+start+again.')
   }
 

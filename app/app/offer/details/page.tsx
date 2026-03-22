@@ -51,7 +51,13 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
       condition: condition as 'excellent' | 'good' | 'fair' | 'poor',
     })
 
-    redirect(`/offer/contact?token=${encodeURIComponent(newToken)}`)
+    const encoded = encodeURIComponent(newToken)
+    console.log(`[offer/details] submitDetails: newToken length=${newToken.length}, encoded length=${encoded.length}, parts=${newToken.split('.').length}`)
+    // Quick roundtrip check
+    const decoded = decodeURIComponent(encoded)
+    const roundtrip = verifyOfferToken(decoded)
+    console.log(`[offer/details] submitDetails: roundtrip verify=${roundtrip ? 'OK' : 'FAIL'}, mileage=${roundtrip?.mileage}, condition=${roundtrip?.condition}`)
+    redirect(`/offer/contact?token=${encoded}`)
   }
 
   return (
