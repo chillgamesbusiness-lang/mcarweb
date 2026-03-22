@@ -82,10 +82,19 @@ export interface OfferTokenPayload {
 
 function getSecret(): string {
   const secret = process.env.OFFER_SESSION_SECRET
-  if (!secret || secret.length < 32) {
-    throw new Error('OFFER_SESSION_SECRET must be at least 32 characters')
+  if (secret && secret.length >= 32) return secret
+
+  // Fallback: derive a deterministic secret from the Supabase service role key
+  // (always available in production). This ensures token signing works even if
+  // OFFER_SESSION_SECRET is not explicitly configured.
+  const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (fallback && fallback.length >= 32) {
+    return fallback.slice(0, 64)
   }
-  return secret
+
+  throw new Error(
+    'OFFER_SESSION_SECRET must be at least 32 characters (or SUPABASE_SERVICE_ROLE_KEY must be set as fallback)'
+  )
 }
 
 function base64url(buf: Buffer): string {
@@ -104,7 +113,7 @@ function sign(payloadB64: string): string {
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
-const TOKEN_TTL_MS = 30 * 60 * 1000 // 30 minutes
+const TOKEN_TTL_MS = 2 * 60 * 60 * 1000 // 2 hours
 
 /**
  * Create a signed offer-session token.
@@ -141,7 +150,13 @@ export function verifyOfferToken(token: string): OfferTokenPayload | null {
   const [payloadB64, sig] = parts
 
   // Verify signature (constant-time comparison to prevent timing attacks)
-  const expectedSig = sign(payloadB64)
+  let expectedSig: string
+  try {
+    expectedSig = sign(payloadB64)
+  } catch (err) {
+    console.error('[offerSession] Token verification failed — OFFER_SESSION_SECRET may be missing or too short:', (err as Error).message)
+    return null
+  }
   try {
     const sigBuf = Buffer.from(sig, 'base64url')
     const expectedBuf = Buffer.from(expectedSig, 'base64url')

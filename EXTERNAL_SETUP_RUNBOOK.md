@@ -177,6 +177,9 @@ UPSTASH_REDIS_REST_TOKEN=
 # Cloudflare Turnstile (optional for now)
 NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
+
+# Offer Session Token Signing (auto-derives from Supabase key if not set)
+OFFER_SESSION_SECRET=
 ```
 
 Save the file.

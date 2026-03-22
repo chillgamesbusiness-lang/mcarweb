@@ -376,6 +376,17 @@ export function getMarketValue(
   const normModel = model.toUpperCase().trim()
   const normFuel = normaliseFuelForLookup(fuel)
 
+  // Year-position interpolation: adjust avgRetail ±6% based on where
+  // the vehicle year falls within the matched year-range band.
+  // A 2019 car at the top of a [2016,2019] band gets +6%, a 2016 car gets -6%.
+  function interpolateRetail(entry: MarketEntry): number {
+    const rangeWidth = entry.yearRange[1] - entry.yearRange[0]
+    if (rangeWidth === 0) return entry.avgRetail // single-year range
+    const position = (year - entry.yearRange[0]) / rangeWidth // 0 to 1
+    const factor = 1 + (position - 0.5) * 0.12 // 0.94 to 1.06
+    return Math.round(entry.avgRetail * factor)
+  }
+
   // 1. Exact match (make + model + year + fuel)
   const exact = MARKET_DATA.find(
     (e) =>
@@ -385,7 +396,7 @@ export function getMarketValue(
       year <= e.yearRange[1] &&
       e.fuel === normFuel
   )
-  if (exact) return { avgRetail: exact.avgRetail, volatility: exact.volatility, matchQuality: 'exact' }
+  if (exact) return { avgRetail: interpolateRetail(exact), volatility: exact.volatility, matchQuality: 'exact' }
 
   // 2. Fuzzy: match make + model + year, any fuel
   const fuelFuzzy = MARKET_DATA.find(
@@ -396,7 +407,7 @@ export function getMarketValue(
       year <= e.yearRange[1]
   )
   if (fuelFuzzy)
-    return { avgRetail: fuelFuzzy.avgRetail, volatility: fuelFuzzy.volatility, matchQuality: 'fuel_fuzzy' }
+    return { avgRetail: interpolateRetail(fuelFuzzy), volatility: fuelFuzzy.volatility, matchQuality: 'fuel_fuzzy' }
 
   // 3. Fuzzy: match make + model, closest year range (within 3 years)
   const modelMatches = MARKET_DATA.filter(

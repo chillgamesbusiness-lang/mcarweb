@@ -61,8 +61,8 @@ const CONDITION_MULTIPLIER: Record<Condition, number> = {
   poor: 0.85,
 }
 
-const LIQUIDITY_BUFFER = 0.07 // 7%
-const TRADE_MARGIN = 0.80     // 80% of retail = trade base
+const LIQUIDITY_BUFFER = 0.04 // 4%
+const TRADE_MARGIN = 0.88     // 88% of retail = trade base
 const COMPOUND_ADJUSTMENT_FLOOR = 0.35
 
 // ── Main calculation ───────────────────────────────────────────────────────────
@@ -401,14 +401,14 @@ export function calculateValuation(input: {
 // ── Step helpers ────────────────────────────────────────────────────────────────
 
 /**
- * Non-linear age depreciation for market-value-based pricing.
+ * Mild intra-band age adjustment for market-value-based pricing.
  *
- * Because avgRetail in market data already reflects current depreciated values
- * (not original MSRP), these rates are calibrated to adjust within/around the
- * cohort rather than apply full new-car depreciation on top.
+ * Market data avgRetail already captures the bulk of depreciation.
+ * Year-position interpolation in getMarketValue handles intra-band spread.
+ * This multiplier adds a small wear/reliability signal on top.
  *
- * 0–3yr: 2% p.a., 4–7yr: 4% p.a., 8–12yr: 4% p.a., 12+: 2% p.a.
- * Floor at 0.40.
+ * 0–3yr: 0.5% p.a., 4–7yr: 1% p.a., 8–12yr: 2% p.a., 12+: 1% p.a.
+ * Floor at 0.55.
  */
 function getAgeMultiplier(vehicleAge: number): number {
   if (vehicleAge <= 0) return 1.0
@@ -416,13 +416,13 @@ function getAgeMultiplier(vehicleAge: number): number {
   let totalDepreciation = 0
 
   for (let y = 1; y <= vehicleAge; y++) {
-    if (y <= 3) totalDepreciation += 0.02
-    else if (y <= 7) totalDepreciation += 0.04
-    else if (y <= 12) totalDepreciation += 0.04
-    else totalDepreciation += 0.02
+    if (y <= 3) totalDepreciation += 0.005
+    else if (y <= 7) totalDepreciation += 0.01
+    else if (y <= 12) totalDepreciation += 0.02
+    else totalDepreciation += 0.01
   }
 
-  return Math.max(0.40, 1 - totalDepreciation)
+  return Math.max(0.55, 1 - totalDepreciation)
 }
 
 /**
