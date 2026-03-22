@@ -81,13 +81,13 @@ export interface OfferTokenPayload {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function getSecret(): string {
-  const secret = process.env.OFFER_SESSION_SECRET
+  const secret = process.env.OFFER_SESSION_SECRET?.trim()
   if (secret && secret.length >= 32) return secret
 
   // Fallback: derive a deterministic secret from the Supabase service role key
   // (always available in production). This ensures token signing works even if
   // OFFER_SESSION_SECRET is not explicitly configured.
-  const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
   if (fallback && fallback.length >= 32) {
     return fallback.slice(0, 64)
   }
