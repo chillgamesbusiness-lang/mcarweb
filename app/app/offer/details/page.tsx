@@ -16,9 +16,11 @@ interface DetailsPageProps {
 
 export default async function OfferDetailsPage({ searchParams }: DetailsPageProps) {
   const { token } = await searchParams
+  console.log(`[offer/details] token present=${!!token}, length=${token?.length ?? 0}, dots=${token?.split('.').length ?? 0}`)
   const payload = token ? verifyOfferToken(token) : null
 
   if (!payload) {
+    console.error(`[offer/details] verifyOfferToken returned null — redirecting to /offer`)
     redirect('/offer?error=Session+expired+or+invalid.+Please+start+again.')
   }
 

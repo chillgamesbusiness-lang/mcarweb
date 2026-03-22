@@ -142,10 +142,16 @@ export function createOfferToken(
  * Returns the decoded payload on success, or null on failure.
  */
 export function verifyOfferToken(token: string): OfferTokenPayload | null {
-  if (!token || typeof token !== 'string') return null
+  if (!token || typeof token !== 'string') {
+    console.error('[offerSession] verify: token is falsy or not a string')
+    return null
+  }
 
   const parts = token.split('.')
-  if (parts.length !== 2) return null
+  if (parts.length !== 2) {
+    console.error(`[offerSession] verify: expected 2 parts, got ${parts.length}. Token length=${token.length}, first 80 chars: ${token.slice(0, 80)}`)
+    return null
+  }
 
   const [payloadB64, sig] = parts
 
@@ -154,14 +160,18 @@ export function verifyOfferToken(token: string): OfferTokenPayload | null {
   try {
     expectedSig = sign(payloadB64)
   } catch (err) {
-    console.error('[offerSession] Token verification failed — OFFER_SESSION_SECRET may be missing or too short:', (err as Error).message)
+    console.error('[offerSession] verify: sign() threw — secret missing/short:', (err as Error).message)
     return null
   }
   try {
     const sigBuf = Buffer.from(sig, 'base64url')
     const expectedBuf = Buffer.from(expectedSig, 'base64url')
-    if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null
-  } catch {
+    if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) {
+      console.error(`[offerSession] verify: signature mismatch. sig len=${sigBuf.length}, expected len=${expectedBuf.length}, secret len=${getSecret().length}`)
+      return null
+    }
+  } catch (err) {
+    console.error('[offerSession] verify: signature comparison threw:', (err as Error).message)
     return null
   }
 
@@ -171,13 +181,20 @@ export function verifyOfferToken(token: string): OfferTokenPayload | null {
     const payload = JSON.parse(json) as OfferTokenPayload
 
     // Check version
-    if (payload.v !== 1) return null
+    if (payload.v !== 1) {
+      console.error(`[offerSession] verify: unexpected version ${payload.v}`)
+      return null
+    }
 
     // Check expiry
-    if (Date.now() > payload.exp) return null
+    if (Date.now() > payload.exp) {
+      console.error(`[offerSession] verify: token expired. now=${Date.now()}, exp=${payload.exp}, diff=${Date.now() - payload.exp}ms`)
+      return null
+    }
 
     return payload
-  } catch {
+  } catch (err) {
+    console.error('[offerSession] verify: payload decode/parse failed:', (err as Error).message)
     return null
   }
 }
