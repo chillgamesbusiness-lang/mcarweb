@@ -25,6 +25,7 @@ import { ebayProvider } from '@/lib/providers/ebayProvider'
 import { regcheckProvider } from '@/lib/providers/regcheckProvider'
 import { bregoProvider } from '@/lib/providers/bregoProvider'
 import { oneAutoProvider } from '@/lib/providers/oneAutoProvider'
+import { oneAutoApiProvider } from '@/lib/providers/oneAutoApiProvider'
 import { motorSpecsProvider } from '@/lib/providers/motorSpecsProvider'
 import { marketcheckProvider } from '@/lib/providers/marketcheckProvider'
 
@@ -35,6 +36,7 @@ const PROVIDERS: CompProvider[] = [
   regcheckProvider,
   bregoProvider,
   oneAutoProvider,
+  oneAutoApiProvider,
   motorSpecsProvider,
   marketcheckProvider,
 ]

@@ -24,25 +24,18 @@ export async function login(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password })
 
-  if (error) {
+  if (error || !signInData.user) {
     redirect('/login?error=invalid_credentials')
   }
-
-  // Fetch role to direct the user to the right panel
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) redirect('/login?error=no_user')
 
   // Use service client for role lookup — bypasses RLS circular policy on users table
   const svc = createServiceClient()
   const { data: profile } = await svc
     .from('users')
     .select('role')
-    .eq('id', user.id)
+    .eq('id', signInData.user.id)
     .single()
 
   revalidatePath('/', 'layout')

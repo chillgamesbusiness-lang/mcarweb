@@ -54,8 +54,6 @@ import type {
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const CURRENT_YEAR = 2026
-
 const CONDITION_MULTIPLIER: Record<Condition, number> = {
   excellent: 1.00,
   good: 0.97,
@@ -195,7 +193,7 @@ export function calculateValuation(input: {
   }
 
   // ── Step 11: Keeper history check (v2 NEW) ────────────────────────────
-  const keeperMultiplier = getKeeperMultiplier(vp.dateOfLastV5C, vehicleAge)
+  const keeperMultiplier = getKeeperMultiplier(vp.dateOfLastV5C, vehicleAge, now)
 
   if (keeperMultiplier < 1.0) {
     riskFlags.push('Recent keeper change on older vehicle')
@@ -403,8 +401,13 @@ export function calculateValuation(input: {
 // ── Step helpers ────────────────────────────────────────────────────────────────
 
 /**
- * Non-linear age depreciation.
- * 0–3yr: 12% p.a., 4–7yr: 8% p.a., 8–12yr: 6% p.a., 12+: 0%.
+ * Non-linear age depreciation for market-value-based pricing.
+ *
+ * Because avgRetail in market data already reflects current depreciated values
+ * (not original MSRP), these rates are calibrated to adjust within/around the
+ * cohort rather than apply full new-car depreciation on top.
+ *
+ * 0–3yr: 2% p.a., 4–7yr: 4% p.a., 8–12yr: 4% p.a., 12+: 2% p.a.
  * Floor at 0.40.
  */
 function getAgeMultiplier(vehicleAge: number): number {
@@ -413,10 +416,10 @@ function getAgeMultiplier(vehicleAge: number): number {
   let totalDepreciation = 0
 
   for (let y = 1; y <= vehicleAge; y++) {
-    if (y <= 3) totalDepreciation += 0.12
-    else if (y <= 7) totalDepreciation += 0.08
-    else if (y <= 12) totalDepreciation += 0.06
-    else totalDepreciation += 0.02 // Slow continued depreciation after 12yr (was 0 = wrong)
+    if (y <= 3) totalDepreciation += 0.02
+    else if (y <= 7) totalDepreciation += 0.04
+    else if (y <= 12) totalDepreciation += 0.04
+    else totalDepreciation += 0.02
   }
 
   return Math.max(0.40, 1 - totalDepreciation)
@@ -599,7 +602,8 @@ function getVolatilityMultiplier(volatility: Volatility): number {
  */
 function getKeeperMultiplier(
   dateOfLastV5C: string | null,
-  vehicleAge: number
+  vehicleAge: number,
+  now: Date = new Date()
 ): number {
   if (!dateOfLastV5C) return 1.00
 
@@ -608,10 +612,9 @@ function getKeeperMultiplier(
   // Guard against malformed dates (would produce NaN and silently disable the check)
   if (isNaN(v5cDate.getTime())) return 1.00
 
-  const today = new Date()
   const monthsSinceV5C =
-    (today.getFullYear() - v5cDate.getFullYear()) * 12 +
-    (today.getMonth() - v5cDate.getMonth())
+    (now.getFullYear() - v5cDate.getFullYear()) * 12 +
+    (now.getMonth() - v5cDate.getMonth())
 
   if (vehicleAge > 3 && monthsSinceV5C < 6) {
     return 0.98
