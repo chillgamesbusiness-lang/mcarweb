@@ -209,7 +209,8 @@ export default function DashboardClient(props: DashboardProps) {
       {/* ③ Weekly Executive Summary */}
       <ExecutiveSummary summary={weeklySummary} exposure={exposure} />
 
-      {/* ── Everything else behind "Show Details" ── */}
+      {/* Advanced cards — commented out (Shadow, Exposure, Decay, Weekly Trends) */}
+      {/*
       <div className="text-center pt-1">
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
@@ -235,6 +236,7 @@ export default function DashboardClient(props: DashboardProps) {
           <WeeklyTrendsCard trends={weeklyTrends} summary={weeklySummary} />
         </div>
       </Expandable>
+      */}
     </div>
   )
 }
