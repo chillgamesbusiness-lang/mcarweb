@@ -122,15 +122,10 @@ export async function sendOTP(
   }
 
   // ── Rate limit bypass whitelist (dev/test numbers) ───────────────────
-  // OTP_BYPASS_PHONES = comma-separated E.164-style or 07xxx numbers, e.g. "+447503715100,07123456789"
-  const bypassList = (process.env.OTP_BYPASS_PHONES ?? '')
-    .split(',')
-    .map((n) => cleanPhone(n.trim()))
-    .filter(Boolean)
-  const isWhitelisted = bypassList.includes(cleanedPhone)
+  const isWL = isWhitelistedPhone(cleanedPhone)
 
   // ── Rate limits: per-phone (3/day) + per-IP (10/day) ─────────────────
-  if (!isWhitelisted) {
+  if (!isWL) {
     const phoneLimit = await checkOtpRateLimit(`otp:phone:${cleanedPhone}`, 3, 86400)
     if (!phoneLimit.allowed) {
       throw new Error('Too many verification requests. Please try again tomorrow.')
@@ -307,6 +302,82 @@ export async function verifyOTP(
 
 // ── Rate limiting is now handled by checkOtpRateLimit in rateLimit.ts ──────────
 // Per-phone: 3/day, per-IP: 10/day, cooldown: 60s per phone
+
+// ── Phone whitelist (auto-verified, skip OTP) ──────────────────────────────────
+// Phones listed here are treated as pre-verified — no SMS code required.
+// Also supports OTP_BYPASS_PHONES env var (comma-separated).
+const PHONE_WHITELIST: string[] = [
+  '07968212121', // Whitelisted for testing
+]
+
+function getWhitelistedPhones(): string[] {
+  const envPhones = (process.env.OTP_BYPASS_PHONES ?? '')
+    .split(',')
+    .map((n) => cleanPhone(n.trim()))
+    .filter(Boolean)
+  return [...PHONE_WHITELIST, ...envPhones]
+}
+
+export function isWhitelistedPhone(phone: string): boolean {
+  const cleaned = cleanPhone(phone)
+  return getWhitelistedPhones().includes(cleaned)
+}
+
+// ── Check if a phone is already verified (recent session or whitelist) ──────────
+
+/**
+ * Check if a phone number has been recently verified via OTP or is whitelisted.
+ * Returns the existing verified session ID if found, or creates a pre-verified
+ * session for whitelisted phones.
+ *
+ * "Recently" = within the last 30 days.
+ */
+export async function checkPhoneVerified(
+  phone: string,
+  ip: string = 'unknown'
+): Promise<{ verified: boolean; sessionId: string | null }> {
+  const cleaned = cleanPhone(phone)
+
+  if (!isValidUkMobile(cleaned)) {
+    return { verified: false, sessionId: null }
+  }
+
+  // ── Whitelisted phones: create a pre-verified session ────────────────
+  if (isWhitelistedPhone(cleaned)) {
+    const sessionId = crypto.randomUUID()
+    await getSupabase()
+      .from('otp_sessions')
+      .insert({
+        id: sessionId,
+        phone: cleaned,
+        code_hash: 'whitelisted',
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        attempts: 0,
+        verified: true,
+        ip_address: ip,
+        created_at: new Date().toISOString(),
+      })
+    return { verified: true, sessionId }
+  }
+
+  // ── Check for a recently verified session in DB ──────────────────────
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: session } = await getSupabase()
+    .from('otp_sessions')
+    .select('id')
+    .eq('phone', cleaned)
+    .eq('verified', true)
+    .gte('created_at', thirtyDaysAgo)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (session) {
+    return { verified: true, sessionId: session.id }
+  }
+
+  return { verified: false, sessionId: null }
+}
 
 // ── Validate all contact fields at once ────────────────────────────────────────
 

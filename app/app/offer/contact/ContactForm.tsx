@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useState, useRef } from 'react'
+import { Suspense, useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 
 interface ContactFormProps {
@@ -20,7 +20,48 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
   const [otpVerifying, setOtpVerifying] = useState(false)
   const [otpCode, setOtpCode] = useState('')
   const [cooldown, setCooldown] = useState(0)
+  const [checkingPhone, setCheckingPhone] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
+  const lastCheckedPhone = useRef<string>('')
+
+  // Check if phone was previously verified (or is whitelisted)
+  const checkPreviousVerification = useCallback(async (phone: string) => {
+    const digits = phone.replace(/\D/g, '')
+    if (digits.length < 10 || digits.length > 11) return
+    if (lastCheckedPhone.current === digits) return
+    lastCheckedPhone.current = digits
+
+    setCheckingPhone(true)
+    try {
+      const res = await fetch('/api/otp/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      })
+      const data = await res.json()
+      if (data.verified && data.sessionId) {
+        setOtpSessionId(data.sessionId)
+        setOtpVerified(true)
+        setOtpStep(false)
+      }
+    } catch {
+      // Silent — user can still verify manually
+    } finally {
+      setCheckingPhone(false)
+    }
+  }, [])
+
+  // On mount, check localStorage for a previously verified phone
+  useEffect(() => {
+    const savedPhone = localStorage.getItem('mcar_verified_phone')
+    if (savedPhone) {
+      const phoneInput = document.getElementById('phone') as HTMLInputElement | null
+      if (phoneInput && !phoneInput.value) {
+        phoneInput.value = savedPhone
+      }
+      checkPreviousVerification(savedPhone)
+    }
+  }, [checkPreviousVerification])
 
   // Countdown timer for resend cooldown
   function startCooldown() {
@@ -91,6 +132,12 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
 
       if (data.verified) {
         setOtpVerified(true)
+        // Save verified phone to localStorage for future visits
+        if (formRef.current) {
+          const fd = new FormData(formRef.current)
+          const phone = (fd.get('phone') as string)?.trim()
+          if (phone) localStorage.setItem('mcar_verified_phone', phone)
+        }
       } else {
         setOtpError(data.error || 'Incorrect code. Please try again.')
       }
@@ -141,9 +188,12 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
             required={!otpVerified}
             placeholder="07123 456789"
             readOnly={otpVerified}
+            onBlur={(e) => {
+              if (!otpVerified) checkPreviousVerification(e.target.value)
+            }}
             className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none read-only:bg-gray-100 read-only:text-gray-500"
           />
-          {!otpVerified && (
+          {!otpVerified && !checkingPhone && (
             <button
               type="button"
               onClick={handleSendOtp}
@@ -152,6 +202,11 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
             >
               {otpSending ? 'Sending...' : cooldown > 0 ? `Resend (${cooldown}s)` : otpStep ? 'Resend Code' : 'Verify Phone'}
             </button>
+          )}
+          {checkingPhone && (
+            <span className="flex items-center text-gray-400 text-sm px-3">
+              Checking…
+            </span>
           )}
           {otpVerified && (
             <span className="flex items-center text-green-600 text-sm font-medium px-3">
