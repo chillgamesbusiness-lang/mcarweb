@@ -207,7 +207,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
             <ul className="mt-4 text-left space-y-1.5 border-t border-gray-50 pt-4">
               {valuation.customerBullets.map((b: string, i: number) => (
                 <li key={i} className="text-xs text-gray-500 flex items-start gap-1.5">
-                  <span className="mt-0.5 shrink-0 text-green-500">✓</span>
+                  <svg className="w-3.5 h-3.5 mt-0.5 shrink-0 text-green-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                   <span>{b}</span>
                 </li>
               ))}

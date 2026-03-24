@@ -454,6 +454,9 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   snapshot.risk_tier === 'low' ? 'text-green-700' :
                   snapshot.risk_tier === 'medium' ? 'text-amber-700' : 'text-red-700'
                 }`}>
+                  <svg width="8" height="8" viewBox="0 0 8 8" className="inline-block mr-1 -mt-0.5">
+                    <circle cx="4" cy="4" r="3.5" fill={snapshot.risk_tier === 'low' ? '#22c55e' : snapshot.risk_tier === 'medium' ? '#f59e0b' : '#ef4444'} />
+                  </svg>
                   {snapshot.risk_tier?.toUpperCase()}
                 </p>
               </div>
@@ -466,13 +469,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             </div>
 
             <Field label="Market Value Used" value={`£${snapshot.market_value_used?.toLocaleString()}`} />
-            <Field label="Region" value={snapshot.region_used ?? '-'} />
+            {/* Technical metadata — commented out */}
+            {/* <Field label="Region" value={snapshot.region_used ?? '-'} />
             <Field label="Engine Version" value={snapshot.engine_version ?? 'v1'} />
-            <Field label="Postcode (at quote)" value={snapshot.input_postcode ?? '-'} />
+            <Field label="Postcode (at quote)" value={snapshot.input_postcode ?? '-'} /> */}
             <Field label="Snapshot Created" value={new Date(snapshot.created_at).toLocaleString('en-GB')} />
 
-            {/* Multiplier table */}
-            {multipliers && (
+            {/* Multiplier table — commented out (technical detail) */}
+            {/* {multipliers && (
               <div className="mt-4">
                 <span className="text-xs text-gray-400 block mb-2">Multipliers</span>
                 <div className="bg-gray-50 rounded-lg overflow-hidden">
@@ -503,10 +507,10 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   </table>
                 </div>
               </div>
-            )}
+            )} */}
 
-            {/* Risk flags */}
-            {riskFlags && riskFlags.length > 0 && (
+            {/* Risk flags — commented out (technical detail) */}
+            {/* {riskFlags && riskFlags.length > 0 && (
               <div className="mt-4">
                 <span className="text-xs text-gray-400 block mb-2">Risk Flags ({riskFlags.length})</span>
                 <ul className="space-y-1">
@@ -517,19 +521,17 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   ))}
                 </ul>
               </div>
-            )}
+            )} */}
 
-            {/* Admin Explanation (engine v3) — color-coded by impact direction */}
-            {adminExplanation && adminExplanation.length > 0 && (
+            {/* Admin Engine Explanation — commented out (technical detail) */}
+            {/* {adminExplanation && adminExplanation.length > 0 && (
               <div className="mt-4">
                 <span className="text-xs text-gray-400 block mb-2">Engine Explanation ({adminExplanation.length})</span>
                 <div className="space-y-1">
                   {adminExplanation.map((item, i) => {
-                    // Positive impacts = green, negative = severity gradient, neutral = blue
                     const impactStr = item.impact ?? ''
                     const isPositive = impactStr.startsWith('+') || impactStr === 'clear' || impactStr === 'bonus'
                     const isNegative = impactStr.startsWith('-') || impactStr === 'blocked' || impactStr === 'manual_review'
-                    // Extract numeric % for severity scaling
                     const pctMatch = impactStr.match(/-(\d+(?:\.\d+)?)%/)
                     const pctVal = pctMatch ? parseFloat(pctMatch[1]) : 0
 
@@ -571,7 +573,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   Percentages are compound multiplier impacts, not flat price cuts. Final value = base × all multipliers.
                 </p>
               </div>
-            )}
+            )} */}
 
             {/* ── Profit Simulation V4 (Resale Evidence Engine) ─────────── */}
             {profitSimV4 ? (
@@ -630,18 +632,18 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
                   {profitSimV4.guardrailTriggered && (
                     <p className="mt-2 text-xs text-red-700 font-medium text-center">
-                      ⚠ {profitSimV4.guardrailReason}
+                      <svg className="inline w-3.5 h-3.5 mr-0.5 -mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
+                      {profitSimV4.guardrailReason}
                     </p>
                   )}
 
-                  {/* ── Show Details Toggle ────────────────────────────────── */}
-                  <details className="mt-3">
+                  {/* Detailed breakdown — commented out (technical detail) */}
+                  {/* <details className="mt-3">
                     <summary className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-medium text-center">
                       Show details
                     </summary>
 
                     <div className="mt-3 space-y-4">
-                      {/* ── Evidence Tab ────────────────────────────────── */}
                       <div className="bg-white/60 rounded-lg p-3">
                         <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Evidence</h4>
                         <p className="text-xs text-gray-700">{profitSimV4.evidence?.compsSummary}</p>
@@ -652,143 +654,10 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                         </div>
                       </div>
 
-                      {/* ── Adjustments Tab ─────────────────────────────── */}
-                      {profitSimV4.adjustmentDrivers?.length > 0 && (
-                        <div className="bg-white/60 rounded-lg p-3">
-                          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Key Adjustments</h4>
-                          <div className="space-y-1">
-                            {profitSimV4.adjustmentDrivers.slice(0, 5).map((d: { factor: string; impact: string; direction: string }, i: number) => (
-                              <div key={i} className="flex justify-between text-xs">
-                                <span className="text-gray-700">{d.factor}</span>
-                                <span className={`font-medium ${
-                                  d.direction === 'negative' ? 'text-red-600' :
-                                  d.direction === 'positive' ? 'text-green-600' : 'text-gray-500'
-                                }`}>{d.impact}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ── Costs & Time Tab ─────────────────────────────── */}
-                      <div className="bg-white/60 rounded-lg p-3">
-                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Costs &amp; Time</h4>
-                        {profitSimV4.costsAndTime?.sellCostBreakdown?.breakdown?.map((line: string, i: number) => (
-                          <p key={i} className="text-xs text-gray-600">{line}</p>
-                        ))}
-                        <div className="mt-2 pt-2 border-t border-gray-100">
-                          <p className="text-xs text-gray-600">
-                            {profitSimV4.costsAndTime?.timeToSell?.explanation}
-                          </p>
-                          {profitSimV4.costsAndTime?.timeToSell?.signals?.slice(0, 3).map((s: string, i: number) => (
-                            <p key={i} className="text-[10px] text-gray-400 ml-2">• {s}</p>
-                          ))}
-                        </div>
-
-                        {/* TCO Analysis */}
-                        {profitSimV4.costsAndTime?.tco && (
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">TCO Prep Costs</p>
-                            {profitSimV4.costsAndTime.tco.breakdown?.map((line: string, i: number) => (
-                              <p key={i} className="text-[10px] text-gray-500">{line}</p>
-                            ))}
-                            {profitSimV4.costsAndTime.tco.riskNote && (
-                              <p className="text-[10px] text-amber-600 font-medium mt-1">{profitSimV4.costsAndTime.tco.riskNote}</p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Auction vs Retail Spread */}
-                        {profitSimV4.costsAndTime?.auctionRetailSpread?.spreadPct !== null && profitSimV4.costsAndTime?.auctionRetailSpread?.spreadPct !== undefined && (
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Auction → Retail Spread</p>
-                            <div className="flex items-center gap-2">
-                              {profitSimV4.costsAndTime.auctionRetailSpread.auctionEstimate && (
-                                <span className="text-xs text-gray-600">Auction: £{profitSimV4.costsAndTime.auctionRetailSpread.auctionEstimate.toLocaleString()}</span>
-                              )}
-                              <span className="text-[10px] text-gray-400">→</span>
-                              {profitSimV4.costsAndTime.auctionRetailSpread.retailEstimate && (
-                                <span className="text-xs text-gray-600">Retail: £{profitSimV4.costsAndTime.auctionRetailSpread.retailEstimate.toLocaleString()}</span>
-                              )}
-                              <span className={`text-xs font-semibold ${
-                                (profitSimV4.costsAndTime.auctionRetailSpread.spreadPct ?? 0) > 15 ? 'text-green-600' : 'text-gray-600'
-                              }`}>({profitSimV4.costsAndTime.auctionRetailSpread.spreadPct}%)</span>
-                            </div>
-                            <p className="text-[10px] text-gray-400 mt-0.5">{profitSimV4.costsAndTime.auctionRetailSpread.note}</p>
-                          </div>
-                        )}
-
-                        {/* Regional Weighting */}
-                        {profitSimV4.costsAndTime?.regionalWeighting && (
-                          <div className="mt-2 pt-2 border-t border-gray-100">
-                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Regional Pricing</p>
-                            <p className="text-xs text-gray-600">{profitSimV4.costsAndTime.regionalWeighting.note}</p>
-                            <div className="flex gap-3 mt-1">
-                              <span className="text-[10px] text-gray-400">Demand: <span className="font-medium text-gray-600">{profitSimV4.costsAndTime.regionalWeighting.demandLevel}</span></span>
-                              <span className="text-[10px] text-gray-400">Supply: <span className="font-medium text-gray-600">{profitSimV4.costsAndTime.regionalWeighting.supplyLevel}</span></span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* ── Resale Range ──────────────────────────────────── */}
-                      <div className="bg-white/60 rounded-lg p-3">
-                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Resale Range</h4>
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div>
-                            <p className="text-[10px] text-gray-400">Low</p>
-                            <p className="text-sm font-semibold text-gray-700">£{profitSimV4.resale?.low?.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-gray-400">Mid</p>
-                            <p className="text-sm font-bold text-gray-900">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-gray-400">High</p>
-                            <p className="text-sm font-semibold text-gray-700">£{profitSimV4.resale?.high?.toLocaleString()}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* ── Raw Comps (admin only) ────────────────────────── */}
-                      {profitSimV4.topComps?.length > 0 && (
-                        <div className="bg-white/60 rounded-lg p-3">
-                          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
-                            Market Comps ({profitSimV4.topComps.length})
-                          </h4>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-[10px]">
-                              <thead>
-                                <tr className="text-gray-400 border-b border-gray-100">
-                                  <th className="text-left py-1">Title</th>
-                                  <th className="text-right py-1">Price</th>
-                                  <th className="text-right py-1">Year</th>
-                                  <th className="text-right py-1">Miles</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {profitSimV4.topComps.map((c: { title: string; price: number; year: number; mileage: number | null }, i: number) => (
-                                  <tr key={i} className="border-b border-gray-50">
-                                    <td className="py-1 text-gray-600 max-w-[160px] truncate">{c.title}</td>
-                                    <td className="py-1 text-right font-medium text-gray-800">£{c.price?.toLocaleString()}</td>
-                                    <td className="py-1 text-right text-gray-500">{c.year || '—'}</td>
-                                    <td className="py-1 text-right text-gray-500">{c.mileage ? `${(c.mileage/1000).toFixed(0)}k` : '—'}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* ── v3 Delta (shadow mode) ─────────────────────────── */}
-                      {profitSimV4.v3ProfitMidDelta !== null && profitSimV4.v3ProfitMidDelta !== undefined && (
-                        <p className="text-[10px] text-gray-400 italic text-center">
-                          v4 vs v3 delta: {profitSimV4.v3ProfitMidDelta >= 0 ? '+' : ''}£{profitSimV4.v3ProfitMidDelta?.toLocaleString()}
-                        </p>
-                      )}
+                      Adjustments, Costs & Time, Resale Range, Market Comps, v3 Delta
+                      all commented out (technical detail)
                     </div>
-                  </details>
+                  </details> */}
                 </div>
               </div>
             ) : profitSim ? (
@@ -820,17 +689,19 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                       </p>
                     </div>
                   </div>
-                  <div className="flex justify-between text-xs text-gray-500">
+                  {/* Technical detail hidden */}
+                  {/* <div className="flex justify-between text-xs text-gray-500">
                     <span>Est. Resale: £{profitSim.estimatedRetail?.toLocaleString()}</span>
                     <span>Recon: £{profitSim.reconEstimate?.toLocaleString()}</span>
                     <span>Sell cost: {((profitSim.sellCostPct ?? 0.05) * 100).toFixed(0)}%</span>
                   </div>
                   <p className="mt-1 text-[10px] text-gray-400 italic">
                     v3 baseline — 20% dealer markup. v4 not yet computed for this lead.
-                  </p>
+                  </p> */}
                   {profitSim.guardrailTriggered && (
                     <p className="mt-2 text-xs text-red-700 font-medium">
-                      ⚠ Guardrail: {profitSim.guardrailReason}
+                      <svg className="inline w-3.5 h-3.5 mr-0.5 -mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
+                      Guardrail: {profitSim.guardrailReason}
                     </p>
                   )}
                 </div>
@@ -849,7 +720,11 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             <div className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium mb-3 ${
               lead.outcome === 'won' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
             }`}>
-              {lead.outcome === 'won' ? '✓ Won' : '✗ Lost'}
+              {lead.outcome === 'won' ? (
+                <><svg className="inline w-4 h-4 mr-1 -mt-0.5 text-green-700" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>Won</>
+              ) : (
+                <><svg className="inline w-4 h-4 mr-1 -mt-0.5 text-red-700" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>Lost</>
+              )}
             </div>
             {lead.outcome === 'won' && lead.final_offer && (
               <Field label="Final Price" value={`£${lead.final_offer.toLocaleString()}`} />

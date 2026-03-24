@@ -37,8 +37,13 @@ function signalAbove(val: number, greenAbove: number, amberAbove: number): Signa
   return 'red'
 }
 
-function dot(s: Signal) {
-  return s === 'green' ? '🟢' : s === 'amber' ? '🟠' : '🔴'
+function SignalDot({ s }: { s: Signal }) {
+  const color = s === 'green' ? '#22c55e' : s === 'amber' ? '#f59e0b' : '#ef4444'
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" className="inline-block">
+      <circle cx="6" cy="6" r="5" fill={color} />
+    </svg>
+  )
 }
 
 // ── Premium card styling (softer shadows, no heavy borders) ────────────────────
@@ -117,7 +122,7 @@ function BusinessBanner({
   return (
     <div className={`${bg} rounded-xl px-5 py-3.5 flex items-center justify-between shadow-sm`}>
       <div className="flex items-center gap-3">
-        <span className="text-white text-lg">{dot(status)}</span>
+        <span className="text-white text-lg"><SignalDot s={status} /></span>
         <div>
           <p className="text-white font-semibold text-sm">Business Status: {label}</p>
           <p className="text-white/75 text-xs leading-relaxed">
@@ -129,7 +134,7 @@ function BusinessBanner({
           </p>
         </div>
       </div>
-      <span className="text-white/50 text-[10px] hidden sm:block uppercase tracking-wider">Auto-assessed</span>
+      <span className="text-white/50 text-[10px] hidden sm:block uppercase tracking-wider">System check</span>
     </div>
   )
 }
@@ -247,7 +252,7 @@ function AcquisitionSignal({ kpi }: { kpi: AcquisitionKPIs }) {
     <div className={cardClass(sig)}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Acquisition</h2>
-        <span className="text-base">{dot(sig)}</span>
+        <SignalDot s={sig} />
       </div>
       <div className="space-y-2.5">
         <MetricRow label="Offers this week" value={kpi.offersThisWeek}
@@ -283,7 +288,7 @@ function ProfitSignal({ kpi }: { kpi: ProfitKPIs }) {
     <div className={cardClass(sig)}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Profit</h2>
-        <span className="text-base">{dot(sig)}</span>
+        <SignalDot s={sig} />
       </div>
       <div className="space-y-2.5">
         <MetricRow label="Avg predicted profit" value={`£${kpi.avgPredictedProfitMid}`} signal={sig} />
@@ -322,7 +327,7 @@ function RiskSignal({ kpi, exposure, weeklySummary }: {
     <div className={cardClass(sig)}>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Risk</h2>
-        <span className="text-base">{dot(sig)}</span>
+        <SignalDot s={sig} />
       </div>
       <div className="space-y-2.5">
         <MetricRow label="Recon error %"

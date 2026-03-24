@@ -136,10 +136,11 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
               </div>
             </div>
             {payload.motSummary.mileageConsistency !== 'consistent' && (
-              <div className="mt-2 rounded-lg bg-amber-50 ring-1 ring-amber-200 px-3 py-1.5 text-xs text-amber-700">
-                {payload.motSummary.mileageConsistency === 'rollback_detected'
-                  ? '⚠️ Mileage discrepancy detected in MOT history'
-                  : '⚠️ Unusual mileage pattern detected'}
+              <div className="mt-2 rounded-lg bg-amber-50 ring-1 ring-amber-200 px-3 py-1.5 text-xs text-amber-700 flex items-start gap-1.5">
+                <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
+                <span>{payload.motSummary.mileageConsistency === 'rollback_detected'
+                  ? 'Mileage discrepancy detected in MOT history'
+                  : 'Unusual mileage pattern detected'}</span>
               </div>
             )}
           </div>
