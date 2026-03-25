@@ -90,31 +90,8 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent(errors.join('. '))}`)
     }
 
-    // ── OTP verification ────────────────────────────────────────────────
-    const otpSessionId = formData.get('otp_session_id') as string | null
-    const otpVerifiedFlag = formData.get('otp_verified') as string
-
-    if (otpVerifiedFlag !== 'true' || !otpSessionId) {
-      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification is required.')}`)
-    }
-
-    // Double-check OTP session is actually verified in the DB (tamper-proof)
-    // Also verify the OTP session phone matches the submitted phone
-    const svcCheck = createServiceClient()
-    const { data: otpSession } = await svcCheck
-      .from('otp_sessions')
-      .select('verified, phone')
-      .eq('id', otpSessionId)
-      .single()
-
-    if (!otpSession?.verified) {
-      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone verification failed. Please verify again.')}`)
-    }
-
-    // Ensure OTP was verified for the same phone number being submitted
-    if (otpSession.phone !== phoneDigits) {
-      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Phone number does not match verification. Please verify the correct number.')}`)
-    }
+    // ── OTP verification (temporarily disabled — still in testing) ─────
+    // TODO: Re-enable SMS verification before production launch
 
     // ── Build VehicleProfile for pricing engine ─────────────────────────
     // Validate engine-critical inputs (defense-in-depth)
