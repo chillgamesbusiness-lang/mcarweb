@@ -178,36 +178,36 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       <StepIndicator current={3} />
 
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Book Appointment</h1>
-        <p className="mt-2 text-gray-500 text-sm">Choose how and when you would like to meet</p>
+        <h1 className="text-3xl font-bold text-charcoal tracking-tight">Book Appointment</h1>
+        <p className="mt-2 text-warm-gray text-sm">Choose how and when you would like to meet</p>
       </div>
 
       {/* Offer summary — profit simulation centrepiece */}
       {autoQuote && lead.estimated_min > 0 ? (
-        <div className="bg-white rounded-xl shadow-md ring-1 ring-green-100 p-6 mb-6 text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Your Estimated Offer</p>
+        <div className="bg-surface rounded-2xl shadow-xl border border-gold/20 p-8 mb-6 text-center">
+          <p className="text-xs text-warm-gray uppercase tracking-wider mb-3">Your Estimated Valuation</p>
           {/* Big bold midpoint */}
-          <p className="text-4xl font-extrabold text-gray-900 mb-1">
+          <p className="text-5xl font-extrabold text-charcoal mb-1">
             £{Math.round(((lead.estimated_min ?? 0) + (lead.estimated_max ?? 0)) / 2).toLocaleString()}
           </p>
           {/* Smaller min/max range */}
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-warm-gray">
             £{lead.estimated_min?.toLocaleString()} – £{lead.estimated_max?.toLocaleString()}
           </p>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-warm-gray mt-3">
             {lead.reg} — {lead.make} {lead.model} ({lead.year})
           </p>
           {valuation && valuation.riskTier !== 'low' && (
-            <p className="text-xs text-gray-400 mt-3">
+            <p className="text-xs text-warm-gray mt-3">
               Final offer confirmed at appointment after inspection
             </p>
           )}
           {/* Customer explanation bullets */}
           {valuation?.customerBullets && valuation.customerBullets.length > 0 && (
-            <ul className="mt-4 text-left space-y-1.5 border-t border-gray-50 pt-4">
+            <ul className="mt-5 text-left space-y-2 border-t border-warm-border pt-5">
               {valuation.customerBullets.map((b: string, i: number) => (
-                <li key={i} className="text-xs text-gray-500 flex items-start gap-1.5">
-                  <svg className="w-3.5 h-3.5 mt-0.5 shrink-0 text-green-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                <li key={i} className="text-xs text-warm-gray flex items-start gap-2">
+                  <svg className="w-4 h-4 mt-0.5 shrink-0 text-gold" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                   <span>{b}</span>
                 </li>
               ))}
@@ -215,15 +215,15 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm ring-1 ring-amber-100 p-6 mb-6 text-center">
-          <p className="text-xs text-amber-500 uppercase tracking-wider mb-2">Review Required</p>
-          <p className="text-lg font-semibold text-gray-900">
+        <div className="bg-surface rounded-2xl shadow-lg border border-gold/20 p-8 mb-6 text-center">
+          <p className="text-xs text-gold-dark uppercase tracking-wider mb-2">Review Required</p>
+          <p className="text-lg font-semibold text-charcoal">
             We&apos;ll provide a personalised offer at your appointment
           </p>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-warm-gray mt-3">
             {lead.reg} — {lead.make} {lead.model} ({lead.year})
           </p>
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-warm-gray mt-2">
             Our specialist will assess your vehicle and provide a competitive offer
           </p>
         </div>
@@ -231,7 +231,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
 
       {/* Quote expiry notice */}
       {snapshot && (
-        <p className="text-xs text-gray-300 text-center mb-4">
+        <p className="text-xs text-warm-gray text-center mb-4">
           Quote valid until{' '}
           {new Date(new Date(snapshot.created_at).getTime() + QUOTE_TTL_MS).toLocaleDateString('en-GB', {
             day: 'numeric',

@@ -56,7 +56,7 @@ function TurnstileWidget({ onToken }: { onToken: (token: string) => void }) {
 function OfferForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [reg, setReg] = useState('')
+  const [reg, setReg] = useState(searchParams.get('reg')?.toUpperCase() || '')
   const [loading, setLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(
@@ -95,51 +95,116 @@ function OfferForm() {
   return (
     <OfferShell>
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Get Your Offer</h1>
-        <p className="mt-2 text-gray-500 text-sm leading-relaxed">
-          Enter your registration below for an instant, no-obligation valuation
+        <h1 className="text-3xl font-bold text-charcoal tracking-tight">
+          Get Your Valuation
+        </h1>
+        <p className="mt-2 text-warm-gray text-sm leading-relaxed">
+          Enter your registration below for a free, no-obligation valuation
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6 space-y-5">
-        <div>
-          <label htmlFor="reg" className="block text-sm font-medium text-gray-700 mb-1.5">
-            Registration Number
-          </label>
-          <input
-            id="reg"
-            type="text"
-            value={reg}
-            onChange={(e) => setReg(e.target.value.toUpperCase())}
-            placeholder="e.g. AB12 CDE"
-            required
-            className="w-full rounded-lg border border-gray-200 px-4 py-3.5 text-lg font-mono tracking-wider text-center uppercase focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-shadow"
-          />
-        </div>
-
-        <TurnstileWidget onToken={setTurnstileToken} />
-
-        {error && (
-          <div className="rounded-lg bg-amber-50 ring-1 ring-amber-200 p-3 text-sm text-amber-700">
-            {error}
+      {/* Loading state — premium shimmer */}
+      {loading ? (
+        <div className="bg-surface rounded-2xl shadow-lg border border-warm-border p-8 text-center animate-fade-in">
+          <div className="w-16 h-16 rounded-full bg-gold-light mx-auto flex items-center justify-center mb-4">
+            <svg
+              className="w-7 h-7 text-gold animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
           </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading || reg.trim().length < 2 || (hasTurnstile && !turnstileToken)}
-          className="w-full rounded-lg bg-blue-600 px-4 py-3.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-all shadow-sm hover:shadow-md"
+          <p className="text-charcoal font-medium mb-2">
+            Checking vehicle details&hellip;
+          </p>
+          <p className="text-warm-gray text-xs">This usually takes a few seconds</p>
+          <div className="mt-4 h-1.5 bg-warm-border-light rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-gold/60 via-gold to-gold/60 rounded-full"
+              style={{
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 2s infinite linear',
+              }}
+            />
+          </div>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleSubmit}
+          className="bg-surface rounded-2xl shadow-lg border border-warm-border p-7 space-y-5"
         >
-          {loading ? 'Looking up…' : 'Get Valuation'}
-        </button>
-      </form>
+          <div>
+            <label
+              htmlFor="reg"
+              className="block text-sm font-medium text-charcoal mb-2"
+            >
+              Registration Number
+            </label>
+            {/* UK Number Plate Input */}
+            <div className="flex items-stretch border-2 border-charcoal rounded-lg overflow-hidden">
+              <div className="bg-[#003DA5] text-white w-11 flex flex-col items-center justify-center gap-0.5 flex-shrink-0">
+                <svg viewBox="0 0 24 16" className="w-5 h-3.5" fill="none">
+                  <circle cx="12" cy="8" r="5" stroke="white" strokeWidth="1" />
+                  <path
+                    d="M7 8 Q12 4 17 8 Q12 12 7 8Z"
+                    fill="#FFD700"
+                    opacity="0.8"
+                  />
+                </svg>
+                <span className="text-[9px] font-bold tracking-wide leading-none">
+                  GB
+                </span>
+              </div>
+              <input
+                id="reg"
+                type="text"
+                value={reg}
+                onChange={(e) => setReg(e.target.value.toUpperCase())}
+                placeholder="Enter reg"
+                required
+                className="flex-1 px-4 py-4 text-2xl font-bold uppercase tracking-[0.15em] text-center text-charcoal placeholder:text-warm-border focus:outline-none bg-gold-50/30"
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </div>
+          </div>
+
+          <TurnstileWidget onToken={setTurnstileToken} />
+
+          {error && (
+            <div className="rounded-lg bg-gold-50 ring-1 ring-gold/30 p-3 text-sm text-gold-dark">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || reg.trim().length < 2 || (hasTurnstile && !turnstileToken)}
+            className="w-full rounded-lg bg-gold px-4 py-4 text-base font-semibold text-white hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+          >
+            Get Valuation
+          </button>
+
+          <p className="text-xs text-warm-gray text-center">
+            Takes less than 2 minutes&ensp;·&ensp;No sign-up required
+          </p>
+        </form>
+      )}
     </OfferShell>
   )
 }
 
 export default function OfferPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-300">Loading…</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background text-warm-gray">
+          Loading&hellip;
+        </div>
+      }
+    >
       <OfferForm />
     </Suspense>
   )

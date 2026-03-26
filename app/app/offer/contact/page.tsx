@@ -437,15 +437,15 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       <StepIndicator current={2} />
 
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Your Details</h1>
-        <p className="mt-2 text-gray-500 text-sm">
+        <h1 className="text-3xl font-bold text-charcoal tracking-tight">Your Details</h1>
+        <p className="mt-2 text-warm-gray text-sm">
           Almost there! We need your contact information.
         </p>
       </div>
 
       {/* Vehicle summary */}
-      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-4 mb-6 text-sm text-gray-600">
-        <span className="font-mono font-bold text-gray-900">{payload.reg}</span>
+      <div className="bg-surface rounded-xl border border-warm-border p-4 mb-6 text-sm text-warm-gray">
+        <span className="font-mono font-bold text-charcoal">{payload.reg}</span>
         {' — '}
         {payload.vehicle.make} {payload.vehicle.model} ({payload.vehicle.year})
         {' · '}

@@ -72,18 +72,19 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
       <StepIndicator current={1} />
 
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Vehicle Details</h1>
-        <p className="mt-2 text-gray-500 text-sm">Confirm your vehicle info below</p>
+        <h1 className="text-3xl font-bold text-charcoal tracking-tight">Vehicle Details</h1>
+        <p className="mt-2 text-warm-gray text-sm">Confirm your vehicle info below</p>
       </div>
 
       {/* Vehicle summary card */}
-      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5 mb-6">
+      <div className="bg-surface rounded-2xl shadow-lg border border-warm-border p-6 mb-6">
         <div className="text-center">
-          <span className="inline-block bg-yellow-50 text-yellow-700 font-mono text-lg font-bold px-4 py-1.5 rounded-lg mb-3 ring-1 ring-yellow-200">
+          <span className="inline-flex items-center gap-2 bg-charcoal text-white font-mono text-lg font-bold px-5 py-2 rounded-lg mb-4">
+            <span className="text-[9px] text-gold font-sans">GB</span>
             {payload.reg}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 text-sm">
+        <div className="grid grid-cols-2 gap-3 text-sm">
             <Field label="Make" value={payload.vehicle.make} />
             <Field label="Model" value={payload.vehicle.model || '—'} />
             <Field label="Year" value={payload.vehicle.year.toString()} />
@@ -109,11 +110,11 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
 
       {/* MOT summary card (if available) */}
       {payload.motSummary && (
-        <div className="bg-blue-50/60 rounded-xl ring-1 ring-blue-100 p-4 mb-6 text-sm">
-          <h3 className="font-semibold text-blue-900 mb-2">MOT Summary</h3>
-          <div className="grid grid-cols-2 gap-2.5 text-blue-800">
+        <div className="bg-gold-50 rounded-xl border border-gold/20 p-5 mb-6 text-sm">
+          <h3 className="font-semibold text-charcoal mb-3">MOT Summary</h3>
+          <div className="grid grid-cols-2 gap-3 text-charcoal-light">
               <div>
-                <span className="text-blue-500 text-xs">MOT Remaining</span>
+                <span className="text-warm-gray text-xs">MOT Remaining</span>
                 <p className="font-medium">
                   {payload.motSummary.monthsRemaining > 0
                     ? `${payload.motSummary.monthsRemaining} months`
@@ -122,22 +123,22 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
               </div>
               {payload.motSummary.latestMileage != null && (
                 <div>
-                  <span className="text-blue-500 text-xs">Last Recorded Mileage</span>
+                  <span className="text-warm-gray text-xs">Last Recorded Mileage</span>
                   <p className="font-medium">{payload.motSummary.latestMileage.toLocaleString()} mi</p>
                 </div>
               )}
               <div>
-                <span className="text-blue-500 text-xs">Est. Annual Mileage</span>
+                <span className="text-warm-gray text-xs">Est. Annual Mileage</span>
                 <p className="font-medium">{payload.motSummary.annualMileageEstimate.toLocaleString()} mi/yr</p>
               </div>
               <div>
-                <span className="text-blue-500 text-xs">Recent Failures</span>
+                <span className="text-warm-gray text-xs">Recent Failures</span>
                 <p className="font-medium">{payload.motSummary.recentFailCount}</p>
               </div>
             </div>
             {payload.motSummary.mileageConsistency !== 'consistent' && (
-              <div className="mt-2 rounded-lg bg-amber-50 ring-1 ring-amber-200 px-3 py-1.5 text-xs text-amber-700 flex items-start gap-1.5">
-                <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
+              <div className="mt-3 rounded-lg bg-gold-light/60 border border-gold/20 px-3 py-2 text-xs text-gold-dark flex items-start gap-1.5">
+                <svg className="w-4 h-4 shrink-0 mt-0.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
                 <span>{payload.motSummary.mileageConsistency === 'rollback_detected'
                   ? 'Mileage discrepancy detected in MOT history'
                   : 'Unusual mileage pattern detected'}</span>
@@ -154,8 +155,8 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <span className="text-gray-400 text-xs">{label}</span>
-      <p className="text-gray-900 font-medium">{value}</p>
+      <span className="text-warm-gray text-xs">{label}</span>
+      <p className="text-charcoal font-medium">{value}</p>
     </div>
   )
 }

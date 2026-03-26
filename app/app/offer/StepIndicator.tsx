@@ -2,19 +2,19 @@
 
 /**
  * 3-step progress indicator for the offer funnel.
- * Steps: Details → Contact → Book
- * Premium, clean, minimal design.
+ * Steps: Vehicle → Your Details → Valuation
+ * Premium design with gold accent.
  */
 
 const STEPS = [
-  { label: 'Details', step: 1 },
-  { label: 'Contact', step: 2 },
-  { label: 'Book', step: 3 },
+  { label: 'Vehicle', step: 1 },
+  { label: 'Your Details', step: 2 },
+  { label: 'Valuation', step: 3 },
 ] as const
 
 export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
   return (
-    <div className="flex items-center justify-center mb-8">
+    <div className="flex items-center justify-center mb-10">
       {STEPS.map((s, i) => {
         const isActive = s.step === current
         const isDone = s.step < current
@@ -25,13 +25,13 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
             <div className="flex flex-col items-center">
               <div
                 className={`
-                  w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold
+                  w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold
                   transition-all duration-300
                   ${isDone
-                    ? 'bg-green-500 text-white shadow-sm'
+                    ? 'bg-gold text-white shadow-sm'
                     : isActive
-                    ? 'bg-blue-600 text-white shadow-md ring-4 ring-blue-100'
-                    : 'bg-gray-100 text-gray-400'
+                    ? 'bg-gold text-white shadow-md ring-4 ring-gold-light'
+                    : 'bg-surface-warm text-warm-gray border border-warm-border'
                   }
                 `}
               >
@@ -45,7 +45,7 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
               </div>
               <span
                 className={`mt-1.5 text-[10px] font-medium tracking-wide uppercase ${
-                  isActive ? 'text-blue-600' : isDone ? 'text-green-600' : 'text-gray-300'
+                  isActive ? 'text-gold-dark' : isDone ? 'text-gold' : 'text-warm-gray/50'
                 }`}
               >
                 {s.label}
@@ -56,7 +56,7 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
             {i < STEPS.length - 1 && (
               <div
                 className={`w-12 sm:w-16 h-0.5 mx-2 mt-[-14px] rounded-full transition-colors duration-300 ${
-                  s.step < current ? 'bg-green-400' : 'bg-gray-100'
+                  s.step < current ? 'bg-gold/40' : 'bg-warm-border'
                 }`}
               />
             )}

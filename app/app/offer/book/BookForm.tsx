@@ -15,7 +15,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-lg bg-gold px-4 py-3.5 text-sm font-semibold text-white hover:bg-gold-dark transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? 'Booking…' : 'Confirm Booking'}
     </button>
@@ -64,15 +64,15 @@ function BookFormInner({ submitBooking }: BookFormProps) {
   const slots = generateSlots()
 
   return (
-    <form action={submitBooking} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6 space-y-5">
+    <form action={submitBooking} className="bg-surface rounded-2xl shadow-lg border border-warm-border p-7 space-y-5">
       {error && (
-        <div className="rounded-lg bg-amber-50 ring-1 ring-amber-200 p-3 text-sm text-amber-700">
+        <div className="rounded-lg bg-gold-50 border border-gold/30 p-3 text-sm text-gold-dark">
           {error}
         </div>
       )}
 
       <div>
-        <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="type" className="block text-sm font-medium text-charcoal mb-1.5">
           Appointment Type
         </label>
         <select
@@ -80,7 +80,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
           name="type"
           required
           defaultValue=""
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          className="w-full rounded-lg border border-warm-border px-4 py-3 text-sm text-charcoal focus:border-gold focus:ring-2 focus:ring-gold/15 outline-none transition-shadow bg-surface"
         >
           <option value="" disabled>Choose type</option>
           <option value="in_person">In Person</option>
@@ -89,7 +89,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
       </div>
 
       <div>
-        <label htmlFor="slot" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="slot" className="block text-sm font-medium text-charcoal mb-1.5">
           Time Slot
         </label>
         <select
@@ -97,7 +97,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
           name="slot"
           required
           defaultValue=""
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          className="w-full rounded-lg border border-warm-border px-4 py-3 text-sm text-charcoal focus:border-gold focus:ring-2 focus:ring-gold/15 outline-none transition-shadow bg-surface"
         >
           <option value="" disabled>Choose a slot</option>
           {slots.map((s) => (

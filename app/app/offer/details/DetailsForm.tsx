@@ -14,7 +14,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-lg bg-gold px-4 py-3.5 text-sm font-semibold text-white hover:bg-gold-dark transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? 'Processing…' : 'Continue'}
     </button>
@@ -23,9 +23,9 @@ function SubmitButton() {
 
 export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFormProps) {
   return (
-    <form action={submitDetails} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6 space-y-5">
+    <form action={submitDetails} className="bg-surface rounded-2xl shadow-lg border border-warm-border p-7 space-y-5">
       <div>
-        <label htmlFor="mileage" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="mileage" className="block text-sm font-medium text-charcoal mb-1.5">
           Current Mileage
         </label>
         <input
@@ -37,17 +37,17 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           required
           defaultValue={defaultMileage ?? undefined}
           placeholder="e.g. 45000"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          className="w-full rounded-lg border border-warm-border px-4 py-3 text-sm text-charcoal focus:border-gold focus:ring-2 focus:ring-gold/15 outline-none transition-shadow bg-surface"
         />
         {defaultMileage != null && (
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-warm-gray mt-1.5">
             Pre-filled from MOT records — please update if different
           </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="condition" className="block text-sm font-medium text-gray-700 mb-1">
+        <label htmlFor="condition" className="block text-sm font-medium text-charcoal mb-1.5">
           Overall Condition
         </label>
         <select
@@ -55,7 +55,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           name="condition"
           required
           defaultValue=""
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          className="w-full rounded-lg border border-warm-border px-4 py-3 text-sm text-charcoal focus:border-gold focus:ring-2 focus:ring-gold/15 outline-none transition-shadow bg-surface"
         >
           <option value="" disabled>Select condition</option>
           <option value="excellent">Excellent</option>

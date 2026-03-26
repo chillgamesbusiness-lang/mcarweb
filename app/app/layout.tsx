@@ -16,18 +16,18 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#2563eb",          // blue-600 — matches brand buttons
+  themeColor: "#C4963C",          // gold accent — brand identity
 };
 
 const BASE_URL = "https://mcarweb.vercel.app";
 
 export const metadata: Metadata = {
   title: {
-    default: "MCar — Instant Vehicle Valuations",
+    default: "MCar — Sell Your Car Without the Hassle",
     template: "%s | MCar",
   },
   description:
-    "Get an instant, data-driven valuation for your vehicle. Fast, transparent, and fair offers from MCar.",
+    "Enter your registration for a free, no-obligation valuation backed by real vehicle data. A simpler way to sell your car.",
   metadataBase: new URL(BASE_URL),
   alternates: {
     canonical: "/",
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "MCar",
-    title: "MCar — Instant Vehicle Valuations",
+    title: "MCar — Sell Your Car Without the Hassle",
     description:
-      "Get an instant, data-driven valuation for your vehicle. Fast, transparent, and fair offers from MCar.",
+      "Enter your registration for a free, no-obligation valuation backed by real vehicle data. A simpler way to sell your car.",
     url: BASE_URL,
   },
   robots: {
