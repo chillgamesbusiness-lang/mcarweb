@@ -1,80 +1,49 @@
-import SectionShell from '@/app/components/ui/SectionShell'
-
-const privateItems = [
-  'Time-wasters and no-shows',
-  'Haggling and lowball offers',
-  'Uncertainty at every stage',
-  'Repeated listing effort',
-  'Security concerns with strangers',
-]
-
-const ourItems = [
-  'A structured, professional route',
-  'Clear, data-backed valuation',
-  'Quick and simple next steps',
-  'Secure handling throughout',
-  'A smoother, calmer experience',
-]
-
 export default function PrivateSaleComparisonSection() {
   return (
-    <SectionShell>
-      <div className="text-center mb-14">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal">
-          Why not sell privately?
+    <section className="px-5 sm:px-8 lg:px-10 py-20 sm:py-28">
+      <div className="mx-auto max-w-[1280px]">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="h-px w-8 bg-gold/50" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold/70">
+            Comparison
+          </span>
+        </div>
+        <h2 className="text-[clamp(1.75rem,3.5vw,2.75rem)] font-bold tracking-tight text-charcoal leading-[1.1] max-w-xl mb-16">
+          Private selling sounds good until you actually do it.
         </h2>
-        <p className="mt-3 text-warm-gray text-lg max-w-2xl mx-auto">
-          Private selling can work, but it often means dealing with more than you bargained for
-        </p>
-      </div>
 
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-        {/* Private selling */}
-        <div className="rounded-xl bg-surface-warm border border-warm-border p-8">
-          <h3 className="text-lg font-semibold text-charcoal mb-5">
-            Private selling often means
-          </h3>
-          <ul className="space-y-3.5">
-            {privateItems.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-warm-gray">
-                <svg
-                  className="w-5 h-5 text-red-400/70 flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Our process */}
-        <div className="rounded-xl bg-gold-50 border border-gold/20 p-8">
-          <h3 className="text-lg font-semibold text-charcoal mb-5">
-            Our process gives you
-          </h3>
-          <ul className="space-y-3.5">
-            {ourItems.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-charcoal-light">
-                <svg
-                  className="w-5 h-5 text-gold flex-shrink-0 mt-0.5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-                {item}
-              </li>
-            ))}
-          </ul>
+        {/* Two-tone table */}
+        <div className="overflow-hidden rounded-xl border border-warm-border">
+          <table className="w-full text-left text-[14px]">
+            <thead>
+              <tr className="border-b border-warm-border">
+                <th className="px-6 py-4 text-[11px] uppercase tracking-[0.15em] text-warm-gray font-semibold w-[40%]" />
+                <th className="px-6 py-4 text-[11px] uppercase tracking-[0.15em] text-warm-gray font-semibold">
+                  Private sale
+                </th>
+                <th className="px-6 py-4 text-[11px] uppercase tracking-[0.15em] text-gold font-semibold">
+                  MCar
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-warm-border">
+              {[
+                ['Time investment', 'Weeks of listings, viewings, chasing', '2 minutes online'],
+                ['Pricing certainty', 'Guesswork and haggling', 'Data-backed valuation'],
+                ['Security', 'Strangers at your door', 'Professional, structured'],
+                ['Hassle', 'Photos, ads, tyre-kickers', 'We handle it'],
+                ['Obligation', 'Sunk cost after effort', 'Walk away any time'],
+              ].map(([label, priv, ours]) => (
+                <tr key={label} className="hover:bg-surface-warm/50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-charcoal">{label}</td>
+                  <td className="px-6 py-4 text-warm-gray">{priv}</td>
+                  <td className="px-6 py-4 text-charcoal font-medium">{ours}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-    </SectionShell>
+    </section>
   )
 }

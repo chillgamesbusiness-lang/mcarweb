@@ -16,21 +16,22 @@ export default function FinalCtaSection() {
   }
 
   return (
-    <section className="bg-charcoal px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-      <div className="mx-auto max-w-2xl text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
-          Ready to get started?
-        </h2>
-        <p className="text-white/50 text-lg mb-10">
-          Enter your registration for a free, no-obligation valuation.
-          A simpler way to begin selling your car.
-        </p>
+    <section className="bg-charcoal px-5 sm:px-8 lg:px-10 py-20 sm:py-28">
+      <div className="mx-auto max-w-[1280px] grid lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-20 items-center">
+        {/* Left — headline */}
+        <div>
+          <h2 className="text-[clamp(2rem,4.5vw,3.5rem)] font-bold tracking-tight text-white leading-[1.05] mb-5">
+            Find out what your car is worth.
+          </h2>
+          <p className="text-white/40 text-[15px] leading-relaxed max-w-md">
+            Free. Two minutes. No sign-up required. Enter your reg and see a
+            valuation backed by real market data.
+          </p>
+        </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-md mx-auto"
-        >
-          <div className="flex items-stretch border-2 border-white/20 rounded-lg overflow-hidden mb-4 bg-white/5">
+        {/* Right — form */}
+        <form onSubmit={handleSubmit} className="max-w-sm lg:ml-auto w-full">
+          <div className="flex items-stretch border-2 border-white/15 rounded-lg overflow-hidden mb-4 bg-white/[0.04]">
             <div className="bg-[#003DA5] text-white w-11 flex flex-col items-center justify-center gap-0.5 flex-shrink-0">
               <svg viewBox="0 0 24 16" className="w-5 h-3.5" fill="none">
                 <circle cx="12" cy="8" r="5" stroke="white" strokeWidth="1" />
@@ -56,15 +57,11 @@ export default function FinalCtaSection() {
           <button
             type="submit"
             disabled={reg.trim().length < 2}
-            className="w-full rounded-lg bg-gold px-6 py-4 text-base font-semibold text-white hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+            className="w-full rounded-lg bg-gold px-6 py-4 text-[15px] font-semibold text-white hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
           >
-            Get Your Free Valuation
+            Get your free valuation
           </button>
         </form>
-
-        <p className="mt-5 text-xs text-white/30">
-          Get started in under 2 minutes&ensp;·&ensp;No sign-up required
-        </p>
       </div>
     </section>
   )

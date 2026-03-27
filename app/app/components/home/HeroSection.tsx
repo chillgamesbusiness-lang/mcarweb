@@ -16,152 +16,88 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="relative min-h-[92vh] flex items-center overflow-hidden">
-      {/* Layered gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-surface-warm to-background" />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse at 70% 20%, rgba(196,150,60,0.06) 0%, transparent 60%)',
-        }}
-      />
-      {/* Faint geometric grid */}
-      <div
-        className="absolute inset-0 opacity-[0.025]"
-        style={{
-          backgroundImage:
-            'linear-gradient(90deg, #C4963C 1px, transparent 1px), linear-gradient(180deg, #C4963C 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
-        }}
-      />
+    <section className="relative pt-32 sm:pt-40 pb-20 sm:pb-28 overflow-hidden">
+      {/* Background subtle texture */}
+      <div className="absolute inset-0 bg-surface-warm" />
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
 
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-28 pb-16 w-full">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
-          {/* Left — Copy */}
-          <div className="text-center lg:text-left">
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl font-bold tracking-tight text-charcoal leading-[1.08] animate-fade-in-up">
-              Sell Your Car
-              <span className="block text-gold mt-1">Without the Hassle</span>
-            </h1>
-            <p
-              className="mt-6 text-lg text-warm-gray max-w-lg mx-auto lg:mx-0 leading-relaxed animate-fade-in-up"
-              style={{ animationDelay: '0.1s' }}
-            >
-              Enter your registration to get started. We verify your vehicle
-              details, generate a valuation, and make it easy to book the next
-              step.
-            </p>
+      <div className="relative mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-10">
+        {/* Small label */}
+        <div className="flex items-center gap-2 mb-6">
+          <div className="h-px w-8 bg-gold" />
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-dark">
+            Vehicle Valuations
+          </span>
+        </div>
 
-            {/* Trust bullets — desktop */}
-            <div
-              className="hidden lg:flex flex-wrap gap-x-6 gap-y-3 mt-8 text-sm text-charcoal-light animate-fade-in-up"
-              style={{ animationDelay: '0.2s' }}
-            >
-              {[
-                'DVLA-verified vehicle lookup',
-                'No obligation valuation',
-                'Secure details handling',
-              ].map((item) => (
-                <span key={item} className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-gold-light flex items-center justify-center flex-shrink-0">
-                    <svg
-                      className="w-3 h-3 text-gold-dark"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </span>
-                  {item}
-                </span>
-              ))}
+        {/* Main headline — massive, editorial */}
+        <h1 className="max-w-3xl">
+          <span className="block text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-tight text-charcoal">
+            A simpler way to
+          </span>
+          <span className="block text-[clamp(2.5rem,6vw,4.5rem)] font-bold leading-[1.05] tracking-tight text-charcoal">
+            sell your car.
+          </span>
+        </h1>
+
+        <p className="mt-6 text-[17px] sm:text-lg text-warm-gray max-w-xl leading-relaxed">
+          Enter your registration, confirm a few details, and get a clear
+          valuation backed by real data. No accounts, no pressure, no mess.
+        </p>
+
+        {/* Reg input — inline, prominent */}
+        <form onSubmit={handleSubmit} className="mt-10 max-w-md">
+          <div className="flex items-stretch rounded-[10px] border-2 border-charcoal overflow-hidden shadow-lg shadow-charcoal/5">
+            <div className="bg-[#003399] text-white w-12 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 border-r border-charcoal/20">
+              <span className="text-[10px] font-bold tracking-wider leading-none">GB</span>
             </div>
+            <input
+              type="text"
+              value={reg}
+              onChange={(e) => setReg(e.target.value.toUpperCase())}
+              placeholder="YOUR REG"
+              required
+              minLength={2}
+              className="flex-1 px-4 py-[18px] text-[22px] font-bold uppercase tracking-[0.18em] text-charcoal placeholder:text-charcoal/15 focus:outline-none bg-white"
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <button
+              type="submit"
+              disabled={reg.trim().length < 2}
+              className="bg-charcoal text-white px-5 sm:px-7 text-[13px] font-semibold tracking-wide flex-shrink-0 hover:bg-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              Go
+            </button>
           </div>
+          <div className="mt-3 flex items-center gap-4 text-[12px] text-warm-gray">
+            <span>Free &amp; instant</span>
+            <span className="w-[3px] h-[3px] rounded-full bg-warm-border" />
+            <span>No account needed</span>
+            <span className="w-[3px] h-[3px] rounded-full bg-warm-border" />
+            <span>DVLA verified</span>
+          </div>
+        </form>
 
-          {/* Right — Reg Input Card */}
-          <div
-            className="animate-fade-in-up"
-            style={{ animationDelay: '0.15s' }}
-          >
-            <div className="bg-surface rounded-2xl shadow-xl shadow-black/[0.04] border border-warm-border p-8 sm:p-10">
-              <h2 className="text-xl font-semibold text-charcoal mb-1">
-                Start your valuation
-              </h2>
-              <p className="text-sm text-warm-gray mb-6">
-                Enter your registration to begin
-              </p>
-
-              <form onSubmit={handleSubmit}>
-                {/* UK Number Plate Input */}
-                <div className="flex items-stretch border-2 border-charcoal rounded-lg overflow-hidden mb-5">
-                  <div className="bg-[#003DA5] text-white w-11 flex flex-col items-center justify-center gap-0.5 flex-shrink-0">
-                    <svg viewBox="0 0 24 16" className="w-5 h-3.5" fill="none">
-                      <circle cx="12" cy="8" r="5" stroke="white" strokeWidth="1" />
-                      <path d="M7 8 Q12 4 17 8 Q12 12 7 8Z" fill="#FFD700" opacity="0.8" />
-                    </svg>
-                    <span className="text-[9px] font-bold tracking-wide leading-none">
-                      GB
-                    </span>
-                  </div>
-                  <input
-                    type="text"
-                    value={reg}
-                    onChange={(e) => setReg(e.target.value.toUpperCase())}
-                    placeholder="Enter reg"
-                    required
-                    minLength={2}
-                    className="flex-1 px-4 py-4 text-2xl font-bold uppercase tracking-[0.15em] text-center text-charcoal placeholder:text-warm-border focus:outline-none bg-gold-50/30"
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={reg.trim().length < 2}
-                  className="w-full rounded-lg bg-gold px-6 py-4 text-base font-semibold text-white hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
-                >
-                  Get Your Free Valuation
-                </button>
-              </form>
-
-              <p className="mt-4 text-xs text-warm-gray text-center">
-                Takes less than 2 minutes&ensp;·&ensp;No sign-up required
-              </p>
+        {/* Social proof — not a generic strip, more editorial */}
+        <div className="mt-16 pt-10 border-t border-warm-border-light">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-12">
+            <div>
+              <div className="text-[28px] sm:text-[32px] font-bold text-charcoal tracking-tight">2 min</div>
+              <div className="text-[12px] text-warm-gray mt-1">Average time to complete</div>
             </div>
-          </div>
-
-          {/* Trust bullets — mobile only */}
-          <div className="lg:hidden flex flex-wrap justify-center gap-x-5 gap-y-3 text-sm text-charcoal-light animate-fade-in-up">
-            {[
-              'DVLA-verified lookup',
-              'No obligation',
-              'Secure handling',
-            ].map((item) => (
-              <span key={item} className="flex items-center gap-1.5">
-                <svg
-                  className="w-4 h-4 text-gold"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                {item}
-              </span>
-            ))}
+            <div>
+              <div className="text-[28px] sm:text-[32px] font-bold text-charcoal tracking-tight">24hr</div>
+              <div className="text-[12px] text-warm-gray mt-1">Typical response time</div>
+            </div>
+            <div>
+              <div className="text-[28px] sm:text-[32px] font-bold text-charcoal tracking-tight">Free</div>
+              <div className="text-[12px] text-warm-gray mt-1">No hidden costs, ever</div>
+            </div>
+            <div>
+              <div className="text-[28px] sm:text-[32px] font-bold text-charcoal tracking-tight">100%</div>
+              <div className="text-[12px] text-warm-gray mt-1">No obligation</div>
+            </div>
           </div>
         </div>
       </div>

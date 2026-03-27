@@ -1,5 +1,3 @@
-import SectionShell from '@/app/components/ui/SectionShell'
-
 const faqs = [
   {
     q: 'Is the valuation free?',
@@ -37,44 +35,41 @@ const faqs = [
 
 export default function FaqSection() {
   return (
-    <SectionShell className="bg-surface-warm">
-      <div className="text-center mb-14">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-charcoal">
-          Frequently asked questions
-        </h2>
-        <p className="mt-3 text-warm-gray text-lg">
-          Everything you need to know before getting started
-        </p>
-      </div>
+    <section id="faq" className="px-5 sm:px-8 lg:px-10 py-20 sm:py-28 bg-surface-warm">
+      <div className="mx-auto max-w-[1280px] grid lg:grid-cols-[0.4fr_1fr] gap-12 lg:gap-20 items-start">
+        {/* Left – sticky heading */}
+        <div className="lg:sticky lg:top-28">
+          <div className="flex items-center gap-2 mb-5">
+            <div className="h-px w-8 bg-gold/50" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold/70">
+              FAQ
+            </span>
+          </div>
+          <h2 className="text-[clamp(1.75rem,3.5vw,2.75rem)] font-bold tracking-tight text-charcoal leading-[1.1]">
+            Questions we get asked a lot.
+          </h2>
+        </div>
 
-      <div className="max-w-3xl mx-auto space-y-3">
-        {faqs.map((faq) => (
-          <details
-            key={faq.q}
-            className="group bg-surface rounded-xl border border-warm-border overflow-hidden"
-          >
-            <summary className="px-6 py-5 cursor-pointer font-medium text-charcoal flex items-center justify-between gap-4 list-none [&::-webkit-details-marker]:hidden">
-              <span>{faq.q}</span>
-              <svg
-                className="w-5 h-5 text-warm-gray flex-shrink-0 transition-transform duration-200 group-open:rotate-180"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </summary>
-            <div className="px-6 pb-5 text-warm-gray text-sm leading-relaxed border-t border-warm-border-light pt-4">
-              {faq.a}
-            </div>
-          </details>
-        ))}
+        {/* Right – accordion */}
+        <div className="divide-y divide-warm-border">
+          {faqs.map((faq) => (
+            <details
+              key={faq.q}
+              className="group"
+            >
+              <summary className="py-5 cursor-pointer font-medium text-[15px] text-charcoal flex items-center justify-between gap-4 list-none [&::-webkit-details-marker]:hidden select-none">
+                <span>{faq.q}</span>
+                <span className="text-warm-gray text-lg leading-none transition-transform duration-200 group-open:rotate-45 flex-shrink-0">
+                  +
+                </span>
+              </summary>
+              <div className="pb-5 text-warm-gray text-[14px] leading-relaxed max-w-xl">
+                {faq.a}
+              </div>
+            </details>
+          ))}
+        </div>
       </div>
-    </SectionShell>
+    </section>
   )
 }
