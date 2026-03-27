@@ -25,8 +25,8 @@ export default async function InspectorLayout({ children }: { children: React.Re
   if (profile?.role !== 'inspector') redirect('/login')
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar — premium dark, matching admin */}
-      <aside className="w-56 bg-charcoal-deep flex flex-col shrink-0 relative">
+      {/* Sidebar — hidden on mobile, visible on lg+ */}
+      <aside className="hidden lg:flex w-56 bg-charcoal-deep flex-col shrink-0 relative">
         <div className="h-1 gradient-gold" />
 
         <div className="px-5 pt-7 pb-6">
@@ -64,8 +64,28 @@ export default async function InspectorLayout({ children }: { children: React.Re
         </div>
       </aside>
 
-      {/* Page content */}
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      {/* Mobile top bar — visible on <lg */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-charcoal-deep flex items-center justify-between px-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg gradient-gold flex items-center justify-center shadow-md shadow-gold/20">
+            <span className="text-white font-extrabold text-xs">M</span>
+          </div>
+          <span className="text-sm font-bold text-white">Inspector</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <a href="/inspector" className="p-2 text-white/40 hover:text-white transition-colors">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" /></svg>
+          </a>
+          <form action={logout} className="inline">
+            <button type="submit" className="p-2 text-white/30 hover:text-red-400 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Page content — offset for mobile top bar */}
+      <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">{children}</main>
     </div>
   )
 }

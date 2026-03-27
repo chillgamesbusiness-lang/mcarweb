@@ -42,10 +42,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shadow-lg shadow-gold/20">
               <span className="text-white font-extrabold">M</span>
             </div>
-            <span className="text-xl font-extrabold text-charcoal-deep">MCar</span>
+            <span className="text-xl font-extrabold text-foreground">MCar</span>
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-charcoal-deep mb-1">Sign in</h1>
+          <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">Sign in</h1>
           <p className="text-sm text-warm-gray mb-8">Staff portal</p>
 
           {error === 'invalid_credentials' && (
@@ -71,7 +71,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <form action={login} className="card-premium p-7 space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-charcoal-deep mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2">
                 Email
               </label>
               <input
@@ -80,13 +80,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full rounded-xl border border-warm-border bg-white px-4 py-3 text-sm text-charcoal-deep placeholder:text-warm-gray/50 input-premium focus:outline-none"
+                className="w-full rounded-xl border border-warm-border bg-[var(--input-bg)] px-4 py-3 text-sm text-foreground placeholder:text-warm-gray/50 input-premium focus:outline-none"
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-charcoal-deep mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-2">
                 Password
               </label>
               <input
@@ -95,7 +95,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="w-full rounded-xl border border-warm-border bg-white px-4 py-3 text-sm text-charcoal-deep placeholder:text-warm-gray/50 input-premium focus:outline-none"
+                className="w-full rounded-xl border border-warm-border bg-[var(--input-bg)] px-4 py-3 text-sm text-foreground placeholder:text-warm-gray/50 input-premium focus:outline-none"
                 placeholder="••••••••"
               />
             </div>

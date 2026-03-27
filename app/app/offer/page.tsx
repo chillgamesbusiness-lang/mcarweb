@@ -94,18 +94,18 @@ function OfferForm() {
 
   return (
     <OfferShell>
-      <div className="text-center mb-8 animate-fade-in-up">
-        <h1 className="text-[32px] font-extrabold text-charcoal-deep tracking-[-0.02em]">
+      <div className="text-center mb-6 sm:mb-8 animate-fade-in-up">
+        <h1 className="text-[28px] sm:text-[32px] font-extrabold text-foreground tracking-[-0.02em]">
           Get Your Valuation
         </h1>
-        <p className="mt-3 text-warm-gray text-[15px] leading-relaxed">
+        <p className="mt-2 sm:mt-3 text-warm-gray text-sm sm:text-[15px] leading-relaxed">
           Enter your registration below for a free, no-obligation valuation
         </p>
       </div>
 
       {/* Loading state — premium shimmer */}
       {loading ? (
-        <div className="card-premium p-8 text-center animate-scale-in">
+        <div className="card-premium p-6 sm:p-8 text-center animate-scale-in">
           <div className="w-16 h-16 rounded-2xl gradient-gold mx-auto flex items-center justify-center mb-5 shadow-lg shadow-gold/20 animate-pulse-glow">
             <svg
               className="w-7 h-7 text-white animate-spin"
@@ -116,11 +116,11 @@ function OfferForm() {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           </div>
-          <p className="text-charcoal-deep font-bold text-lg mb-2">
+          <p className="text-foreground font-bold text-lg mb-2">
             Checking vehicle details&hellip;
           </p>
           <p className="text-warm-gray text-sm">This usually takes a few seconds</p>
-          <div className="mt-5 h-2 bg-warm-border-light rounded-full overflow-hidden">
+          <div className="mt-5 h-2 bg-[var(--card-border)] rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-gold/60 via-gold to-gold/60 rounded-full"
               style={{
@@ -133,17 +133,17 @@ function OfferForm() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="card-premium p-7 sm:p-8 space-y-5 animate-slide-up"
+          className="card-premium p-5 sm:p-7 md:p-8 space-y-5 animate-slide-up"
         >
           <div>
             <label
               htmlFor="reg"
-              className="block text-sm font-medium text-charcoal mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Registration Number
             </label>
             {/* UK Number Plate Input */}
-            <div className="flex items-stretch border-2 border-charcoal rounded-lg overflow-hidden">
+            <div className="flex items-stretch border-2 border-foreground/80 rounded-lg overflow-hidden">
               <div className="bg-[#003DA5] text-white w-11 flex flex-col items-center justify-center gap-0.5 flex-shrink-0">
                 <svg viewBox="0 0 24 16" className="w-5 h-3.5" fill="none">
                   <circle cx="12" cy="8" r="5" stroke="white" strokeWidth="1" />
@@ -164,7 +164,7 @@ function OfferForm() {
                 onChange={(e) => setReg(e.target.value.toUpperCase())}
                 placeholder="Enter reg"
                 required
-                className="flex-1 px-4 py-5 text-2xl font-bold uppercase tracking-[0.15em] text-center text-charcoal-deep placeholder:text-warm-border focus:outline-none bg-gold-50/30"
+                className="flex-1 px-4 py-4 sm:py-5 text-xl sm:text-2xl font-bold uppercase tracking-[0.15em] text-center text-foreground placeholder:text-warm-gray/40 focus:outline-none bg-[var(--surface-warm)]"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -174,7 +174,7 @@ function OfferForm() {
           <TurnstileWidget onToken={setTurnstileToken} />
 
           {error && (
-            <div className="rounded-lg bg-gold-50 ring-1 ring-gold/30 p-3 text-sm text-gold-dark">
+            <div className="rounded-xl bg-red-50 ring-1 ring-red-300/30 p-3 text-sm text-red-700">
               {error}
             </div>
           )}
@@ -182,7 +182,7 @@ function OfferForm() {
           <button
             type="submit"
             disabled={loading || reg.trim().length < 2 || (hasTurnstile && !turnstileToken)}
-            className="w-full rounded-2xl gradient-gold px-4 py-4 text-base font-bold text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 active:scale-[0.98]"
+            className="w-full rounded-2xl gradient-gold px-4 py-3.5 sm:py-4 text-base font-bold text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 active:scale-[0.98]"
           >
             Get Valuation
           </button>

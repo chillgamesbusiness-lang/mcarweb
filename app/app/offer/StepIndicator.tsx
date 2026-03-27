@@ -14,7 +14,7 @@ const STEPS = [
 
 export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
   return (
-    <div className="flex items-center justify-center mb-10">
+    <div className="flex items-center justify-center mb-8 sm:mb-10 px-2">
       {STEPS.map((s, i) => {
         const isActive = s.step === current
         const isDone = s.step < current
@@ -25,18 +25,18 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
             <div className="flex flex-col items-center">
               <div
                 className={`
-                  w-11 h-11 rounded-2xl flex items-center justify-center text-xs font-bold
+                  w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center text-xs font-bold
                   transition-all duration-500
                   ${isDone
                     ? 'gradient-gold text-white shadow-lg shadow-gold/20'
                     : isActive
                     ? 'gradient-gold text-white shadow-xl shadow-gold/30 ring-4 ring-gold/15 scale-110'
-                    : 'bg-white text-warm-gray border border-warm-border shadow-sm'
+                    : 'bg-[var(--card-bg)] text-warm-gray border border-[var(--card-border)] shadow-sm'
                   }
                 `}
               >
                 {isDone ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
@@ -44,7 +44,7 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
                 )}
               </div>
               <span
-                className={`mt-2 text-[10px] font-bold tracking-wide uppercase ${
+                className={`mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] font-bold tracking-wide uppercase ${
                   isActive ? 'text-gold-dark' : isDone ? 'text-gold' : 'text-warm-gray/40'
                 }`}
               >
@@ -52,14 +52,14 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
               </span>
             </div>
 
-            {/* Connector line with gradient */}
+            {/* Connector line with animated fill */}
             {i < STEPS.length - 1 && (
-              <div className="w-12 sm:w-20 h-[3px] mx-3 mt-[-14px] rounded-full overflow-hidden bg-warm-border/50">
+              <div className="w-8 sm:w-14 md:w-20 h-[3px] mx-1.5 sm:mx-3 mt-[-14px] rounded-full overflow-hidden bg-[var(--card-border)]">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${
+                  className={`h-full rounded-full transition-[width] duration-700 ease-out ${
                     s.step < current
                       ? 'w-full gradient-gold'
-                      : 'w-0 bg-transparent'
+                      : 'w-0'
                   }`}
                 />
               </div>

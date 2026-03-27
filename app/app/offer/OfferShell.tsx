@@ -4,28 +4,28 @@
  */
 export default function OfferShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-background">
       {/* Gradient mesh background */}
       <div className="absolute inset-0 gradient-hero" />
-      <div className="absolute top-20 right-[10%] w-[400px] h-[400px] rounded-full bg-gold/[0.04] blur-[100px]" />
-      <div className="absolute bottom-20 left-[5%] w-[300px] h-[300px] rounded-full bg-gold/[0.03] blur-[80px]" />
+      <div className="absolute top-20 right-[10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] rounded-full bg-gold/[0.04] blur-[100px]" />
+      <div className="absolute bottom-20 left-[5%] w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] rounded-full bg-gold/[0.03] blur-[80px]" />
 
-      <div className="relative px-4 py-8 sm:py-12">
+      <div className="relative px-3 sm:px-4 py-6 sm:py-8 md:py-12">
         <div className="w-full max-w-lg mx-auto">
           {/* Brand header */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-6 sm:mb-8">
             <a href="/" className="inline-flex items-center gap-2.5 group">
               <div className="w-9 h-9 rounded-xl gradient-gold flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
                 <span className="text-[14px] font-extrabold text-white tracking-tight">M</span>
               </div>
-              <span className="text-[16px] font-bold text-charcoal-deep tracking-tight group-hover:text-gold-dark transition-colors">MCar</span>
+              <span className="text-[16px] font-bold text-foreground tracking-tight group-hover:text-gold-dark transition-colors">MCar</span>
             </a>
           </div>
 
           {children}
 
           {/* Trust badges — premium pills */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {[
               {
                 label: 'DVLA Verified',
@@ -40,8 +40,8 @@ export default function OfferShell({ children }: { children: React.ReactNode }) 
                 icon: <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />,
               },
             ].map((badge) => (
-              <span key={badge.label} className="inline-flex items-center gap-1.5 bg-white/60 backdrop-blur-sm border border-warm-border/50 rounded-full px-3 py-1.5 text-[10px] font-semibold text-warm-gray uppercase tracking-wider">
-                <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <span key={badge.label} className="inline-flex items-center gap-1.5 bg-[var(--card-bg)] backdrop-blur-sm border border-[var(--card-border)] rounded-full px-3 py-1.5 text-[9px] sm:text-[10px] font-semibold text-warm-gray uppercase tracking-wider">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   {badge.icon}
                 </svg>
                 {badge.label}

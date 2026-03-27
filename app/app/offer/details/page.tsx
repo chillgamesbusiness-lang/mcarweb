@@ -72,14 +72,14 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
       <StepIndicator current={1} />
 
       <div className="text-center mb-8 animate-fade-in-up">
-        <h1 className="text-3xl font-extrabold text-charcoal-deep tracking-[-0.02em]">Vehicle Details</h1>
+        <h1 className="text-3xl font-extrabold text-foreground tracking-[-0.02em]">Vehicle Details</h1>
         <p className="mt-2 text-warm-gray text-sm">Confirm your vehicle info below</p>
       </div>
 
       {/* Vehicle summary card */}
       <div className="card-premium p-6 mb-6 animate-slide-up">
         <div className="text-center">
-          <span className="inline-flex items-center gap-2 bg-charcoal-deep text-white font-mono text-lg font-bold px-5 py-2.5 rounded-xl mb-4 shadow-md">
+          <span className="inline-flex items-center gap-2 bg-charcoal-deep text-white font-mono text-base sm:text-lg font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl mb-4 shadow-md">
             <span className="text-[9px] text-gold font-sans">GB</span>
             {payload.reg}
           </span>
@@ -111,13 +111,13 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
       {/* MOT summary card (if available) */}
       {payload.motSummary && (
         <div className="card-premium p-5 mb-6 text-sm animate-slide-up" style={{ animationDelay: '100ms' }}>
-          <h3 className="font-bold text-charcoal-deep mb-3 flex items-center gap-2">
+          <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
             <span className="w-6 h-6 rounded-lg gradient-gold flex items-center justify-center">
               <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </span>
             MOT Summary
           </h3>
-          <div className="grid grid-cols-2 gap-3 text-charcoal-light">
+          <div className="grid grid-cols-2 gap-3 text-foreground/70">
               <div>
                 <span className="text-warm-gray text-xs">MOT Remaining</span>
                 <p className="font-medium">
@@ -161,7 +161,7 @@ function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <span className="text-warm-gray text-xs font-medium">{label}</span>
-      <p className="text-charcoal-deep font-semibold">{value}</p>
+      <p className="text-foreground font-semibold">{value}</p>
     </div>
   )
 }

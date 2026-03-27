@@ -21,10 +21,10 @@ export default function OfferDonePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-3xl font-extrabold text-charcoal-deep tracking-[-0.02em]">Booking Confirmed</h1>
+            <h1 className="text-3xl font-extrabold text-foreground tracking-[-0.02em]">Booking Confirmed</h1>
           </div>
 
-          <p className="text-charcoal-light mb-2 text-[15px]">
+          <p className="text-foreground/70 mb-2 text-[15px]">
             Your appointment has been booked. We&apos;ll be in touch shortly to confirm the details.
           </p>
           <p className="text-sm text-warm-gray mb-10">

@@ -25,7 +25,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
   return (
     <form action={submitDetails} className="card-premium p-7 sm:p-8 space-y-5 animate-slide-up">
       <div>
-        <label htmlFor="mileage" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="mileage" className="block text-sm font-semibold text-foreground mb-2">
           Current Mileage
         </label>
         <input
@@ -37,7 +37,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           required
           defaultValue={defaultMileage ?? undefined}
           placeholder="e.g. 45000"
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)]"
         />
         {defaultMileage != null && (
           <p className="text-xs text-warm-gray mt-2 flex items-center gap-1.5">
@@ -48,7 +48,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
       </div>
 
       <div>
-        <label htmlFor="condition" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="condition" className="block text-sm font-semibold text-foreground mb-2">
           Overall Condition
         </label>
         <select
@@ -56,7 +56,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           name="condition"
           required
           defaultValue=""
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white appearance-none"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] appearance-none"
         >
           <option value="" disabled>Select condition</option>
           <option value="excellent">Excellent</option>

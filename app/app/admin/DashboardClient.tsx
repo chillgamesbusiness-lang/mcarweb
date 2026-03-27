@@ -47,10 +47,10 @@ export default function DashboardClient(props: DashboardProps) {
   const overallStatus: Signal = healthyProfit && goodAcceptance ? 'green' : healthyProfit || goodAcceptance ? 'amber' : 'red'
 
   return (
-    <div className="p-6 lg:p-10 max-w-6xl">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto">
       {/* Page header — premium with status indicator */}
-      <div className="flex items-center gap-4 mb-10">
-        <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-charcoal-deep">Dashboard</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-8 sm:mb-10">
+        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-foreground">Dashboard</h1>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-warm-border">
           <StatusDot status={overallStatus} />
           <span className="text-[11px] font-semibold text-warm-gray uppercase tracking-wider">
@@ -60,19 +60,19 @@ export default function DashboardClient(props: DashboardProps) {
       </div>
 
       {/* ── Hero KPI cards ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-5 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-8 sm:mb-10">
         {quickStats.map((s, i) => (
-          <div key={s.label} className="card-premium p-6 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
-            <p className="text-4xl font-extrabold tracking-tight text-charcoal-deep">{s.value}</p>
+          <div key={s.label} className="card-premium p-5 sm:p-6 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
+            <p className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">{s.value}</p>
             <p className="text-xs uppercase tracking-widest text-warm-gray mt-2 font-semibold">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* ── Two-column asymmetric: profit + offers ───────────────── */}
-      <div className="grid grid-cols-5 gap-6 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 sm:gap-6 mb-8 sm:mb-10">
         {/* Left — profit card, large & dominant */}
-        <div className="col-span-3 card-premium p-7">
+        <div className="lg:col-span-3 card-premium p-5 sm:p-7">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-8 h-8 rounded-xl gradient-gold flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -80,7 +80,7 @@ export default function DashboardClient(props: DashboardProps) {
             <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-gray">Profit</p>
           </div>
           <div className="mb-6">
-            <p className="text-5xl font-extrabold tracking-tight gradient-gold-text leading-none">
+            <p className="text-3xl sm:text-5xl font-extrabold tracking-tight gradient-gold-text leading-none">
               {profit.avgPredictedProfitMid >= 0 ? '£' : '−£'}{Math.abs(profit.avgPredictedProfitMid).toLocaleString()}
             </p>
             <p className="text-sm text-warm-gray mt-2">avg predicted per deal</p>
@@ -94,7 +94,7 @@ export default function DashboardClient(props: DashboardProps) {
         </div>
 
         {/* Right — offers card, compact */}
-        <div className="col-span-2 card-premium p-7">
+        <div className="lg:col-span-2 card-premium p-5 sm:p-7">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-8 h-8 rounded-xl bg-accent-blue/10 flex items-center justify-center">
               <svg className="w-4 h-4 text-accent-blue" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
@@ -122,14 +122,14 @@ export default function DashboardClient(props: DashboardProps) {
       </div>
 
       {/* ── Weekly summary — premium card ────────────────────── */}
-      <div className="card-premium p-7 max-w-2xl">
+      <div className="card-premium p-5 sm:p-7 max-w-2xl">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="w-8 h-8 rounded-xl bg-accent-emerald/10 flex items-center justify-center">
             <svg className="w-4 h-4 text-accent-emerald" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" /></svg>
           </div>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-gray">This Week</p>
         </div>
-        <p className="text-[15px] leading-relaxed text-charcoal-light">
+        <p className="text-[15px] leading-relaxed text-foreground/70">
           {weeklySummary.offersGenerated} offers generated
           {weeklySummary.acceptanceRate > 0 && `, ${weeklySummary.acceptanceRate}% accepted`}.
           {profit.avgRealisedProfit !== null
@@ -152,7 +152,7 @@ function DataRow({ label, value, highlight }: {
     highlight === 'green' ? 'text-green-600 font-bold' :
     highlight === 'amber' ? 'text-amber-600 font-bold' :
     highlight === 'red' ? 'text-red-500 font-bold' :
-    'text-charcoal-deep'
+    'text-foreground'
 
   return (
     <div className="flex items-baseline justify-between py-0.5">

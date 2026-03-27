@@ -178,7 +178,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       <StepIndicator current={3} />
 
       <div className="text-center mb-8 animate-fade-in-up">
-        <h1 className="text-3xl font-extrabold text-charcoal-deep tracking-[-0.02em]">Book Appointment</h1>
+        <h1 className="text-3xl font-extrabold text-foreground tracking-[-0.02em]">Book Appointment</h1>
         <p className="mt-2 text-warm-gray text-sm">Choose how and when you would like to meet</p>
       </div>
 
@@ -217,7 +217,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       ) : (
         <div className="card-premium p-8 mb-6 text-center animate-slide-up">
           <p className="text-xs text-gold-dark uppercase tracking-widest mb-2 font-semibold">Review Required</p>
-          <p className="text-lg font-semibold text-charcoal-deep">
+          <p className="text-lg font-semibold text-foreground">
             We&apos;ll provide a personalised offer at your appointment
           </p>
           <p className="text-xs text-warm-gray mt-3">

@@ -25,8 +25,8 @@ export default async function InspectorIndexPage() {
   }
 
   return (
-    <div className="p-6 lg:p-10">
-      <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-charcoal-deep mb-1">My Inspections</h1>
+    <div className="p-4 sm:p-6 lg:p-10">
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">My Inspections</h1>
       <p className="text-sm text-warm-gray mb-8">Assigned vehicles awaiting or completed inspection</p>
 
       <div className="card-premium overflow-hidden">
@@ -40,16 +40,16 @@ export default async function InspectorIndexPage() {
             <Link
               key={lead.id}
               href={`/inspector/${lead.id}`}
-              className="group flex items-center gap-6 py-4 px-6 hover:bg-gold/[0.03] transition-all duration-200"
+              className="group flex items-center gap-3 sm:gap-6 py-3 sm:py-4 px-3 sm:px-6 hover:bg-gold/[0.03] transition-all duration-200"
             >
               {/* Reg — bold anchor */}
-              <span className="w-24 text-sm font-bold font-mono text-charcoal-deep tracking-wide shrink-0">
+              <span className="w-20 sm:w-24 text-xs sm:text-sm font-bold font-mono text-foreground tracking-wide shrink-0">
                 {lead.reg}
               </span>
 
               {/* Vehicle + seller */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-charcoal-deep truncate font-medium">
+                <p className="text-sm text-foreground truncate font-medium">
                   {lead.make} {lead.model}
                   <span className="text-warm-gray ml-2 font-normal">— {lead.seller_name}</span>
                 </p>

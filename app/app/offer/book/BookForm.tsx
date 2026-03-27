@@ -73,7 +73,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
       )}
 
       <div>
-        <label htmlFor="type" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="type" className="block text-sm font-semibold text-foreground mb-2">
           Appointment Type
         </label>
         <select
@@ -81,7 +81,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
           name="type"
           required
           defaultValue=""
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white appearance-none"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] appearance-none"
         >
           <option value="" disabled>Choose type</option>
           <option value="in_person">In Person</option>
@@ -90,7 +90,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
       </div>
 
       <div>
-        <label htmlFor="slot" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="slot" className="block text-sm font-semibold text-foreground mb-2">
           Time Slot
         </label>
         <select
@@ -98,7 +98,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
           name="slot"
           required
           defaultValue=""
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white appearance-none"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] appearance-none"
         >
           <option value="" disabled>Choose a slot</option>
           {slots.map((s) => (

@@ -22,7 +22,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <p className="text-[13px] text-charcoal-light font-medium">
+        <p className="text-[13px] text-foreground/70 font-medium">
           Your details are handled securely. We only use them for your valuation and appointment.
         </p>
       </div>
@@ -35,7 +35,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
       )}
 
       <div>
-        <label htmlFor="name" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-2">
           Full Name
         </label>
         <input
@@ -44,12 +44,12 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
           type="text"
           required
           placeholder="John Smith"
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)]"
         />
       </div>
 
       <div>
-        <label htmlFor="phone" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-2">
           Phone Number
         </label>
         <input
@@ -58,12 +58,12 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
           type="tel"
           required
           placeholder="07123 456789"
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)]"
         />
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2">
           Email Address
         </label>
         <input
@@ -72,12 +72,12 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
           type="email"
           required
           placeholder="john@example.com"
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)]"
         />
       </div>
 
       <div>
-        <label htmlFor="postcode" className="block text-sm font-semibold text-charcoal-deep mb-2">
+        <label htmlFor="postcode" className="block text-sm font-semibold text-foreground mb-2">
           Postcode
         </label>
         <input
@@ -86,7 +86,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
           type="text"
           required
           placeholder="SW1A 1AA"
-          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)]"
         />
       </div>
 

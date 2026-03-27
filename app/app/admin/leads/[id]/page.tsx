@@ -399,26 +399,29 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   }
 
   return (
-    <div className="p-6 lg:p-10 max-w-4xl">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto">
       {/* ── Header — dossier style: reg as hero, metadata inline ─── */}
-      <div className="mb-10">
+      <div className="mb-8 sm:mb-10">
         <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-2">Lead Detail</p>
-        <h1 className="text-4xl font-extrabold tracking-tight text-charcoal leading-none mb-2">
+        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground leading-none mb-2">
           {lead.reg}
         </h1>
-        <p className="text-[15px] text-charcoal-light">
-          {lead.seller_name}
-          <span className="text-warm-gray mx-2">·</span>
-          {lead.make ?? '—'} {lead.model ?? ''}
-          <span className="text-warm-gray mx-2">·</span>
+        <p className="text-sm sm:text-[15px] text-foreground/70 flex flex-wrap gap-x-1">
+          <span>{lead.seller_name}</span>
+          <span className="text-warm-gray">·</span>
+          <span>{lead.make ?? '—'} {lead.model ?? ''}</span>
+          <span className="text-warm-gray">·</span>
           <span className="text-warm-gray">{new Date(lead.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
         </p>
       </div>
 
-      {/* ── Vehicle + Seller: two columns, no cards ─────────────── */}
-      <div className="grid grid-cols-2 gap-x-12 gap-y-1 mb-10 pb-10 border-b border-warm-border">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Vehicle</p>
+      {/* ── Vehicle + Seller: two cards side by side ─────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-6 sm:mb-8">
+        <div className="card-premium p-5 sm:p-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3 flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.147-.504 1.147-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H14.25m0 0V5.625m0 8.625h-2.875" /></svg>
+            Vehicle
+          </p>
           <dl className="space-y-2">
             <DL label="Year" value={lead.year?.toString() ?? '—'} />
             <DL label="Fuel" value={lead.fuel ?? '—'} />
@@ -427,8 +430,11 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             <DL label="Condition" value={lead.condition} />
           </dl>
         </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Seller</p>
+        <div className="card-premium p-5 sm:p-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3 flex items-center gap-2">
+            <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+            Seller
+          </p>
           <dl className="space-y-2">
             <DL label="Email" value={lead.seller_email} />
             <DL label="Phone" value={lead.seller_phone} />
@@ -437,174 +443,74 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         </div>
       </div>
 
-      {/* ── Valuation — hero numbers, not a card ──────────────────── */}
-      <div className="mb-10 pb-10 border-b border-warm-border">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5">Valuation</p>
+      {/* ── Valuation — hero numbers in card ──────────────────────── */}
+      <div className="card-premium p-5 sm:p-7 mb-6 sm:mb-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          Valuation
+        </p>
         {snapshot ? (
           <>
-            {/* Big 3 values in a strip */}
-            <div className="flex gap-10 mb-6">
-              <div>
+            {/* Big 3 values — responsive strip */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-10 mb-6">
+              <div className="text-center sm:text-left">
                 <p className="text-xs text-warm-gray mb-1">Min</p>
-                <p className="text-2xl font-bold tracking-tight text-green-700">£{snapshot.result_min?.toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold tracking-tight text-green-600">£{snapshot.result_min?.toLocaleString()}</p>
               </div>
-              <div>
+              <div className="text-center sm:text-left">
                 <p className="text-xs text-warm-gray mb-1">Midpoint</p>
-                <p className="text-3xl font-extrabold tracking-tight text-charcoal">£{snapshot.result_midpoint?.toLocaleString()}</p>
+                <p className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">£{snapshot.result_midpoint?.toLocaleString()}</p>
               </div>
-              <div>
+              <div className="text-center sm:text-left">
                 <p className="text-xs text-warm-gray mb-1">Max</p>
-                <p className="text-2xl font-bold tracking-tight text-green-700">£{snapshot.result_max?.toLocaleString()}</p>
+                <p className="text-xl sm:text-2xl font-bold tracking-tight text-green-600">£{snapshot.result_max?.toLocaleString()}</p>
               </div>
             </div>
 
-            {/* Metadata inline */}
-            <div className="flex gap-8 text-sm">
+            {/* Metadata chips */}
+            <div className="flex flex-wrap gap-3 sm:gap-6 text-sm">
               <div>
                 <span className="text-warm-gray">Confidence</span>
-                <span className="ml-2 font-semibold text-charcoal">{snapshot.confidence_score}/100</span>
+                <span className="ml-2 font-semibold text-foreground">{snapshot.confidence_score}/100</span>
               </div>
               <div>
                 <span className="text-warm-gray">Risk</span>
                 <span className={`ml-2 font-semibold ${
-                  snapshot.risk_tier === 'low' ? 'text-green-700' :
-                  snapshot.risk_tier === 'medium' ? 'text-amber-700' : 'text-red-700'
+                  snapshot.risk_tier === 'low' ? 'text-green-600' :
+                  snapshot.risk_tier === 'medium' ? 'text-amber-600' : 'text-red-600'
                 }`}>
                   {snapshot.risk_tier?.toUpperCase()}
                 </span>
               </div>
               <div>
                 <span className="text-warm-gray">Auto-Quote</span>
-                <span className={`ml-2 font-semibold ${snapshot.auto_quote ? 'text-green-700' : 'text-red-700'}`}>
+                <span className={`ml-2 font-semibold ${snapshot.auto_quote ? 'text-green-600' : 'text-red-600'}`}>
                   {snapshot.auto_quote ? 'Yes' : 'Manual Review'}
                 </span>
               </div>
               <div>
                 <span className="text-warm-gray">Market</span>
-                <span className="ml-2 font-semibold text-charcoal">£{snapshot.market_value_used?.toLocaleString()}</span>
+                <span className="ml-2 font-semibold text-foreground">£{snapshot.market_value_used?.toLocaleString()}</span>
               </div>
             </div>
-            {/* Technical metadata — commented out */}
-            {/* <Field label="Region" value={snapshot.region_used ?? '-'} />
-            <Field label="Engine Version" value={snapshot.engine_version ?? 'v1'} />
-            <Field label="Postcode (at quote)" value={snapshot.input_postcode ?? '-'} /> */}
-            <DL label="Snapshot" value={new Date(snapshot.created_at).toLocaleString('en-GB')} />
-
-            {/* Multiplier table — commented out (technical detail) */}
-            {/* {multipliers && (
-              <div className="mt-4">
-                <span className="text-xs text-gray-400 block mb-2">Multipliers</span>
-                <div className="bg-gray-50 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <tbody className="divide-y divide-gray-200">
-                      {Object.entries(multipliers).map(([key, val]) => {
-                        const isTradeBase = key === 'tradeBase'
-                        const isBuffer = key === 'liquidityBuffer'
-                        const displayVal = isTradeBase
-                          ? `£${val.toLocaleString()}`
-                          : isBuffer
-                            ? `${(val * 100).toFixed(0)}%`
-                            : val.toFixed(4)
-                        const isNeutral = !isTradeBase && !isBuffer && val === 1
-                        const isPenalty = !isTradeBase && !isBuffer && val < 1
-                        return (
-                          <tr key={key} className={isPenalty ? 'bg-red-50' : isNeutral ? '' : ''}>
-                            <td className="px-3 py-1.5 text-gray-600">{MULTIPLIER_LABELS[key] ?? key}</td>
-                            <td className={`px-3 py-1.5 text-right font-mono ${
-                              isPenalty ? 'text-red-700 font-medium' : 'text-gray-900'
-                            }`}>
-                              {displayVal}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )} */}
-
-            {/* Risk flags — commented out (technical detail) */}
-            {/* {riskFlags && riskFlags.length > 0 && (
-              <div className="mt-4">
-                <span className="text-xs text-gray-400 block mb-2">Risk Flags ({riskFlags.length})</span>
-                <ul className="space-y-1">
-                  {riskFlags.map((flag: string, i: number) => (
-                    <li key={i} className="text-sm text-red-700 bg-red-50 rounded px-3 py-1.5">
-                      {flag}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )} */}
-
-            {/* Admin Engine Explanation — commented out (technical detail) */}
-            {/* {adminExplanation && adminExplanation.length > 0 && (
-              <div className="mt-4">
-                <span className="text-xs text-gray-400 block mb-2">Engine Explanation ({adminExplanation.length})</span>
-                <div className="space-y-1">
-                  {adminExplanation.map((item, i) => {
-                    const impactStr = item.impact ?? ''
-                    const isPositive = impactStr.startsWith('+') || impactStr === 'clear' || impactStr === 'bonus'
-                    const isNegative = impactStr.startsWith('-') || impactStr === 'blocked' || impactStr === 'manual_review'
-                    const pctMatch = impactStr.match(/-(\d+(?:\.\d+)?)%/)
-                    const pctVal = pctMatch ? parseFloat(pctMatch[1]) : 0
-
-                    let bgClass: string
-                    let textClass: string
-                    let impactClass: string
-
-                    if (isPositive) {
-                      bgClass = 'bg-green-50'
-                      textClass = 'text-green-800'
-                      impactClass = 'text-green-700 font-semibold'
-                    } else if (item.severity === 'critical' || pctVal >= 15) {
-                      bgClass = 'bg-red-50'
-                      textClass = 'text-red-800'
-                      impactClass = 'text-red-700 font-semibold'
-                    } else if (item.severity === 'warning' || pctVal >= 5) {
-                      bgClass = 'bg-amber-50'
-                      textClass = 'text-amber-800'
-                      impactClass = 'text-amber-700 font-semibold'
-                    } else if (isNegative) {
-                      bgClass = 'bg-orange-50'
-                      textClass = 'text-orange-800'
-                      impactClass = 'text-orange-600 font-medium'
-                    } else {
-                      bgClass = 'bg-blue-50'
-                      textClass = 'text-blue-800'
-                      impactClass = 'text-blue-600'
-                    }
-
-                    return (
-                      <div key={i} className={`text-sm rounded px-3 py-1.5 flex justify-between items-center ${bgClass} ${textClass}`}>
-                        <span><span className="font-mono text-xs mr-2">{item.rule}</span>{item.description}</span>
-                        <span className={`font-mono text-xs shrink-0 ml-2 ${impactClass}`}>{impactStr}</span>
-                      </div>
-                    )
-                  })}
-                </div>
-                <p className="text-[10px] text-gray-400 mt-1.5 italic">
-                  Percentages are compound multiplier impacts, not flat price cuts. Final value = base × all multipliers.
-                </p>
-              </div>
-            )} */}
+            <div className="mt-3 pt-3 border-t border-[var(--card-border)]">
+              <DL label="Snapshot" value={new Date(snapshot.created_at).toLocaleString('en-GB')} />
+            </div>
 
             {/* ── Profit Simulation V4 (Resale Evidence Engine) ─────────── */}
             {profitSimV4 ? (
-              <div className="mt-4">
+              <div className="mt-5">
                 <span className="text-xs text-warm-gray block mb-2">Profit Simulation v4</span>
 
-                {/* ── Compact View (always visible) ──────────────────────── */}
-                <div className={`rounded-lg p-4 ${
+                <div className={`rounded-xl p-4 sm:p-5 ${
                   profitSimV4.profit?.mid >= 300 ? 'bg-green-50 ring-1 ring-green-200' :
                   profitSimV4.profit?.mid >= 0 ? 'bg-amber-50 ring-1 ring-amber-200' :
                   'bg-red-50 ring-1 ring-red-200'
                 }`}>
                   {/* Big profit number */}
-                  <div className="text-center mb-3">
+                  <div className="text-center mb-4">
                     <p className="text-xs text-warm-gray mb-0.5">Projected Profit (Mid)</p>
-                    <p className={`text-3xl font-extrabold tracking-tight ${
+                    <p className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
                       profitSimV4.profit?.mid >= 300 ? 'text-green-700' :
                       profitSimV4.profit?.mid >= 0 ? 'text-amber-700' : 'text-red-700'
                     }`}>
@@ -612,15 +518,15 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                     </p>
                   </div>
 
-                  {/* 4 compact stats */}
-                  <div className="grid grid-cols-4 gap-2 text-center mb-3">
+                  {/* 4 compact stats — responsive grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-3">
                     <div>
                       <p className="text-[10px] text-warm-gray">Est. Resale</p>
-                      <p className="text-sm font-semibold text-charcoal">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
+                      <p className="text-sm font-semibold text-foreground">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-warm-gray">Profit Range</p>
-                      <p className="text-xs font-medium text-charcoal-light">
+                      <p className="text-xs font-medium text-foreground/70">
                         £{profitSimV4.profit?.low?.toLocaleString()} – £{profitSimV4.profit?.high?.toLocaleString()}
                       </p>
                     </div>
@@ -651,40 +557,18 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                       {profitSimV4.guardrailReason}
                     </p>
                   )}
-
-                  {/* Detailed breakdown — commented out (technical detail) */}
-                  {/* <details className="mt-3">
-                    <summary className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-medium text-center">
-                      Show details
-                    </summary>
-
-                    <div className="mt-3 space-y-4">
-                      <div className="bg-white/60 rounded-lg p-3">
-                        <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Evidence</h4>
-                        <p className="text-xs text-gray-700">{profitSimV4.evidence?.compsSummary}</p>
-                        <div className="mt-1 flex gap-3 text-[10px] text-gray-400">
-                          <span>Variance: {profitSimV4.evidence?.variance}</span>
-                          <span>Threshold: {profitSimV4.evidence?.similarityThreshold?.toFixed(2)}</span>
-                          <span>Sources: {profitSimV4.evidence?.providers?.join(', ') || 'baseline'}</span>
-                        </div>
-                      </div>
-
-                      Adjustments, Costs & Time, Resale Range, Market Comps, v3 Delta
-                      all commented out (technical detail)
-                    </div>
-                  </details> */}
                 </div>
               </div>
             ) : profitSim ? (
               /* ── Fallback: v3 Profit Simulation ─────────────────────────── */
-              <div className="mt-4">
+              <div className="mt-5">
                 <span className="text-xs text-warm-gray block mb-2">Profit Simulation (v3)</span>
-                <div className={`rounded-lg p-4 ${
+                <div className={`rounded-xl p-4 sm:p-5 ${
                   profitSim.profitRiskBand === 'green' ? 'bg-green-50 ring-1 ring-green-200' :
                   profitSim.profitRiskBand === 'amber' ? 'bg-amber-50 ring-1 ring-amber-200' :
                   'bg-red-50 ring-1 ring-red-200'
                 }`}>
-                  <div className="grid grid-cols-3 gap-3 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                     <div className="text-center">
                       <p className="text-xs text-warm-gray">Profit (Min)</p>
                       <p className={`text-sm font-bold ${profitSim.expectedProfitMin < 0 ? 'text-red-700' : 'text-green-700'}`}>
@@ -704,15 +588,6 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                       </p>
                     </div>
                   </div>
-                  {/* Technical detail hidden */}
-                  {/* <div className="flex justify-between text-xs text-gray-500">
-                    <span>Est. Resale: £{profitSim.estimatedRetail?.toLocaleString()}</span>
-                    <span>Recon: £{profitSim.reconEstimate?.toLocaleString()}</span>
-                    <span>Sell cost: {((profitSim.sellCostPct ?? 0.05) * 100).toFixed(0)}%</span>
-                  </div>
-                  <p className="mt-1 text-[10px] text-gray-400 italic">
-                    v3 baseline — 20% dealer markup. v4 not yet computed for this lead.
-                  </p> */}
                   {profitSim.guardrailTriggered && (
                     <p className="mt-2 text-xs text-red-700 font-medium">
                       <svg className="inline w-3.5 h-3.5 mr-0.5 -mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
@@ -728,9 +603,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         )}
       </div>
 
-      {/* ── Outcome — distinct from other sections ──────────────── */}
-      <div className="mb-10 pb-10 border-b border-warm-border">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5">Outcome</p>
+      {/* ── Outcome card ──────────────────────────────────────── */}
+      <div className="card-premium p-5 sm:p-7 mb-6 sm:mb-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          Outcome
+        </p>
         {lead.outcome ? (
           <div>
             <div className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium mb-3 ${
@@ -751,9 +629,8 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             {lead.outcome_at && (
               <DL label="Recorded" value={new Date(lead.outcome_at).toLocaleString('en-GB')} />
             )}
-            {/* Show delta if won and we have valuation data */}
             {lead.outcome === 'won' && lead.final_offer && snapshot && (
-              <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+              <div className="mt-3 p-3 bg-blue-50 rounded-xl">
                 <p className="text-xs text-blue-600 mb-1">Engine vs Actual</p>
                 <p className="text-sm text-blue-900">
                   Midpoint was £{snapshot.result_midpoint?.toLocaleString()} — 
@@ -781,14 +658,17 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         )}
       </div>
 
-      {/* ── CRM State — compact inline forms ──────────────────── */}
-      <div className="mb-10 pb-10 border-b border-warm-border">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5">CRM State</p>
+      {/* ── CRM State card ──────────────────────────────────── */}
+      <div className="card-premium p-5 sm:p-7 mb-6 sm:mb-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
+          CRM State
+        </p>
 
-        <div className="flex gap-8 mb-6 text-sm">
-          <div><span className="text-warm-gray">Status</span> <span className="ml-2 font-semibold text-charcoal capitalize">{lead.status}</span></div>
-          <div><span className="text-warm-gray">Finance</span> <span className="ml-2 font-semibold text-charcoal capitalize">{(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}</span></div>
-          <div><span className="text-warm-gray">Inspector</span> <span className="ml-2 font-semibold text-charcoal">{
+        <div className="flex flex-wrap gap-4 sm:gap-8 mb-6 text-sm">
+          <div><span className="text-warm-gray">Status</span> <span className="ml-2 font-semibold text-foreground capitalize">{lead.status}</span></div>
+          <div><span className="text-warm-gray">Finance</span> <span className="ml-2 font-semibold text-foreground capitalize">{(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}</span></div>
+          <div><span className="text-warm-gray">Inspector</span> <span className="ml-2 font-semibold text-foreground">{
             (() => {
               const insp = inspectors?.find((i: { id: string; name: string; email: string }) => i.id === lead.assigned_inspector_id)
               return insp ? insp.name : 'Unassigned'
@@ -796,17 +676,17 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
           }</span></div>
         </div>
 
-        {/* 3 forms in a compact row */}
-        <div className="grid grid-cols-3 gap-4">
+        {/* 3 forms — responsive: 1 col mobile, 3 cols desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Inspector assignment */}
-          <form action={submitAssignInspector}>
+          <form action={submitAssignInspector} className="p-4 rounded-xl bg-[var(--surface-warm)] border border-[var(--card-border)]">
             <input type="hidden" name="leadId" value={lead.id} />
-            <label htmlFor="inspector_id" className="block text-xs text-warm-gray mb-1.5">Inspector</label>
+            <label htmlFor="inspector_id" className="block text-xs text-warm-gray mb-1.5 font-medium">Inspector</label>
             <select
               id="inspector_id"
               name="inspector_id"
               defaultValue={lead.assigned_inspector_id ?? ''}
-              className="w-full border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none"
+              className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
             >
               <option value="">Unassigned</option>
               {inspectors?.map((insp: { id: string; name: string; email: string }) => (
@@ -815,21 +695,21 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             </select>
             <SubmitButton
               loadingText="…"
-              className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+              className="mt-3 w-full rounded-lg gradient-gold px-3 py-2 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
             >
               Assign
             </SubmitButton>
           </form>
 
           {/* Finance */}
-          <form action={submitFinanceStatus}>
+          <form action={submitFinanceStatus} className="p-4 rounded-xl bg-[var(--surface-warm)] border border-[var(--card-border)]">
             <input type="hidden" name="leadId" value={lead.id} />
-            <label htmlFor="finance_status" className="block text-xs text-warm-gray mb-1.5">Finance</label>
+            <label htmlFor="finance_status" className="block text-xs text-warm-gray mb-1.5 font-medium">Finance</label>
             <select
               id="finance_status"
               name="finance_status"
               defaultValue={lead.finance_status ?? 'not_checked'}
-              className="w-full border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none"
+              className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
             >
               <option value="not_checked">Not Checked</option>
               <option value="clear">Clear</option>
@@ -837,7 +717,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             </select>
             <SubmitButton
               loadingText="…"
-              className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+              className="mt-3 w-full rounded-lg gradient-gold px-3 py-2 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
             >
               Update
             </SubmitButton>
@@ -848,20 +728,20 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             const currentStatus = lead.status as LeadStatus
             const allowedTransitions = VALID_STATUS_TRANSITIONS[currentStatus] ?? []
             if (allowedTransitions.length === 0) return (
-              <div>
-                <label className="block text-xs text-warm-gray mb-1.5">Status</label>
+              <div className="p-4 rounded-xl bg-[var(--surface-warm)] border border-[var(--card-border)]">
+                <label className="block text-xs text-warm-gray mb-1.5 font-medium">Status</label>
                 <p className="text-xs text-warm-gray/60 mt-2">Terminal state — no transitions</p>
               </div>
             )
             return (
-              <form action={submitStatusChange}>
+              <form action={submitStatusChange} className="p-4 rounded-xl bg-[var(--surface-warm)] border border-[var(--card-border)]">
                 <input type="hidden" name="leadId" value={lead.id} />
-                <label htmlFor="status" className="block text-xs text-warm-gray mb-1.5">Status</label>
+                <label htmlFor="status" className="block text-xs text-warm-gray mb-1.5 font-medium">Status</label>
                 <select
                   id="status"
                   name="status"
                   defaultValue=""
-                  className="w-full border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none"
+                  className="w-full rounded-lg border border-[var(--card-border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-foreground focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20"
                 >
                   <option value="" disabled>Select…</option>
                   {allowedTransitions.map((s) => (
@@ -872,7 +752,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 </select>
                 <SubmitButton
                   loadingText="…"
-                  className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+                  className="mt-3 w-full rounded-lg gradient-gold px-3 py-2 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
                 >
                   Update
                 </SubmitButton>
@@ -882,32 +762,38 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         </div>
       </div>
 
-      {/* ── Appointment — inline, minimal ──────────────────── */}
-      <div className="mb-10 pb-10 border-b border-warm-border">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Appointment</p>
+      {/* ── Appointment card ──────────────────────────────── */}
+      <div className="card-premium p-5 sm:p-7 mb-6 sm:mb-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+          Appointment
+        </p>
         {appointment ? (
-          <div className="flex gap-8 text-sm">
-            <div><span className="text-warm-gray">Type</span> <span className="ml-2 text-charcoal capitalize">{appointment.type.replace('_', '-')}</span></div>
-            <div><span className="text-warm-gray">When</span> <span className="ml-2 text-charcoal">{new Date(appointment.start_at).toLocaleString('en-GB')}</span></div>
-            <div><span className="text-warm-gray">Status</span> <span className="ml-2 text-charcoal capitalize">{appointment.status}</span></div>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 text-sm">
+            <div><span className="text-warm-gray">Type</span> <span className="ml-2 text-foreground capitalize">{appointment.type.replace('_', '-')}</span></div>
+            <div><span className="text-warm-gray">When</span> <span className="ml-2 text-foreground">{new Date(appointment.start_at).toLocaleString('en-GB')}</span></div>
+            <div><span className="text-warm-gray">Status</span> <span className="ml-2 text-foreground capitalize">{appointment.status}</span></div>
           </div>
         ) : (
           <p className="text-sm text-warm-gray/60">No appointment booked.</p>
         )}
       </div>
 
-      {/* ── Inspection — photos + checklist, open layout ──── */}
-      <div className="mb-10 pb-10 border-b border-warm-border">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Inspection</p>
+      {/* ── Inspection card ──────────────────────────────── */}
+      <div className="card-premium p-5 sm:p-7 mb-6 sm:mb-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" /></svg>
+          Inspection
+        </p>
         {inspection ? (
           <div>
-            <div className="flex gap-8 text-sm mb-4">
-              <div><span className="text-warm-gray">Offer</span> <span className="ml-2 font-semibold text-charcoal">{inspection.recommended_offer ? `£${inspection.recommended_offer.toLocaleString()}` : '—'}</span></div>
-              <div><span className="text-warm-gray">Submitted</span> <span className="ml-2 text-charcoal">{inspection.submitted_at ? new Date(inspection.submitted_at).toLocaleString('en-GB') : 'Pending'}</span></div>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 text-sm mb-4">
+              <div><span className="text-warm-gray">Offer</span> <span className="ml-2 font-semibold text-foreground">{inspection.recommended_offer ? `£${inspection.recommended_offer.toLocaleString()}` : '—'}</span></div>
+              <div><span className="text-warm-gray">Submitted</span> <span className="ml-2 text-foreground">{inspection.submitted_at ? new Date(inspection.submitted_at).toLocaleString('en-GB') : 'Pending'}</span></div>
             </div>
 
             {inspection.notes && (
-              <p className="text-sm text-charcoal-light mb-4 italic">&ldquo;{inspection.notes}&rdquo;</p>
+              <p className="text-sm text-foreground/70 mb-4 italic">&ldquo;{inspection.notes}&rdquo;</p>
             )}
 
             {inspectionPhotoUrls.length > 0 && (
@@ -915,14 +801,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 <span className="text-sm text-warm-gray block mb-2">
                   Photos ({inspectionPhotoUrls.length})
                 </span>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                   {inspectionPhotoUrls.map((url, i) => (
                     <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={url}
                         alt={`Inspection photo ${i + 1}`}
-                        className="w-full aspect-square object-cover rounded-md border border-warm-border hover:opacity-80 transition-opacity"
+                        className="w-full aspect-square object-cover rounded-xl border border-[var(--card-border)] hover:opacity-80 transition-opacity"
                       />
                     </a>
                   ))}
@@ -931,13 +817,13 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             )}
 
             {inspection.checklist_json && Object.keys(inspection.checklist_json as Record<string, string>).length > 0 && (
-              <div className="mt-3">
+              <div className="mt-4">
                 <span className="text-sm text-warm-gray block mb-2">Checklist</span>
-                <div className="grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {Object.entries(inspection.checklist_json as Record<string, string>).map(([key, val]) => (
-                    <div key={key} className="flex gap-2 text-sm">
+                    <div key={key} className="flex gap-2 text-sm py-1 px-2 rounded-lg bg-[var(--surface-warm)]">
                       <span className="text-warm-gray">{key.replace(/_/g, ' ')}</span>
-                      <span className="font-medium text-charcoal-light capitalize">{val}</span>
+                      <span className="font-medium text-foreground capitalize">{val}</span>
                     </div>
                   ))}
                 </div>
@@ -949,9 +835,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         )}
       </div>
 
-      {/* ── Notes — timeline style ─────────────────────────────── */}
-      <div className="mb-10 pb-10 border-b border-warm-border">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Notes ({notes?.length ?? 0})</p>
+      {/* ── Notes card — timeline style ─────────────────────── */}
+      <div className="card-premium p-5 sm:p-7 mb-6 sm:mb-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
+          Notes ({notes?.length ?? 0})
+        </p>
 
         <form action={submitNote} className="mb-6 max-w-lg">
           <input type="hidden" name="leadId" value={lead.id} />
@@ -960,22 +849,22 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             required
             rows={2}
             placeholder="Add a note..."
-            className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal placeholder:text-warm-gray/50 focus:border-gold focus:outline-none resize-y"
+            className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--input-bg)] px-4 py-3 text-sm text-foreground placeholder:text-warm-gray/50 focus:border-gold focus:outline-none focus:ring-2 focus:ring-gold/20 resize-y"
           />
           <SubmitButton
             loadingText="Adding…"
-            className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+            className="mt-2 rounded-lg gradient-gold px-4 py-2 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
           >
             Add Note
           </SubmitButton>
         </form>
 
         {notes && notes.length > 0 ? (
-          <div className="space-y-0 border-l-2 border-warm-border-light pl-5 ml-1">
+          <div className="space-y-0 border-l-2 border-gold/20 pl-5 ml-1">
             {notes.map((note) => (
               <div key={note.id} className="pb-4 relative">
-                <div className="absolute -left-[27px] top-1.5 w-2 h-2 rounded-full bg-warm-border" />
-                <p className="text-sm text-charcoal-light">{note.body}</p>
+                <div className="absolute -left-[27px] top-1.5 w-2.5 h-2.5 rounded-full bg-gold/40 ring-2 ring-[var(--card-bg)]" />
+                <p className="text-sm text-foreground/80">{note.body}</p>
                 <p className="text-[11px] text-warm-gray/60 mt-1">{new Date(note.created_at).toLocaleString('en-GB')}</p>
               </div>
             ))}
@@ -985,17 +874,20 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         )}
       </div>
 
-      {/* ── Audit Log — minimal timeline ───────────────────────── */}
-      <div className="mb-10">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Audit Log</p>
+      {/* ── Audit Log card ───────────────────────────────────── */}
+      <div className="card-premium p-5 sm:p-7">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          Audit Log
+        </p>
         {auditLog && auditLog.length > 0 ? (
           <div className="space-y-1.5">
             {auditLog.map((entry) => (
-              <div key={entry.id} className="flex gap-4 text-xs">
-                <span className="text-warm-gray/50 tabular-nums whitespace-nowrap w-36 shrink-0">
+              <div key={entry.id} className="flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs py-1.5 px-2 rounded-lg hover:bg-[var(--surface-warm)] transition-colors">
+                <span className="text-warm-gray/50 tabular-nums whitespace-nowrap shrink-0">
                   {new Date(entry.created_at).toLocaleString('en-GB')}
                 </span>
-                <span className="text-warm-gray">{entry.action.replace(/_/g, ' ')}</span>
+                <span className="text-foreground/70">{entry.action.replace(/_/g, ' ')}</span>
               </div>
             ))}
           </div>
@@ -1010,8 +902,8 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 function DL({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-baseline gap-3">
-      <dt className="text-sm text-warm-gray w-28 shrink-0">{label}</dt>
-      <dd className="text-sm text-charcoal">{value}</dd>
+      <dt className="text-sm text-warm-gray w-24 sm:w-28 shrink-0">{label}</dt>
+      <dd className="text-sm text-foreground">{value}</dd>
     </div>
   )
 }

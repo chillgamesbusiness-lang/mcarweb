@@ -93,9 +93,9 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   }
 
   return (
-    <div className="p-6 lg:p-10">
+    <div className="p-4 sm:p-6 lg:p-10">
       {/* Title */}
-      <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-charcoal-deep mb-1">
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">
         Leads
       </h1>
       {totalCount > 0 && (
@@ -103,7 +103,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
       )}
 
       {/* Search + Filter — premium card bar */}
-      <form method="GET" action="/admin/leads" className="card-premium p-4 flex gap-3 mb-8 max-w-3xl">
+      <form method="GET" action="/admin/leads" className="card-premium p-3 sm:p-4 flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6 sm:mb-8 max-w-3xl">
         <div className="flex-1 relative">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-gray/50" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
           <input
@@ -111,13 +111,13 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
             name="q"
             defaultValue={q}
             placeholder="Search reg, name, email..."
-            className="w-full rounded-xl border border-warm-border bg-white pl-10 pr-4 py-2.5 text-sm text-charcoal-deep placeholder:text-warm-gray/50 input-premium focus:outline-none"
+            className="w-full rounded-xl border border-warm-border bg-[var(--input-bg)] pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-warm-gray/50 input-premium focus:outline-none"
           />
         </div>
         <select
           name="status"
           defaultValue={statusFilter}
-          className="rounded-xl border border-warm-border bg-white px-4 py-2.5 text-sm text-charcoal-deep input-premium focus:outline-none appearance-none"
+            className="rounded-xl border border-warm-border bg-[var(--input-bg)] px-4 py-2.5 text-sm text-foreground input-premium focus:outline-none appearance-none"
         >
           <option value="">All Statuses</option>
           {Object.entries(STATUS_LABELS).map(([val, label]) => (
@@ -147,16 +147,16 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
           <Link
             key={lead.id}
             href={`/admin/leads/${lead.id}`}
-            className="group flex items-center gap-6 py-4 px-6 hover:bg-gold/[0.03] transition-all duration-200"
+            className="group flex items-center gap-3 sm:gap-6 py-3 sm:py-4 px-3 sm:px-6 hover:bg-gold/[0.03] transition-all duration-200"
           >
             {/* Reg — monospace, bold, anchors the row */}
-            <span className="w-24 text-sm font-bold font-mono text-charcoal-deep tracking-wide shrink-0">
+            <span className="w-20 sm:w-24 text-xs sm:text-sm font-bold font-mono text-foreground tracking-wide shrink-0">
               {lead.reg}
             </span>
 
             {/* Seller + vehicle */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-charcoal-deep truncate font-medium">
+              <p className="text-sm text-foreground truncate font-medium">
                 {lead.seller_name}
                 <span className="text-warm-gray ml-2 font-normal">
                   {lead.make} {lead.model}
@@ -173,12 +173,12 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
             </span>
 
             {/* Finance */}
-            <span className="text-xs text-warm-gray capitalize w-20 text-right shrink-0">
+            <span className="text-xs text-warm-gray capitalize w-20 text-right shrink-0 hidden md:block">
               {(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}
             </span>
 
             {/* Date */}
-            <span className="text-xs text-warm-gray/60 w-20 text-right shrink-0 tabular-nums">
+            <span className="text-xs text-warm-gray/60 w-20 text-right shrink-0 tabular-nums hidden sm:block">
               {new Date(lead.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
             </span>
 
