@@ -13,53 +13,53 @@ export default async function AdminCalendarPage() {
     .limit(50)
 
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold text-charcoal mb-6">Calendar / Appointments</h1>
+    <div className="p-6 lg:p-10">
+      <h1 className="text-3xl font-bold tracking-tight text-charcoal mb-1">Calendar</h1>
+      <p className="text-sm text-warm-gray mb-8">Upcoming & recent appointments</p>
 
-      <div className="bg-surface rounded-lg border border-warm-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-surface-warm border-b border-warm-border">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Date & Time</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Type</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Seller</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Reg</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-warm-border-light">
-            {appointments?.map((appt) => {
-              const lead = appt.leads as { seller_name: string; reg: string } | null
-              return (
-                <tr key={appt.id} className="hover:bg-surface-warm">
-                  <td className="px-4 py-3 whitespace-nowrap text-charcoal-light">
-                    {new Date(appt.start_at).toLocaleString('en-GB', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    })}
-                  </td>
-                  <td className="px-4 py-3 capitalize text-charcoal-light">
-                    {appt.type.replace('_', '-')}
-                  </td>
-                  <td className="px-4 py-3 text-charcoal-light">{lead?.seller_name ?? '—'}</td>
-                  <td className="px-4 py-3 font-mono text-charcoal-light">{lead?.reg ?? '—'}</td>
-                  <td className="px-4 py-3 capitalize text-warm-gray">{appt.status}</td>
-                </tr>
-              )
-            })}
+      {/* Clean divider-row list, no table wrapper */}
+      <div className="border-t border-warm-border">
+        {appointments?.map((appt) => {
+          const lead = appt.leads as { seller_name: string; reg: string } | null
+          return (
+            <div key={appt.id} className="flex items-center gap-6 py-4 border-b border-warm-border-light">
+              {/* Date — prominent */}
+              <span className="w-40 text-sm tabular-nums text-charcoal shrink-0">
+                {new Date(appt.start_at).toLocaleString('en-GB', {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </span>
 
-            {(!appointments || appointments.length === 0) && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-warm-gray">
-                  No appointments found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              {/* Type */}
+              <span className="w-20 text-xs uppercase tracking-wider text-warm-gray shrink-0">
+                {appt.type.replace('_', '-')}
+              </span>
+
+              {/* Seller + Reg */}
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-charcoal">{lead?.seller_name ?? '—'}</span>
+                <span className="ml-2 text-sm font-mono text-warm-gray">{lead?.reg ?? ''}</span>
+              </div>
+
+              {/* Status */}
+              <span className={`text-xs capitalize ${
+                appt.status === 'completed' ? 'text-green-600' : 'text-warm-gray'
+              }`}>
+                {appt.status}
+              </span>
+            </div>
+          )
+        })}
+
+        {(!appointments || appointments.length === 0) && (
+          <p className="py-12 text-center text-warm-gray text-sm">
+            No appointments found.
+          </p>
+        )}
       </div>
 
-      <p className="mt-6 text-sm text-warm-gray">Full calendar widget coming in a later session.</p>
+      <p className="mt-8 text-[11px] text-warm-gray/50">Full calendar widget coming in a later session.</p>
     </div>
   )
 }

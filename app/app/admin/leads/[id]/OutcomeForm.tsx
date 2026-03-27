@@ -77,9 +77,9 @@ export default function OutcomeForm({
       </div>
 
       {outcome === 'won' && (
-        <div className="space-y-3">
+        <div className="space-y-4 max-w-sm">
           <div>
-            <label htmlFor="final_offer" className="block text-sm font-medium text-charcoal-light mb-1">
+            <label htmlFor="final_offer" className="block text-xs text-warm-gray mb-1">
               Final Agreed Price (£) <span className="text-red-500">*</span>
             </label>
             <input
@@ -89,12 +89,12 @@ export default function OutcomeForm({
               min={0}
               defaultValue={currentFinalOffer ?? ''}
               placeholder="e.g. 4500"
-              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+              className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none"
               required
             />
           </div>
           <div>
-            <label htmlFor="actual_purchase_price" className="block text-sm font-medium text-charcoal-light mb-1">
+            <label htmlFor="actual_purchase_price" className="block text-xs text-warm-gray mb-1">
               Actual Purchase Price (£)
             </label>
             <input
@@ -104,11 +104,11 @@ export default function OutcomeForm({
               min={0}
               defaultValue={currentActualPurchase ?? ''}
               placeholder="What was paid to seller"
-              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+              className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none"
             />
           </div>
           <div>
-            <label htmlFor="actual_recon_cost" className="block text-sm font-medium text-charcoal-light mb-1">
+            <label htmlFor="actual_recon_cost" className="block text-xs text-warm-gray mb-1">
               Recon Cost (£)
             </label>
             <input
@@ -118,11 +118,11 @@ export default function OutcomeForm({
               min={0}
               defaultValue={currentReconCost ?? ''}
               placeholder="Actual recon spend"
-              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+              className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none"
             />
           </div>
           <div>
-            <label htmlFor="actual_resale_price" className="block text-sm font-medium text-charcoal-light mb-1">
+            <label htmlFor="actual_resale_price" className="block text-xs text-warm-gray mb-1">
               Resale Price (£)
             </label>
             <input
@@ -132,11 +132,11 @@ export default function OutcomeForm({
               min={0}
               defaultValue={currentActualResale ?? ''}
               placeholder="What the car sold for"
-              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+              className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none"
             />
           </div>
           <div>
-            <label htmlFor="days_to_sale" className="block text-sm font-medium text-charcoal-light mb-1">
+            <label htmlFor="days_to_sale" className="block text-xs text-warm-gray mb-1">
               Days to Sale
             </label>
             <input
@@ -146,25 +146,25 @@ export default function OutcomeForm({
               min={0}
               defaultValue={currentDaysToSale ?? ''}
               placeholder="Days from purchase to resale"
-              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+              className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none"
             />
           </div>
-          <p className="text-xs text-warm-gray">
-            Purchase/recon/resale data feeds the calibration engine. Fill in as data becomes available.
+          <p className="text-[11px] text-warm-gray/60">
+            Feeds the calibration engine. Fill in as data becomes available.
           </p>
         </div>
       )}
 
       {outcome === 'lost' && (
-        <div>
-          <label htmlFor="reason_if_lost" className="block text-sm font-medium text-charcoal-light mb-1">
+        <div className="max-w-sm">
+          <label htmlFor="reason_if_lost" className="block text-xs text-warm-gray mb-1">
             Reason
           </label>
           <select
             id="reason_if_lost"
             name="reason_if_lost"
             defaultValue={currentReason ?? ''}
-            className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+            className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none"
           >
             <option value="" disabled>Select reason</option>
             {LOSS_REASONS.map(r => (
@@ -178,7 +178,7 @@ export default function OutcomeForm({
         <button
           type="submit"
           disabled={submitted}
-          className="rounded-md bg-charcoal px-4 py-2 text-sm font-semibold text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="text-sm font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
         >
           {submitted ? 'Saving…' : 'Save Outcome'}
         </button>

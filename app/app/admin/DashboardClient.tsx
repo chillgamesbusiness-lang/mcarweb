@@ -42,93 +42,74 @@ function StatusDot({ status }: { status: Signal }) {
 export default function DashboardClient(props: DashboardProps) {
   const { acquisition, profit, weeklySummary, quickStats } = props
 
-  // Simple overall health
   const healthyProfit = profit.avgPredictedProfitMid > 200
   const goodAcceptance = acquisition.acceptanceRate >= 15
   const overallStatus: Signal = healthyProfit && goodAcceptance ? 'green' : healthyProfit || goodAcceptance ? 'amber' : 'red'
-  const overallLabel = overallStatus === 'green' ? 'Looking Good' : overallStatus === 'amber' ? 'Needs Attention' : 'Action Needed'
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <h1 className="text-xl font-bold text-charcoal">Dashboard</h1>
-
-      {/* Overall status banner */}
-      <div className={`rounded-xl px-5 py-4 flex items-center gap-3 shadow-sm ${
-        overallStatus === 'green' ? 'bg-green-50 ring-1 ring-green-200' :
-        overallStatus === 'amber' ? 'bg-amber-50 ring-1 ring-amber-200' :
-        'bg-red-50 ring-1 ring-red-200'
-      }`}>
+    <div className="p-6 lg:p-10 max-w-5xl">
+      {/* Page header — tight, editorial */}
+      <div className="flex items-baseline gap-4 mb-10">
+        <h1 className="text-3xl font-bold tracking-tight text-charcoal">Dashboard</h1>
         <StatusDot status={overallStatus} />
-        <div>
-          <p className={`font-semibold text-sm ${
-            overallStatus === 'green' ? 'text-green-800' :
-            overallStatus === 'amber' ? 'text-amber-800' : 'text-red-800'
-          }`}>{overallLabel}</p>
-          <p className="text-xs text-warm-gray mt-0.5">
-            {weeklySummary.offersGenerated} offers this week
-            {weeklySummary.acceptanceRate > 0 && ` · ${weeklySummary.acceptanceRate}% accepted`}
-          </p>
-        </div>
       </div>
 
-      {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-4">
-        {quickStats.map(s => (
-          <div key={s.label} className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border px-5 py-4">
-            <p className="text-xs text-warm-gray mb-0.5">{s.label}</p>
-            <p className="text-2xl font-bold text-charcoal">{s.value}</p>
+      {/* ── Hero strip: 3 numbers on a clean line, no cards ───────── */}
+      <div className="flex gap-12 mb-12 border-b border-warm-border pb-8">
+        {quickStats.map((s) => (
+          <div key={s.label}>
+            <p className="text-4xl font-extrabold tracking-tight text-charcoal">{s.value}</p>
+            <p className="text-xs uppercase tracking-widest text-warm-gray mt-1">{s.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Performance cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Offers card */}
-        <div className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border p-5">
-          <h2 className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-4">Offers</h2>
+      {/* ── Two-column asymmetric: big profit block + offers sidebar ─── */}
+      <div className="grid grid-cols-5 gap-10 mb-12">
+        {/* Left — profit, large & dominant */}
+        <div className="col-span-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-4">Profit</p>
+          <div className="mb-6">
+            <p className="text-5xl font-extrabold tracking-tight text-charcoal leading-none">
+              {profit.avgPredictedProfitMid >= 0 ? '£' : '−£'}{Math.abs(profit.avgPredictedProfitMid).toLocaleString()}
+            </p>
+            <p className="text-sm text-warm-gray mt-2">avg predicted per deal</p>
+          </div>
+
+          <div className="space-y-3 border-t border-warm-border-light pt-5">
+            <DataRow label="Avg realised profit" value={profit.avgRealisedProfit !== null ? `£${profit.avgRealisedProfit.toLocaleString()}` : '—'} />
+            <DataRow label="Deals won" value={profit.totalWonDeals} />
+            <DataRow label="Deals completed" value={profit.totalRealisedDeals} />
+          </div>
+        </div>
+
+        {/* Right — offers, compact */}
+        <div className="col-span-2 border-l border-warm-border pl-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-4">Offers</p>
           <div className="space-y-3">
-            <Row label="This week" value={acquisition.offersThisWeek} />
-            <Row label="Last week" value={acquisition.offersLastWeek} />
+            <DataRow label="This week" value={acquisition.offersThisWeek} />
+            <DataRow label="Last week" value={acquisition.offersLastWeek} />
             {acquisition.offersThisWeek !== acquisition.offersLastWeek && (
-              <Row
+              <DataRow
                 label="Change"
                 value={`${acquisition.offersThisWeek > acquisition.offersLastWeek ? '+' : ''}${acquisition.offersThisWeek - acquisition.offersLastWeek}`}
                 highlight={acquisition.offersThisWeek >= acquisition.offersLastWeek ? 'green' : 'red'}
               />
             )}
-            <Row label="Total (all time)" value={acquisition.totalOffers} />
-            <Row
+            <DataRow label="Total all-time" value={acquisition.totalOffers} />
+            <DataRow
               label="Acceptance rate"
               value={`${acquisition.acceptanceRate}%`}
-              highlight={acquisition.acceptanceRate >= 30 ? 'green' : acquisition.acceptanceRate >= 15 ? 'amber' : 'red'}
+              highlight={signalAbove(acquisition.acceptanceRate, 30, 15)}
             />
-          </div>
-        </div>
-
-        {/* Profit card */}
-        <div className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border p-5">
-          <h2 className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-4">Profit</h2>
-          <div className="space-y-3">
-            <Row
-              label="Avg expected profit"
-              value={`£${profit.avgPredictedProfitMid.toLocaleString()}`}
-              highlight={profit.avgPredictedProfitMid >= 300 ? 'green' : profit.avgPredictedProfitMid > 0 ? 'amber' : 'red'}
-            />
-            <Row
-              label="Avg actual profit"
-              value={profit.avgRealisedProfit !== null ? `£${profit.avgRealisedProfit.toLocaleString()}` : 'No data yet'}
-            />
-            <Row label="Deals won" value={profit.totalWonDeals} />
-            <Row label="Deals completed" value={profit.totalRealisedDeals} />
           </div>
         </div>
       </div>
 
-      {/* Weekly summary */}
-      <div className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border p-5">
-        <h2 className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-3">This Week</h2>
-        <p className="text-sm text-charcoal-light leading-relaxed">
+      {/* ── Weekly summary — editorial paragraph, not a card ──────── */}
+      <div className="max-w-lg">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">This Week</p>
+        <p className="text-[15px] leading-relaxed text-charcoal-light">
           {weeklySummary.offersGenerated} offers generated
           {weeklySummary.acceptanceRate > 0 && `, ${weeklySummary.acceptanceRate}% accepted`}.
           {profit.avgRealisedProfit !== null
@@ -140,9 +121,9 @@ export default function DashboardClient(props: DashboardProps) {
   )
 }
 
-// ── Simple row component ───────────────────────────────────────────────────────
+// ── Simple data row — no cards, just clean label : value ─────────────────────
 
-function Row({ label, value, highlight }: {
+function DataRow({ label, value, highlight }: {
   label: string
   value: string | number
   highlight?: Signal
@@ -154,9 +135,9 @@ function Row({ label, value, highlight }: {
     'text-charcoal'
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-baseline justify-between">
       <span className="text-sm text-warm-gray">{label}</span>
-      <span className={`text-sm font-semibold ${valClass}`}>{value}</span>
+      <span className={`text-sm font-semibold tabular-nums ${valClass}`}>{value}</span>
     </div>
   )
 }

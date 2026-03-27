@@ -26,25 +26,28 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (profile?.role !== 'admin') redirect('/login')
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
-      <aside className="w-56 bg-surface border-r border-warm-border flex flex-col">
-        <div className="px-5 py-5 border-b border-warm-border-light">
-          <p className="text-xs font-semibold uppercase tracking-widest text-warm-gray">Admin</p>
-          <p className="mt-1 text-base font-bold text-charcoal">MCar CRM</p>
+      {/* Sidebar — dark, confident, not another white box */}
+      <aside className="w-52 bg-charcoal flex flex-col shrink-0">
+        {/* Gold hairline accent at top */}
+        <div className="h-0.5 bg-gold" />
+
+        <div className="px-5 pt-6 pb-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-gold/60">Admin</p>
+          <p className="mt-1 text-lg font-bold tracking-tight text-white/90">MCar</p>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 space-y-0.5">
           <NavLink href="/admin">Dashboard</NavLink>
           <NavLink href="/admin/leads">Leads</NavLink>
           <NavLink href="/admin/calendar">Calendar</NavLink>
           <NavLink href="/admin/settings">Settings</NavLink>
         </nav>
 
-        <div className="px-3 py-4 border-t border-warm-border-light">
+        <div className="px-3 py-4">
           <form action={logout}>
             <button
               type="submit"
-              className="w-full text-left text-sm text-warm-gray hover:text-red-600 transition-colors px-2 py-1.5 rounded"
+              className="w-full text-left text-[13px] text-white/30 hover:text-red-400 transition-colors px-3 py-2"
             >
               Sign out
             </button>
@@ -62,7 +65,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="block px-3 py-2 rounded-md text-sm font-medium text-charcoal-light hover:bg-surface-warm hover:text-charcoal transition-colors"
+      className="block px-3 py-2.5 text-[13px] font-medium text-white/50 hover:text-white hover:bg-white/5 rounded transition-colors"
     >
       {children}
     </Link>

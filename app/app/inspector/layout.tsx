@@ -25,27 +25,29 @@ export default async function InspectorLayout({ children }: { children: React.Re
   if (profile?.role !== 'inspector') redirect('/login')
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
-      <aside className="w-56 bg-surface border-r border-warm-border flex flex-col">
-        <div className="px-5 py-5 border-b border-warm-border-light">
-          <p className="text-xs font-semibold uppercase tracking-widest text-warm-gray">Inspector</p>
-          <p className="mt-1 text-base font-bold text-charcoal">MCar CRM</p>
+      {/* Sidebar — dark, matching admin */}
+      <aside className="w-52 bg-charcoal flex flex-col shrink-0">
+        <div className="h-0.5 bg-gold" />
+
+        <div className="px-5 pt-6 pb-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-gold/60">Inspector</p>
+          <p className="mt-1 text-lg font-bold tracking-tight text-white/90">MCar</p>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        <nav className="flex-1 px-3 space-y-0.5">
           <a
             href="/inspector"
-            className="block px-3 py-2 rounded-md text-sm font-medium text-charcoal-light hover:bg-surface-warm hover:text-charcoal transition-colors"
+            className="block px-3 py-2.5 text-[13px] font-medium text-white/50 hover:text-white hover:bg-white/5 rounded transition-colors"
           >
             My Inspections
           </a>
         </nav>
 
-        <div className="px-3 py-4 border-t border-warm-border-light">
+        <div className="px-3 py-4">
           <form action={logout}>
             <button
               type="submit"
-              className="w-full text-left text-sm text-warm-gray hover:text-red-600 transition-colors px-2 py-1.5 rounded"
+              className="w-full text-left text-[13px] text-white/30 hover:text-red-400 transition-colors px-3 py-2"
             >
               Sign out
             </button>

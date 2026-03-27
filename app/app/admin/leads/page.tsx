@@ -93,26 +93,28 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-charcoal">
-          Leads {totalCount > 0 && <span className="text-warm-gray text-lg font-normal">({totalCount})</span>}
-        </h1>
-      </div>
+    <div className="p-6 lg:p-10">
+      {/* Title — big, tight, editorial */}
+      <h1 className="text-3xl font-bold tracking-tight text-charcoal mb-1">
+        Leads
+      </h1>
+      {totalCount > 0 && (
+        <p className="text-sm text-warm-gray mb-8">{totalCount} total</p>
+      )}
 
-      {/* Search + Filter bar */}
-      <form method="GET" action="/admin/leads" className="flex gap-3 mb-6">
+      {/* Search + Filter — inline, minimal chrome */}
+      <form method="GET" action="/admin/leads" className="flex gap-3 mb-8 max-w-2xl">
         <input
           type="text"
           name="q"
           defaultValue={q}
-          placeholder="Search reg, name, or email..."
-          className="flex-1 rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+          placeholder="Search reg, name, email..."
+          className="flex-1 border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal placeholder:text-warm-gray/60 focus:border-gold focus:outline-none transition-colors"
         />
         <select
           name="status"
           defaultValue={statusFilter}
-          className="rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+          className="border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none transition-colors"
         >
           <option value="">All Statuses</option>
           {Object.entries(STATUS_LABELS).map(([val, label]) => (
@@ -121,110 +123,102 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
         </select>
         <button
           type="submit"
-          className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors"
+          className="text-sm font-medium text-gold hover:text-gold-dark transition-colors"
         >
           Search
         </button>
         {(q || statusFilter) && (
           <Link
             href="/admin/leads"
-            className="rounded-md border border-warm-border px-4 py-2 text-sm text-warm-gray hover:bg-surface-warm transition-colors flex items-center"
+            className="text-sm text-warm-gray hover:text-charcoal transition-colors"
           >
             Clear
           </Link>
         )}
       </form>
 
-      <div className="bg-surface rounded-lg border border-warm-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-surface-warm border-b border-warm-border">
-            <tr>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Date</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Seller</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Vehicle</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-warm-gray">Finance</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-warm-border-light">
-            {leads?.map((lead) => (
-              <tr key={lead.id} className="hover:bg-surface-warm">
-                <td className="px-4 py-3 text-warm-gray whitespace-nowrap">
-                  {new Date(lead.created_at).toLocaleDateString('en-GB')}
-                </td>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-charcoal">{lead.seller_name}</p>
-                  <p className="text-warm-gray/70 text-xs">{lead.seller_email}</p>
-                </td>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-charcoal">{lead.reg}</p>
-                  <p className="text-warm-gray/70 text-xs">
-                    {lead.make} {lead.model}
-                  </p>
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLOURS[lead.status as Lead['status']]}`}
-                  >
-                    {STATUS_LABELS[lead.status as Lead['status']]}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-warm-gray capitalize">
-                  {(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link
-                    href={`/admin/leads/${lead.id}`}
-                    className="text-gold hover:underline text-xs font-medium"
-                  >
-                    View →
-                  </Link>
-                </td>
-              </tr>
-            ))}
+      {/* Lead rows — no table wrapper card, just clean divider-separated rows */}
+      <div className="border-t border-warm-border">
+        {leads?.map((lead) => (
+          <Link
+            key={lead.id}
+            href={`/admin/leads/${lead.id}`}
+            className="group flex items-center gap-6 py-4 border-b border-warm-border-light hover:bg-surface-warm/50 px-2 -mx-2 transition-colors"
+          >
+            {/* Reg — monospace, bold, anchors the row */}
+            <span className="w-24 text-sm font-bold font-mono text-charcoal tracking-wide shrink-0">
+              {lead.reg}
+            </span>
 
-            {(!leads || leads.length === 0) && (
-              <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-warm-gray">
-                  {q || statusFilter ? 'No leads match your search.' : 'No leads yet.'}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+            {/* Seller + vehicle */}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-charcoal truncate">
+                {lead.seller_name}
+                <span className="text-warm-gray ml-2 font-normal">
+                  {lead.make} {lead.model}
+                </span>
+              </p>
+              <p className="text-xs text-warm-gray/60 mt-0.5">{lead.seller_email}</p>
+            </div>
+
+            {/* Status badge */}
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium shrink-0 ${STATUS_COLOURS[lead.status as Lead['status']]}`}
+            >
+              {STATUS_LABELS[lead.status as Lead['status']]}
+            </span>
+
+            {/* Finance */}
+            <span className="text-xs text-warm-gray capitalize w-20 text-right shrink-0">
+              {(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}
+            </span>
+
+            {/* Date */}
+            <span className="text-xs text-warm-gray/60 w-20 text-right shrink-0 tabular-nums">
+              {new Date(lead.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+            </span>
+
+            {/* Arrow */}
+            <span className="text-warm-gray/30 group-hover:text-gold transition-colors shrink-0">→</span>
+          </Link>
+        ))}
+
+        {(!leads || leads.length === 0) && (
+          <p className="py-12 text-center text-warm-gray text-sm">
+            {q || statusFilter ? 'No leads match your search.' : 'No leads yet.'}
+          </p>
+        )}
       </div>
 
-      {/* Pagination */}
+      {/* Pagination — minimal */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-warm-gray">
-            Showing {from + 1}–{Math.min(from + PAGE_SIZE, totalCount)} of {totalCount}
+        <div className="flex items-center justify-between mt-6 pt-4">
+          <p className="text-xs text-warm-gray">
+            {from + 1}–{Math.min(from + PAGE_SIZE, totalCount)} of {totalCount}
           </p>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {page > 1 && (
               <Link
                 href={buildUrl(page - 1)}
-                className="rounded-md border border-warm-border px-3 py-1.5 text-sm text-warm-gray hover:bg-surface-warm"
+                className="px-3 py-1.5 text-xs text-warm-gray hover:text-charcoal transition-colors"
               >
-                ← Previous
+                ← Prev
               </Link>
             )}
-            {/* Page numbers — show max 7 pages around current */}
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
               .map((p, idx, arr) => {
                 const prev = arr[idx - 1]
                 const showEllipsis = prev !== undefined && p - prev > 1
                 return (
-                  <span key={p} className="flex items-center gap-1">
-                    {showEllipsis && <span className="text-warm-gray px-1">…</span>}
+                  <span key={p} className="flex items-center">
+                    {showEllipsis && <span className="text-warm-gray/40 px-1 text-xs">…</span>}
                     <Link
                       href={buildUrl(p)}
-                      className={`rounded-md px-3 py-1.5 text-sm ${
+                      className={`px-2.5 py-1 text-xs rounded ${
                         p === page
                           ? 'bg-charcoal text-white'
-                          : 'border border-warm-border text-warm-gray hover:bg-surface-warm'
+                          : 'text-warm-gray hover:text-charcoal transition-colors'
                       }`}
                     >
                       {p}
@@ -235,7 +229,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
             {page < totalPages && (
               <Link
                 href={buildUrl(page + 1)}
-                className="rounded-md border border-warm-border px-3 py-1.5 text-sm text-warm-gray hover:bg-surface-warm"
+                className="px-3 py-1.5 text-xs text-warm-gray hover:text-charcoal transition-colors"
               >
                 Next →
               </Link>

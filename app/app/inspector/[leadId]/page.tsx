@@ -51,12 +51,13 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
   }
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-charcoal mb-1">
-        Inspection: {lead.reg}
+    <div className="p-6 lg:p-10 max-w-2xl">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-2">Inspection</p>
+      <h1 className="text-3xl font-extrabold tracking-tight text-charcoal leading-none mb-1">
+        {lead.reg}
       </h1>
-      <p className="text-sm text-warm-gray mb-8">
-        {lead.make} {lead.model} - {lead.seller_name}
+      <p className="text-sm text-charcoal-light mb-8">
+        {lead.make} {lead.model} — {lead.seller_name}
       </p>
 
       {isSubmitted && (
@@ -101,10 +102,10 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
           existing={existingInspection?.checklist_json as Record<string, string> | null}
         />
 
-        <div className="bg-surface rounded-lg border border-warm-border p-5">
-          <h2 className="text-sm font-semibold text-charcoal-light mb-4">Recommended Offer</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-warm-gray text-sm">GBP</span>
+        <div className="mb-8 pb-8 border-b border-warm-border">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Recommended Offer</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-warm-gray text-sm">£</span>
             <input
               type="number"
               name="recommended_offer"
@@ -113,20 +114,20 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
               max={500000}
               defaultValue={existingInspection?.recommended_offer ?? undefined}
               disabled={isSubmitted}
-              className="w-40 rounded-md border border-warm-border px-3 py-2 text-sm disabled:bg-surface-warm disabled:text-warm-gray"
+              className="w-40 border-b border-warm-border bg-transparent px-1 py-2 text-lg font-bold text-charcoal focus:border-gold focus:outline-none disabled:text-warm-gray disabled:border-warm-border-light"
               placeholder="0"
             />
           </div>
         </div>
 
-        <div className="bg-surface rounded-lg border border-warm-border p-5">
-          <h2 className="text-sm font-semibold text-charcoal-light mb-4">Inspector Notes</h2>
+        <div className="mb-8 pb-8 border-b border-warm-border">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Notes</p>
           <textarea
             name="notes"
-            rows={4}
+            rows={3}
             disabled={isSubmitted}
             defaultValue={existingInspection?.notes ?? ''}
-            className="w-full rounded-md border border-warm-border px-3 py-2 text-sm disabled:bg-surface-warm disabled:text-warm-gray"
+            className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal placeholder:text-warm-gray/50 focus:border-gold focus:outline-none resize-y disabled:text-warm-gray disabled:border-warm-border-light"
             placeholder="Any additional observations..."
           />
         </div>
@@ -134,7 +135,7 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
         {!isSubmitted && (
           <SubmitButton
             loadingText="Submitting…"
-            className="w-full rounded-md bg-charcoal px-4 py-2.5 text-sm font-semibold text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="text-sm font-semibold text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
           >
             Submit Inspection
           </SubmitButton>
@@ -156,9 +157,9 @@ function ChecklistSection({
   existing: Record<string, string> | null
 }) {
   return (
-    <div className="bg-surface rounded-lg border border-warm-border p-5">
-      <h2 className="text-sm font-semibold text-charcoal-light mb-4">{title}</h2>
-      <div className="space-y-3">
+    <div className="mb-8 pb-8 border-b border-warm-border">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">{title}</p>
+      <div className="space-y-2">
         {fields.map((field) => (
           <div key={field} className="flex items-center justify-between gap-4">
             <label className="text-sm text-charcoal-light w-40">{field}</label>
@@ -167,7 +168,7 @@ function ChecklistSection({
               disabled={readOnly}
               required={!readOnly}
               defaultValue={existing?.[`${title}_${field}`] ?? ''}
-              className="flex-1 rounded-md border border-warm-border px-3 py-1.5 text-sm disabled:bg-surface-warm disabled:text-warm-gray"
+              className="flex-1 border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none disabled:text-warm-gray disabled:border-warm-border-light"
             >
               <option value="">Select</option>
               <option value="good">Good</option>

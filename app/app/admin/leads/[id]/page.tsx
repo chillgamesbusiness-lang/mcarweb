@@ -399,81 +399,96 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   }
 
   return (
-    <div className="p-8 max-w-4xl">
-      <h1 className="text-2xl font-bold text-charcoal mb-1">
-        {lead.reg} - {lead.seller_name}
-      </h1>
-      <p className="text-sm text-warm-gray mb-8">
-        Lead ID: {lead.id} | Submitted {new Date(lead.created_at).toLocaleString('en-GB')}
-      </p>
+    <div className="p-6 lg:p-10 max-w-4xl">
+      {/* ── Header — dossier style: reg as hero, metadata inline ─── */}
+      <div className="mb-10">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-2">Lead Detail</p>
+        <h1 className="text-4xl font-extrabold tracking-tight text-charcoal leading-none mb-2">
+          {lead.reg}
+        </h1>
+        <p className="text-[15px] text-charcoal-light">
+          {lead.seller_name}
+          <span className="text-warm-gray mx-2">·</span>
+          {lead.make ?? '—'} {lead.model ?? ''}
+          <span className="text-warm-gray mx-2">·</span>
+          <span className="text-warm-gray">{new Date(lead.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        </p>
+      </div>
 
-      <Section title="Vehicle">
-        <Field label="Registration" value={lead.reg} />
-        <Field label="Make / Model" value={`${lead.make ?? '-'} ${lead.model ?? ''}`} />
-        <Field label="Year" value={lead.year?.toString() ?? '-'} />
-        <Field label="Fuel" value={lead.fuel ?? '-'} />
-        <Field label="Transmission" value={lead.transmission ?? '-'} />
-        <Field label="Mileage" value={lead.mileage ? `${lead.mileage.toLocaleString()} miles` : '-'} />
-        <Field label="Condition" value={lead.condition} />
-      </Section>
+      {/* ── Vehicle + Seller: two columns, no cards ─────────────── */}
+      <div className="grid grid-cols-2 gap-x-12 gap-y-1 mb-10 pb-10 border-b border-warm-border">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Vehicle</p>
+          <dl className="space-y-2">
+            <DL label="Year" value={lead.year?.toString() ?? '—'} />
+            <DL label="Fuel" value={lead.fuel ?? '—'} />
+            <DL label="Transmission" value={lead.transmission ?? '—'} />
+            <DL label="Mileage" value={lead.mileage ? `${lead.mileage.toLocaleString()} mi` : '—'} />
+            <DL label="Condition" value={lead.condition} />
+          </dl>
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Seller</p>
+          <dl className="space-y-2">
+            <DL label="Email" value={lead.seller_email} />
+            <DL label="Phone" value={lead.seller_phone} />
+            <DL label="Postcode" value={lead.seller_postcode} />
+          </dl>
+        </div>
+      </div>
 
-      <Section title="Seller">
-        <Field label="Name" value={lead.seller_name} />
-        <Field label="Email" value={lead.seller_email} />
-        <Field label="Phone" value={lead.seller_phone} />
-        <Field label="Postcode" value={lead.seller_postcode} />
-      </Section>
-
-      {/* ── Valuation Breakdown (admin-only) ──────────────────────────── */}
-      <Section title="Valuation Breakdown">
+      {/* ── Valuation — hero numbers, not a card ──────────────────── */}
+      <div className="mb-10 pb-10 border-b border-warm-border">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5">Valuation</p>
         {snapshot ? (
           <>
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-xs text-green-600 mb-1">Min</p>
-                <p className="text-lg font-bold text-green-800">£{snapshot.result_min?.toLocaleString()}</p>
+            {/* Big 3 values in a strip */}
+            <div className="flex gap-10 mb-6">
+              <div>
+                <p className="text-xs text-warm-gray mb-1">Min</p>
+                <p className="text-2xl font-bold tracking-tight text-green-700">£{snapshot.result_min?.toLocaleString()}</p>
               </div>
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <p className="text-xs text-blue-600 mb-1">Midpoint</p>
-                <p className="text-lg font-bold text-blue-800">£{snapshot.result_midpoint?.toLocaleString()}</p>
+              <div>
+                <p className="text-xs text-warm-gray mb-1">Midpoint</p>
+                <p className="text-3xl font-extrabold tracking-tight text-charcoal">£{snapshot.result_midpoint?.toLocaleString()}</p>
               </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <p className="text-xs text-green-600 mb-1">Max</p>
-                <p className="text-lg font-bold text-green-800">£{snapshot.result_max?.toLocaleString()}</p>
+              <div>
+                <p className="text-xs text-warm-gray mb-1">Max</p>
+                <p className="text-2xl font-bold tracking-tight text-green-700">£{snapshot.result_max?.toLocaleString()}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            {/* Metadata inline */}
+            <div className="flex gap-8 text-sm">
               <div>
-                <span className="text-xs text-warm-gray">Confidence</span>
-                <p className="text-sm font-semibold text-charcoal">{snapshot.confidence_score}/100</p>
+                <span className="text-warm-gray">Confidence</span>
+                <span className="ml-2 font-semibold text-charcoal">{snapshot.confidence_score}/100</span>
               </div>
               <div>
-                <span className="text-xs text-warm-gray">Risk Tier</span>
-                <p className={`text-sm font-semibold ${
+                <span className="text-warm-gray">Risk</span>
+                <span className={`ml-2 font-semibold ${
                   snapshot.risk_tier === 'low' ? 'text-green-700' :
                   snapshot.risk_tier === 'medium' ? 'text-amber-700' : 'text-red-700'
                 }`}>
-                  <svg width="8" height="8" viewBox="0 0 8 8" className="inline-block mr-1 -mt-0.5">
-                    <circle cx="4" cy="4" r="3.5" fill={snapshot.risk_tier === 'low' ? '#22c55e' : snapshot.risk_tier === 'medium' ? '#f59e0b' : '#ef4444'} />
-                  </svg>
                   {snapshot.risk_tier?.toUpperCase()}
-                </p>
+                </span>
               </div>
               <div>
-                <span className="text-xs text-warm-gray">Auto-Quote</span>
-                <p className={`text-sm font-semibold ${snapshot.auto_quote ? 'text-green-700' : 'text-red-700'}`}>
-                  {snapshot.auto_quote ? 'Yes' : 'No — Manual Review'}
-                </p>
+                <span className="text-warm-gray">Auto-Quote</span>
+                <span className={`ml-2 font-semibold ${snapshot.auto_quote ? 'text-green-700' : 'text-red-700'}`}>
+                  {snapshot.auto_quote ? 'Yes' : 'Manual Review'}
+                </span>
+              </div>
+              <div>
+                <span className="text-warm-gray">Market</span>
+                <span className="ml-2 font-semibold text-charcoal">£{snapshot.market_value_used?.toLocaleString()}</span>
               </div>
             </div>
-
-            <Field label="Market Value Used" value={`£${snapshot.market_value_used?.toLocaleString()}`} />
             {/* Technical metadata — commented out */}
             {/* <Field label="Region" value={snapshot.region_used ?? '-'} />
             <Field label="Engine Version" value={snapshot.engine_version ?? 'v1'} />
             <Field label="Postcode (at quote)" value={snapshot.input_postcode ?? '-'} /> */}
-            <Field label="Snapshot Created" value={new Date(snapshot.created_at).toLocaleString('en-GB')} />
+            <DL label="Snapshot" value={new Date(snapshot.created_at).toLocaleString('en-GB')} />
 
             {/* Multiplier table — commented out (technical detail) */}
             {/* {multipliers && (
@@ -709,12 +724,13 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             ) : null}
           </>
         ) : (
-          <p className="text-sm text-warm-gray">No valuation snapshot recorded for this lead.</p>
+          <p className="text-sm text-warm-gray">No valuation snapshot recorded.</p>
         )}
-      </Section>
+      </div>
 
-      {/* ── Outcome Tracking ──────────────────────────────────────────── */}
-      <Section title="Outcome">
+      {/* ── Outcome — distinct from other sections ──────────────── */}
+      <div className="mb-10 pb-10 border-b border-warm-border">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5">Outcome</p>
         {lead.outcome ? (
           <div>
             <div className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium mb-3 ${
@@ -727,13 +743,13 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
               )}
             </div>
             {lead.outcome === 'won' && lead.final_offer && (
-              <Field label="Final Price" value={`£${lead.final_offer.toLocaleString()}`} />
+              <DL label="Final Price" value={`£${lead.final_offer.toLocaleString()}`} />
             )}
             {lead.outcome === 'lost' && lead.reason_if_lost && (
-              <Field label="Reason" value={lead.reason_if_lost.replace(/_/g, ' ')} />
+              <DL label="Reason" value={lead.reason_if_lost.replace(/_/g, ' ')} />
             )}
             {lead.outcome_at && (
-              <Field label="Recorded" value={new Date(lead.outcome_at).toLocaleString('en-GB')} />
+              <DL label="Recorded" value={new Date(lead.outcome_at).toLocaleString('en-GB')} />
             )}
             {/* Show delta if won and we have valuation data */}
             {lead.outcome === 'won' && lead.final_offer && snapshot && (
@@ -763,136 +779,136 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             submitOutcome={submitOutcome}
           />
         )}
-      </Section>
+      </div>
 
-      <Section title="CRM State">
-        <Field label="Current Status" value={lead.status} />
-        <Field label="Finance Status" value={lead.finance_status ?? 'not_checked'} />
-        <Field label="Assigned Inspector" value={
-          (() => {
-            const insp = inspectors?.find((i: { id: string; name: string; email: string }) => i.id === lead.assigned_inspector_id)
-            return insp ? `${insp.name} (${insp.email})` : 'Unassigned'
-          })()
-        } />
+      {/* ── CRM State — compact inline forms ──────────────────── */}
+      <div className="mb-10 pb-10 border-b border-warm-border">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-5">CRM State</p>
 
-        {/* Inspector assignment form */}
-        <form action={submitAssignInspector} className="mt-3 flex gap-2 items-end">
-          <input type="hidden" name="leadId" value={lead.id} />
-          <div className="flex-1">
-            <label htmlFor="inspector_id" className="block text-xs text-warm-gray mb-1">
-              Assign Inspector
-            </label>
+        <div className="flex gap-8 mb-6 text-sm">
+          <div><span className="text-warm-gray">Status</span> <span className="ml-2 font-semibold text-charcoal capitalize">{lead.status}</span></div>
+          <div><span className="text-warm-gray">Finance</span> <span className="ml-2 font-semibold text-charcoal capitalize">{(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}</span></div>
+          <div><span className="text-warm-gray">Inspector</span> <span className="ml-2 font-semibold text-charcoal">{
+            (() => {
+              const insp = inspectors?.find((i: { id: string; name: string; email: string }) => i.id === lead.assigned_inspector_id)
+              return insp ? insp.name : 'Unassigned'
+            })()
+          }</span></div>
+        </div>
+
+        {/* 3 forms in a compact row */}
+        <div className="grid grid-cols-3 gap-4">
+          {/* Inspector assignment */}
+          <form action={submitAssignInspector}>
+            <input type="hidden" name="leadId" value={lead.id} />
+            <label htmlFor="inspector_id" className="block text-xs text-warm-gray mb-1.5">Inspector</label>
             <select
               id="inspector_id"
               name="inspector_id"
               defaultValue={lead.assigned_inspector_id ?? ''}
-              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+              className="w-full border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none"
             >
               <option value="">Unassigned</option>
               {inspectors?.map((insp: { id: string; name: string; email: string }) => (
-                <option key={insp.id} value={insp.id}>
-                  {insp.name} ({insp.email})
-                </option>
+                <option key={insp.id} value={insp.id}>{insp.name}</option>
               ))}
             </select>
-          </div>
-          <SubmitButton
-            loadingText="Assigning…"
-            className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            Assign
-          </SubmitButton>
-        </form>
+            <SubmitButton
+              loadingText="…"
+              className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+            >
+              Assign
+            </SubmitButton>
+          </form>
 
-        {/* Finance status form */}
-        <form action={submitFinanceStatus} className="mt-3 flex gap-2 items-end">
-          <input type="hidden" name="leadId" value={lead.id} />
-          <div className="flex-1">
-            <label htmlFor="finance_status" className="block text-xs text-warm-gray mb-1">
-              Finance Status
-            </label>
+          {/* Finance */}
+          <form action={submitFinanceStatus}>
+            <input type="hidden" name="leadId" value={lead.id} />
+            <label htmlFor="finance_status" className="block text-xs text-warm-gray mb-1.5">Finance</label>
             <select
               id="finance_status"
               name="finance_status"
               defaultValue={lead.finance_status ?? 'not_checked'}
-              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+              className="w-full border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none"
             >
               <option value="not_checked">Not Checked</option>
               <option value="clear">Clear</option>
               <option value="finance_found">Finance Found</option>
             </select>
-          </div>
-          <SubmitButton
-            loadingText="Updating…"
-            className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            Update
-          </SubmitButton>
-        </form>
+            <SubmitButton
+              loadingText="…"
+              className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+            >
+              Update
+            </SubmitButton>
+          </form>
 
-        {/* Status change form with valid transitions */}
-        {(() => {
-          const currentStatus = lead.status as LeadStatus
-          const allowedTransitions = VALID_STATUS_TRANSITIONS[currentStatus] ?? []
-          if (allowedTransitions.length === 0) return (
-            <p className="text-xs text-warm-gray mt-2">
-              This lead is in a terminal state ({currentStatus}) — no further transitions available.
-            </p>
-          )
-          return (
-            <form action={submitStatusChange} className="mt-3 flex gap-2 items-end">
-              <input type="hidden" name="leadId" value={lead.id} />
-              <div className="flex-1">
-                <label htmlFor="status" className="block text-xs text-warm-gray mb-1">
-                  Change Status
-                </label>
+          {/* Status */}
+          {(() => {
+            const currentStatus = lead.status as LeadStatus
+            const allowedTransitions = VALID_STATUS_TRANSITIONS[currentStatus] ?? []
+            if (allowedTransitions.length === 0) return (
+              <div>
+                <label className="block text-xs text-warm-gray mb-1.5">Status</label>
+                <p className="text-xs text-warm-gray/60 mt-2">Terminal state — no transitions</p>
+              </div>
+            )
+            return (
+              <form action={submitStatusChange}>
+                <input type="hidden" name="leadId" value={lead.id} />
+                <label htmlFor="status" className="block text-xs text-warm-gray mb-1.5">Status</label>
                 <select
                   id="status"
                   name="status"
                   defaultValue=""
-                  className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
+                  className="w-full border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none"
                 >
-                  <option value="" disabled>Select new status...</option>
+                  <option value="" disabled>Select…</option>
                   {allowedTransitions.map((s) => (
                     <option key={s} value={s}>
                       {s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                     </option>
                   ))}
                 </select>
-              </div>
-              <SubmitButton
-                loadingText="Updating…"
-                className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                Update
-              </SubmitButton>
-            </form>
-          )
-        })()}
-      </Section>
+                <SubmitButton
+                  loadingText="…"
+                  className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+                >
+                  Update
+                </SubmitButton>
+              </form>
+            )
+          })()}
+        </div>
+      </div>
 
-      <Section title="Appointment">
+      {/* ── Appointment — inline, minimal ──────────────────── */}
+      <div className="mb-10 pb-10 border-b border-warm-border">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Appointment</p>
         {appointment ? (
-          <>
-            <Field label="Type" value={appointment.type} />
-            <Field label="Starts" value={new Date(appointment.start_at).toLocaleString('en-GB')} />
-            <Field label="Status" value={appointment.status} />
-            <Field label="Location / Link" value={appointment.location_or_link ?? '-'} />
-          </>
+          <div className="flex gap-8 text-sm">
+            <div><span className="text-warm-gray">Type</span> <span className="ml-2 text-charcoal capitalize">{appointment.type.replace('_', '-')}</span></div>
+            <div><span className="text-warm-gray">When</span> <span className="ml-2 text-charcoal">{new Date(appointment.start_at).toLocaleString('en-GB')}</span></div>
+            <div><span className="text-warm-gray">Status</span> <span className="ml-2 text-charcoal capitalize">{appointment.status}</span></div>
+          </div>
         ) : (
-          <p className="text-sm text-warm-gray">No appointment booked.</p>
+          <p className="text-sm text-warm-gray/60">No appointment booked.</p>
         )}
-      </Section>
+      </div>
 
-      <Section title="Inspection">
+      {/* ── Inspection — photos + checklist, open layout ──── */}
+      <div className="mb-10 pb-10 border-b border-warm-border">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Inspection</p>
         {inspection ? (
-          <>
-            <Field
-              label="Recommended Offer"
-              value={inspection.recommended_offer ? `GBP ${inspection.recommended_offer.toLocaleString()}` : '-'}
-            />
-            <Field label="Submitted" value={inspection.submitted_at ? new Date(inspection.submitted_at).toLocaleString('en-GB') : 'Not submitted'} />
-            <Field label="Notes" value={inspection.notes ?? '-'} />
+          <div>
+            <div className="flex gap-8 text-sm mb-4">
+              <div><span className="text-warm-gray">Offer</span> <span className="ml-2 font-semibold text-charcoal">{inspection.recommended_offer ? `£${inspection.recommended_offer.toLocaleString()}` : '—'}</span></div>
+              <div><span className="text-warm-gray">Submitted</span> <span className="ml-2 text-charcoal">{inspection.submitted_at ? new Date(inspection.submitted_at).toLocaleString('en-GB') : 'Pending'}</span></div>
+            </div>
+
+            {inspection.notes && (
+              <p className="text-sm text-charcoal-light mb-4 italic">&ldquo;{inspection.notes}&rdquo;</p>
+            )}
 
             {inspectionPhotoUrls.length > 0 && (
               <div className="mt-3">
@@ -927,79 +943,75 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 </div>
               </div>
             )}
-          </>
+          </div>
         ) : (
-          <p className="text-sm text-warm-gray">No inspection submitted yet.</p>
+          <p className="text-sm text-warm-gray/60">No inspection submitted.</p>
         )}
-      </Section>
+      </div>
 
-      <Section title={`Notes (${notes?.length ?? 0})`}>
-        {/* Add note form */}
-        <form action={submitNote} className="mb-4">
+      {/* ── Notes — timeline style ─────────────────────────────── */}
+      <div className="mb-10 pb-10 border-b border-warm-border">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Notes ({notes?.length ?? 0})</p>
+
+        <form action={submitNote} className="mb-6 max-w-lg">
           <input type="hidden" name="leadId" value={lead.id} />
           <textarea
             name="body"
             required
             rows={2}
             placeholder="Add a note..."
-            className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none resize-y"
+            className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal placeholder:text-warm-gray/50 focus:border-gold focus:outline-none resize-y"
           />
           <SubmitButton
             loadingText="Adding…"
-            className="mt-2 rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="mt-2 text-xs font-medium text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
           >
             Add Note
           </SubmitButton>
         </form>
 
         {notes && notes.length > 0 ? (
-          <ul className="space-y-2">
+          <div className="space-y-0 border-l-2 border-warm-border-light pl-5 ml-1">
             {notes.map((note) => (
-              <li key={note.id} className="text-sm text-charcoal-light bg-surface-warm rounded p-3">
-                <p>{note.body}</p>
-                <p className="text-xs text-warm-gray mt-1">{new Date(note.created_at).toLocaleString('en-GB')}</p>
-              </li>
+              <div key={note.id} className="pb-4 relative">
+                <div className="absolute -left-[27px] top-1.5 w-2 h-2 rounded-full bg-warm-border" />
+                <p className="text-sm text-charcoal-light">{note.body}</p>
+                <p className="text-[11px] text-warm-gray/60 mt-1">{new Date(note.created_at).toLocaleString('en-GB')}</p>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="text-sm text-warm-gray">No notes yet.</p>
+          <p className="text-sm text-warm-gray/60">No notes yet.</p>
         )}
-      </Section>
+      </div>
 
-      <Section title="Audit Log">
+      {/* ── Audit Log — minimal timeline ───────────────────────── */}
+      <div className="mb-10">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4">Audit Log</p>
         {auditLog && auditLog.length > 0 ? (
-          <ul className="space-y-1 text-sm">
+          <div className="space-y-1.5">
             {auditLog.map((entry) => (
-              <li key={entry.id} className="flex gap-3 text-warm-gray">
-                <span className="text-warm-gray/60 whitespace-nowrap">
+              <div key={entry.id} className="flex gap-4 text-xs">
+                <span className="text-warm-gray/50 tabular-nums whitespace-nowrap w-36 shrink-0">
                   {new Date(entry.created_at).toLocaleString('en-GB')}
                 </span>
-                <span className="font-medium">{entry.action.replace(/_/g, ' ')}</span>
-              </li>
+                <span className="text-warm-gray">{entry.action.replace(/_/g, ' ')}</span>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="text-sm text-warm-gray">No activity yet.</p>
+          <p className="text-sm text-warm-gray/60">No activity.</p>
         )}
-      </Section>
+      </div>
     </div>
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function DL({ label, value }: { label: string; value: string }) {
   return (
-    <div className="mb-8">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-warm-gray mb-3">{title}</h2>
-      <div className="bg-surface rounded-lg border border-warm-border p-5 space-y-3">{children}</div>
-    </div>
-  )
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex gap-4">
-      <span className="w-40 text-sm text-warm-gray shrink-0">{label}</span>
-      <span className="text-sm text-charcoal capitalize">{value}</span>
+    <div className="flex items-baseline gap-3">
+      <dt className="text-sm text-warm-gray w-28 shrink-0">{label}</dt>
+      <dd className="text-sm text-charcoal">{value}</dd>
     </div>
   )
 }
