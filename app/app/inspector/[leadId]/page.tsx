@@ -52,10 +52,10 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+      <h1 className="text-2xl font-bold text-charcoal mb-1">
         Inspection: {lead.reg}
       </h1>
-      <p className="text-sm text-gray-400 mb-8">
+      <p className="text-sm text-warm-gray mb-8">
         {lead.make} {lead.model} - {lead.seller_name}
       </p>
 
@@ -101,10 +101,10 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
           existing={existingInspection?.checklist_json as Record<string, string> | null}
         />
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">Recommended Offer</h2>
+        <div className="bg-surface rounded-lg border border-warm-border p-5">
+          <h2 className="text-sm font-semibold text-charcoal-light mb-4">Recommended Offer</h2>
           <div className="flex items-center gap-2">
-            <span className="text-gray-500 text-sm">GBP</span>
+            <span className="text-warm-gray text-sm">GBP</span>
             <input
               type="number"
               name="recommended_offer"
@@ -113,20 +113,20 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
               max={500000}
               defaultValue={existingInspection?.recommended_offer ?? undefined}
               disabled={isSubmitted}
-              className="w-40 rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"
+              className="w-40 rounded-md border border-warm-border px-3 py-2 text-sm disabled:bg-surface-warm disabled:text-warm-gray"
               placeholder="0"
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-700 mb-4">Inspector Notes</h2>
+        <div className="bg-surface rounded-lg border border-warm-border p-5">
+          <h2 className="text-sm font-semibold text-charcoal-light mb-4">Inspector Notes</h2>
           <textarea
             name="notes"
             rows={4}
             disabled={isSubmitted}
             defaultValue={existingInspection?.notes ?? ''}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full rounded-md border border-warm-border px-3 py-2 text-sm disabled:bg-surface-warm disabled:text-warm-gray"
             placeholder="Any additional observations..."
           />
         </div>
@@ -134,7 +134,7 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
         {!isSubmitted && (
           <SubmitButton
             loadingText="Submitting…"
-            className="w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-md bg-charcoal px-4 py-2.5 text-sm font-semibold text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Submit Inspection
           </SubmitButton>
@@ -156,18 +156,18 @@ function ChecklistSection({
   existing: Record<string, string> | null
 }) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-5">
-      <h2 className="text-sm font-semibold text-gray-700 mb-4">{title}</h2>
+    <div className="bg-surface rounded-lg border border-warm-border p-5">
+      <h2 className="text-sm font-semibold text-charcoal-light mb-4">{title}</h2>
       <div className="space-y-3">
         {fields.map((field) => (
           <div key={field} className="flex items-center justify-between gap-4">
-            <label className="text-sm text-gray-600 w-40">{field}</label>
+            <label className="text-sm text-charcoal-light w-40">{field}</label>
             <select
               name={`checklist_${title}_${field}`}
               disabled={readOnly}
               required={!readOnly}
               defaultValue={existing?.[`${title}_${field}`] ?? ''}
-              className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-sm disabled:bg-gray-50 disabled:text-gray-400"
+              className="flex-1 rounded-md border border-warm-border px-3 py-1.5 text-sm disabled:bg-surface-warm disabled:text-warm-gray"
             >
               <option value="">Select</option>
               <option value="good">Good</option>

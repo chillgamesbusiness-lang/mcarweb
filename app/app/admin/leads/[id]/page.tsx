@@ -400,10 +400,10 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
   return (
     <div className="p-8 max-w-4xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">
+      <h1 className="text-2xl font-bold text-charcoal mb-1">
         {lead.reg} - {lead.seller_name}
       </h1>
-      <p className="text-sm text-gray-400 mb-8">
+      <p className="text-sm text-warm-gray mb-8">
         Lead ID: {lead.id} | Submitted {new Date(lead.created_at).toLocaleString('en-GB')}
       </p>
 
@@ -445,11 +445,11 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
-                <span className="text-xs text-gray-400">Confidence</span>
-                <p className="text-sm font-semibold text-gray-900">{snapshot.confidence_score}/100</p>
+                <span className="text-xs text-warm-gray">Confidence</span>
+                <p className="text-sm font-semibold text-charcoal">{snapshot.confidence_score}/100</p>
               </div>
               <div>
-                <span className="text-xs text-gray-400">Risk Tier</span>
+                <span className="text-xs text-warm-gray">Risk Tier</span>
                 <p className={`text-sm font-semibold ${
                   snapshot.risk_tier === 'low' ? 'text-green-700' :
                   snapshot.risk_tier === 'medium' ? 'text-amber-700' : 'text-red-700'
@@ -461,7 +461,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 </p>
               </div>
               <div>
-                <span className="text-xs text-gray-400">Auto-Quote</span>
+                <span className="text-xs text-warm-gray">Auto-Quote</span>
                 <p className={`text-sm font-semibold ${snapshot.auto_quote ? 'text-green-700' : 'text-red-700'}`}>
                   {snapshot.auto_quote ? 'Yes' : 'No — Manual Review'}
                 </p>
@@ -578,7 +578,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             {/* ── Profit Simulation V4 (Resale Evidence Engine) ─────────── */}
             {profitSimV4 ? (
               <div className="mt-4">
-                <span className="text-xs text-gray-400 block mb-2">Profit Simulation v4</span>
+                <span className="text-xs text-warm-gray block mb-2">Profit Simulation v4</span>
 
                 {/* ── Compact View (always visible) ──────────────────────── */}
                 <div className={`rounded-lg p-4 ${
@@ -588,7 +588,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 }`}>
                   {/* Big profit number */}
                   <div className="text-center mb-3">
-                    <p className="text-xs text-gray-500 mb-0.5">Projected Profit (Mid)</p>
+                    <p className="text-xs text-warm-gray mb-0.5">Projected Profit (Mid)</p>
                     <p className={`text-3xl font-extrabold tracking-tight ${
                       profitSimV4.profit?.mid >= 300 ? 'text-green-700' :
                       profitSimV4.profit?.mid >= 0 ? 'text-amber-700' : 'text-red-700'
@@ -600,24 +600,24 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   {/* 4 compact stats */}
                   <div className="grid grid-cols-4 gap-2 text-center mb-3">
                     <div>
-                      <p className="text-[10px] text-gray-400">Est. Resale</p>
-                      <p className="text-sm font-semibold text-gray-800">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
+                      <p className="text-[10px] text-warm-gray">Est. Resale</p>
+                      <p className="text-sm font-semibold text-charcoal">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-400">Profit Range</p>
-                      <p className="text-xs font-medium text-gray-600">
+                      <p className="text-[10px] text-warm-gray">Profit Range</p>
+                      <p className="text-xs font-medium text-charcoal-light">
                         £{profitSimV4.profit?.low?.toLocaleString()} – £{profitSimV4.profit?.high?.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-400">Margin</p>
+                      <p className="text-[10px] text-warm-gray">Margin</p>
                       <p className={`text-sm font-bold ${
                         profitSimV4.marginPctMid >= 10 ? 'text-green-700' :
                         profitSimV4.marginPctMid >= 5 ? 'text-amber-700' : 'text-red-700'
                       }`}>{profitSimV4.marginPctMid}%</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-400">Confidence</p>
+                      <p className="text-[10px] text-warm-gray">Confidence</p>
                       <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                         profitSimV4.confidence === 'high' ? 'bg-green-100 text-green-800' :
                         profitSimV4.confidence === 'medium' ? 'bg-amber-100 text-amber-800' :
@@ -626,7 +626,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                     </div>
                   </div>
 
-                  <p className="text-[10px] text-gray-400 italic text-center">
+                  <p className="text-[10px] text-warm-gray italic text-center">
                     {profitSimV4.compactNote}
                   </p>
 
@@ -663,7 +663,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             ) : profitSim ? (
               /* ── Fallback: v3 Profit Simulation ─────────────────────────── */
               <div className="mt-4">
-                <span className="text-xs text-gray-400 block mb-2">Profit Simulation (v3)</span>
+                <span className="text-xs text-warm-gray block mb-2">Profit Simulation (v3)</span>
                 <div className={`rounded-lg p-4 ${
                   profitSim.profitRiskBand === 'green' ? 'bg-green-50 ring-1 ring-green-200' :
                   profitSim.profitRiskBand === 'amber' ? 'bg-amber-50 ring-1 ring-amber-200' :
@@ -671,19 +671,19 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 }`}>
                   <div className="grid grid-cols-3 gap-3 mb-3">
                     <div className="text-center">
-                      <p className="text-xs text-gray-500">Profit (Min)</p>
+                      <p className="text-xs text-warm-gray">Profit (Min)</p>
                       <p className={`text-sm font-bold ${profitSim.expectedProfitMin < 0 ? 'text-red-700' : 'text-green-700'}`}>
                         £{profitSim.expectedProfitMin?.toLocaleString()}
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-500">Profit (Mid)</p>
+                      <p className="text-xs text-warm-gray">Profit (Mid)</p>
                       <p className={`text-lg font-bold ${profitSim.expectedProfitMid < 0 ? 'text-red-700' : 'text-green-700'}`}>
                         £{profitSim.expectedProfitMid?.toLocaleString()}
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-500">Profit (Max)</p>
+                      <p className="text-xs text-warm-gray">Profit (Max)</p>
                       <p className={`text-sm font-bold ${profitSim.expectedProfitMax < 0 ? 'text-red-700' : 'text-green-700'}`}>
                         £{profitSim.expectedProfitMax?.toLocaleString()}
                       </p>
@@ -709,7 +709,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             ) : null}
           </>
         ) : (
-          <p className="text-sm text-gray-400">No valuation snapshot recorded for this lead.</p>
+          <p className="text-sm text-warm-gray">No valuation snapshot recorded for this lead.</p>
         )}
       </Section>
 
@@ -779,14 +779,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         <form action={submitAssignInspector} className="mt-3 flex gap-2 items-end">
           <input type="hidden" name="leadId" value={lead.id} />
           <div className="flex-1">
-            <label htmlFor="inspector_id" className="block text-xs text-gray-400 mb-1">
+            <label htmlFor="inspector_id" className="block text-xs text-warm-gray mb-1">
               Assign Inspector
             </label>
             <select
               id="inspector_id"
               name="inspector_id"
               defaultValue={lead.assigned_inspector_id ?? ''}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
             >
               <option value="">Unassigned</option>
               {inspectors?.map((insp: { id: string; name: string; email: string }) => (
@@ -798,7 +798,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
           </div>
           <SubmitButton
             loadingText="Assigning…"
-            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Assign
           </SubmitButton>
@@ -808,14 +808,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         <form action={submitFinanceStatus} className="mt-3 flex gap-2 items-end">
           <input type="hidden" name="leadId" value={lead.id} />
           <div className="flex-1">
-            <label htmlFor="finance_status" className="block text-xs text-gray-400 mb-1">
+            <label htmlFor="finance_status" className="block text-xs text-warm-gray mb-1">
               Finance Status
             </label>
             <select
               id="finance_status"
               name="finance_status"
               defaultValue={lead.finance_status ?? 'not_checked'}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
             >
               <option value="not_checked">Not Checked</option>
               <option value="clear">Clear</option>
@@ -824,7 +824,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
           </div>
           <SubmitButton
             loadingText="Updating…"
-            className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Update
           </SubmitButton>
@@ -835,7 +835,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
           const currentStatus = lead.status as LeadStatus
           const allowedTransitions = VALID_STATUS_TRANSITIONS[currentStatus] ?? []
           if (allowedTransitions.length === 0) return (
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-warm-gray mt-2">
               This lead is in a terminal state ({currentStatus}) — no further transitions available.
             </p>
           )
@@ -843,14 +843,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             <form action={submitStatusChange} className="mt-3 flex gap-2 items-end">
               <input type="hidden" name="leadId" value={lead.id} />
               <div className="flex-1">
-                <label htmlFor="status" className="block text-xs text-gray-400 mb-1">
+                <label htmlFor="status" className="block text-xs text-warm-gray mb-1">
                   Change Status
                 </label>
                 <select
                   id="status"
                   name="status"
                   defaultValue=""
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                  className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
                 >
                   <option value="" disabled>Select new status...</option>
                   {allowedTransitions.map((s) => (
@@ -862,7 +862,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
               </div>
               <SubmitButton
                 loadingText="Updating…"
-                className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 Update
               </SubmitButton>
@@ -880,7 +880,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             <Field label="Location / Link" value={appointment.location_or_link ?? '-'} />
           </>
         ) : (
-          <p className="text-sm text-gray-400">No appointment booked.</p>
+          <p className="text-sm text-warm-gray">No appointment booked.</p>
         )}
       </Section>
 
@@ -896,7 +896,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
             {inspectionPhotoUrls.length > 0 && (
               <div className="mt-3">
-                <span className="text-sm text-gray-400 block mb-2">
+                <span className="text-sm text-warm-gray block mb-2">
                   Photos ({inspectionPhotoUrls.length})
                 </span>
                 <div className="grid grid-cols-3 gap-3">
@@ -906,7 +906,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                       <img
                         src={url}
                         alt={`Inspection photo ${i + 1}`}
-                        className="w-full aspect-square object-cover rounded-md border border-gray-200 hover:opacity-80 transition-opacity"
+                        className="w-full aspect-square object-cover rounded-md border border-warm-border hover:opacity-80 transition-opacity"
                       />
                     </a>
                   ))}
@@ -916,12 +916,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
             {inspection.checklist_json && Object.keys(inspection.checklist_json as Record<string, string>).length > 0 && (
               <div className="mt-3">
-                <span className="text-sm text-gray-400 block mb-2">Checklist</span>
+                <span className="text-sm text-warm-gray block mb-2">Checklist</span>
                 <div className="grid grid-cols-2 gap-1">
                   {Object.entries(inspection.checklist_json as Record<string, string>).map(([key, val]) => (
                     <div key={key} className="flex gap-2 text-sm">
-                      <span className="text-gray-500">{key.replace(/_/g, ' ')}</span>
-                      <span className="font-medium text-gray-700 capitalize">{val}</span>
+                      <span className="text-warm-gray">{key.replace(/_/g, ' ')}</span>
+                      <span className="font-medium text-charcoal-light capitalize">{val}</span>
                     </div>
                   ))}
                 </div>
@@ -929,7 +929,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             )}
           </>
         ) : (
-          <p className="text-sm text-gray-400">No inspection submitted yet.</p>
+          <p className="text-sm text-warm-gray">No inspection submitted yet.</p>
         )}
       </Section>
 
@@ -942,11 +942,11 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             required
             rows={2}
             placeholder="Add a note..."
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-y"
+            className="w-full rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none resize-y"
           />
           <SubmitButton
             loadingText="Adding…"
-            className="mt-2 rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="mt-2 rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Add Note
           </SubmitButton>
@@ -955,14 +955,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         {notes && notes.length > 0 ? (
           <ul className="space-y-2">
             {notes.map((note) => (
-              <li key={note.id} className="text-sm text-gray-700 bg-gray-50 rounded p-3">
+              <li key={note.id} className="text-sm text-charcoal-light bg-surface-warm rounded p-3">
                 <p>{note.body}</p>
-                <p className="text-xs text-gray-400 mt-1">{new Date(note.created_at).toLocaleString('en-GB')}</p>
+                <p className="text-xs text-warm-gray mt-1">{new Date(note.created_at).toLocaleString('en-GB')}</p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-400">No notes yet.</p>
+          <p className="text-sm text-warm-gray">No notes yet.</p>
         )}
       </Section>
 
@@ -970,8 +970,8 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         {auditLog && auditLog.length > 0 ? (
           <ul className="space-y-1 text-sm">
             {auditLog.map((entry) => (
-              <li key={entry.id} className="flex gap-3 text-gray-600">
-                <span className="text-gray-400 whitespace-nowrap">
+              <li key={entry.id} className="flex gap-3 text-warm-gray">
+                <span className="text-warm-gray/60 whitespace-nowrap">
                   {new Date(entry.created_at).toLocaleString('en-GB')}
                 </span>
                 <span className="font-medium">{entry.action.replace(/_/g, ' ')}</span>
@@ -979,7 +979,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-gray-400">No activity yet.</p>
+          <p className="text-sm text-warm-gray">No activity yet.</p>
         )}
       </Section>
     </div>
@@ -989,8 +989,8 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="mb-8">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 mb-3">{title}</h2>
-      <div className="bg-white rounded-lg border border-gray-200 p-5 space-y-3">{children}</div>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-warm-gray mb-3">{title}</h2>
+      <div className="bg-surface rounded-lg border border-warm-border p-5 space-y-3">{children}</div>
     </div>
   )
 }
@@ -998,8 +998,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex gap-4">
-      <span className="w-40 text-sm text-gray-400 shrink-0">{label}</span>
-      <span className="text-sm text-gray-900 capitalize">{value}</span>
+      <span className="w-40 text-sm text-warm-gray shrink-0">{label}</span>
+      <span className="text-sm text-charcoal capitalize">{value}</span>
     </div>
   )
 }

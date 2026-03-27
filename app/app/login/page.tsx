@@ -14,11 +14,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error } = await searchParams
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <main className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Staff Sign In</h1>
-          <p className="mt-1 text-sm text-gray-500">Vehicle Acquisition CRM</p>
+          <h1 className="text-2xl font-bold text-charcoal">Staff Sign In</h1>
+          <p className="mt-1 text-sm text-warm-gray">Vehicle Acquisition CRM</p>
         </div>
 
         {error === 'invalid_credentials' && (
@@ -41,7 +41,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         <form action={login} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="email" className="block text-sm font-medium text-charcoal-light mb-1">
               Email address
             </label>
             <input
@@ -50,13 +50,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               type="email"
               autoComplete="email"
               required
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm shadow-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="password" className="block text-sm font-medium text-charcoal-light mb-1">
               Password
             </label>
             <input
@@ -65,14 +65,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               type="password"
               autoComplete="current-password"
               required
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-md border border-warm-border px-3 py-2 text-sm shadow-sm focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
               placeholder="••••••••"
             />
           </div>
 
           <SubmitButton
             loadingText="Signing in…"
-            className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full rounded-md bg-charcoal px-4 py-2 text-sm font-semibold text-white hover:bg-charcoal-light focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Sign in
           </SubmitButton>

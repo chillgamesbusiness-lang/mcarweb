@@ -25,12 +25,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   if (profile?.role !== 'admin') redirect('/login')
   return (
-    <div className="min-h-screen flex bg-gray-100">
+    <div className="min-h-screen flex bg-background">
       {/* Sidebar */}
-      <aside className="w-56 bg-white border-r border-gray-200 flex flex-col">
-        <div className="px-5 py-5 border-b border-gray-100">
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">Admin</p>
-          <p className="mt-1 text-base font-bold text-gray-900">MCar CRM</p>
+      <aside className="w-56 bg-surface border-r border-warm-border flex flex-col">
+        <div className="px-5 py-5 border-b border-warm-border-light">
+          <p className="text-xs font-semibold uppercase tracking-widest text-warm-gray">Admin</p>
+          <p className="mt-1 text-base font-bold text-charcoal">MCar CRM</p>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -40,11 +40,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <NavLink href="/admin/settings">Settings</NavLink>
         </nav>
 
-        <div className="px-3 py-4 border-t border-gray-100">
+        <div className="px-3 py-4 border-t border-warm-border-light">
           <form action={logout}>
             <button
               type="submit"
-              className="w-full text-left text-sm text-gray-500 hover:text-red-600 transition-colors px-2 py-1.5 rounded"
+              className="w-full text-left text-sm text-warm-gray hover:text-red-600 transition-colors px-2 py-1.5 rounded"
             >
               Sign out
             </button>
@@ -62,7 +62,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="block px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+      className="block px-3 py-2 rounded-md text-sm font-medium text-charcoal-light hover:bg-surface-warm hover:text-charcoal transition-colors"
     >
       {children}
     </Link>

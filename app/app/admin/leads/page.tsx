@@ -95,8 +95,8 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   return (
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Leads {totalCount > 0 && <span className="text-gray-400 text-lg font-normal">({totalCount})</span>}
+        <h1 className="text-2xl font-bold text-charcoal">
+          Leads {totalCount > 0 && <span className="text-warm-gray text-lg font-normal">({totalCount})</span>}
         </h1>
       </div>
 
@@ -107,12 +107,12 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
           name="q"
           defaultValue={q}
           placeholder="Search reg, name, or email..."
-          className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          className="flex-1 rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
         />
         <select
           name="status"
           defaultValue={statusFilter}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+          className="rounded-md border border-warm-border px-3 py-2 text-sm focus:border-gold focus:ring-1 focus:ring-gold outline-none"
         >
           <option value="">All Statuses</option>
           {Object.entries(STATUS_LABELS).map(([val, label]) => (
@@ -121,45 +121,45 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
         </select>
         <button
           type="submit"
-          className="rounded-md bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          className="rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-white hover:bg-charcoal-light transition-colors"
         >
           Search
         </button>
         {(q || statusFilter) && (
           <Link
             href="/admin/leads"
-            className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center"
+            className="rounded-md border border-warm-border px-4 py-2 text-sm text-warm-gray hover:bg-surface-warm transition-colors flex items-center"
           >
             Clear
           </Link>
         )}
       </form>
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="bg-surface rounded-lg border border-warm-border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-surface-warm border-b border-warm-border">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Date</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Seller</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Vehicle</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">Finance</th>
+              <th className="text-left px-4 py-3 font-medium text-warm-gray">Date</th>
+              <th className="text-left px-4 py-3 font-medium text-warm-gray">Seller</th>
+              <th className="text-left px-4 py-3 font-medium text-warm-gray">Vehicle</th>
+              <th className="text-left px-4 py-3 font-medium text-warm-gray">Status</th>
+              <th className="text-left px-4 py-3 font-medium text-warm-gray">Finance</th>
               <th />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-warm-border-light">
             {leads?.map((lead) => (
-              <tr key={lead.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+              <tr key={lead.id} className="hover:bg-surface-warm">
+                <td className="px-4 py-3 text-warm-gray whitespace-nowrap">
                   {new Date(lead.created_at).toLocaleDateString('en-GB')}
                 </td>
                 <td className="px-4 py-3">
-                  <p className="font-medium text-gray-900">{lead.seller_name}</p>
-                  <p className="text-gray-400 text-xs">{lead.seller_email}</p>
+                  <p className="font-medium text-charcoal">{lead.seller_name}</p>
+                  <p className="text-warm-gray/70 text-xs">{lead.seller_email}</p>
                 </td>
                 <td className="px-4 py-3">
-                  <p className="font-medium text-gray-900">{lead.reg}</p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="font-medium text-charcoal">{lead.reg}</p>
+                  <p className="text-warm-gray/70 text-xs">
                     {lead.make} {lead.model}
                   </p>
                 </td>
@@ -170,13 +170,13 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
                     {STATUS_LABELS[lead.status as Lead['status']]}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-500 capitalize">
+                <td className="px-4 py-3 text-warm-gray capitalize">
                   {(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <Link
                     href={`/admin/leads/${lead.id}`}
-                    className="text-blue-600 hover:underline text-xs font-medium"
+                    className="text-gold hover:underline text-xs font-medium"
                   >
                     View →
                   </Link>
@@ -186,7 +186,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
 
             {(!leads || leads.length === 0) && (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={6} className="px-4 py-8 text-center text-warm-gray">
                   {q || statusFilter ? 'No leads match your search.' : 'No leads yet.'}
                 </td>
               </tr>
@@ -198,14 +198,14 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-warm-gray">
             Showing {from + 1}–{Math.min(from + PAGE_SIZE, totalCount)} of {totalCount}
           </p>
           <div className="flex gap-2">
             {page > 1 && (
               <Link
                 href={buildUrl(page - 1)}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-warm-border px-3 py-1.5 text-sm text-warm-gray hover:bg-surface-warm"
               >
                 ← Previous
               </Link>
@@ -218,13 +218,13 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
                 const showEllipsis = prev !== undefined && p - prev > 1
                 return (
                   <span key={p} className="flex items-center gap-1">
-                    {showEllipsis && <span className="text-gray-400 px-1">…</span>}
+                    {showEllipsis && <span className="text-warm-gray px-1">…</span>}
                     <Link
                       href={buildUrl(p)}
                       className={`rounded-md px-3 py-1.5 text-sm ${
                         p === page
-                          ? 'bg-gray-800 text-white'
-                          : 'border border-gray-300 text-gray-600 hover:bg-gray-50'
+                          ? 'bg-charcoal text-white'
+                          : 'border border-warm-border text-warm-gray hover:bg-surface-warm'
                       }`}
                     >
                       {p}
@@ -235,7 +235,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
             {page < totalPages && (
               <Link
                 href={buildUrl(page + 1)}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-warm-border px-3 py-1.5 text-sm text-warm-gray hover:bg-surface-warm"
               >
                 Next →
               </Link>

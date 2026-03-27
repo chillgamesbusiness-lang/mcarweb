@@ -51,7 +51,7 @@ export default function DashboardClient(props: DashboardProps) {
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+      <h1 className="text-xl font-bold text-charcoal">Dashboard</h1>
 
       {/* Overall status banner */}
       <div className={`rounded-xl px-5 py-4 flex items-center gap-3 shadow-sm ${
@@ -65,7 +65,7 @@ export default function DashboardClient(props: DashboardProps) {
             overallStatus === 'green' ? 'text-green-800' :
             overallStatus === 'amber' ? 'text-amber-800' : 'text-red-800'
           }`}>{overallLabel}</p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-warm-gray mt-0.5">
             {weeklySummary.offersGenerated} offers this week
             {weeklySummary.acceptanceRate > 0 && ` · ${weeklySummary.acceptanceRate}% accepted`}
           </p>
@@ -75,9 +75,9 @@ export default function DashboardClient(props: DashboardProps) {
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-4">
         {quickStats.map(s => (
-          <div key={s.label} className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 px-5 py-4">
-            <p className="text-xs text-gray-400 mb-0.5">{s.label}</p>
-            <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+          <div key={s.label} className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border px-5 py-4">
+            <p className="text-xs text-warm-gray mb-0.5">{s.label}</p>
+            <p className="text-2xl font-bold text-charcoal">{s.value}</p>
           </div>
         ))}
       </div>
@@ -85,8 +85,8 @@ export default function DashboardClient(props: DashboardProps) {
       {/* Performance cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Offers card */}
-        <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Offers</h2>
+        <div className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border p-5">
+          <h2 className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-4">Offers</h2>
           <div className="space-y-3">
             <Row label="This week" value={acquisition.offersThisWeek} />
             <Row label="Last week" value={acquisition.offersLastWeek} />
@@ -107,8 +107,8 @@ export default function DashboardClient(props: DashboardProps) {
         </div>
 
         {/* Profit card */}
-        <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Profit</h2>
+        <div className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border p-5">
+          <h2 className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-4">Profit</h2>
           <div className="space-y-3">
             <Row
               label="Avg expected profit"
@@ -126,9 +126,9 @@ export default function DashboardClient(props: DashboardProps) {
       </div>
 
       {/* Weekly summary */}
-      <div className="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-5">
-        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">This Week</h2>
-        <p className="text-sm text-gray-700 leading-relaxed">
+      <div className="bg-surface rounded-xl shadow-sm ring-1 ring-warm-border p-5">
+        <h2 className="text-xs font-semibold text-warm-gray uppercase tracking-wide mb-3">This Week</h2>
+        <p className="text-sm text-charcoal-light leading-relaxed">
           {weeklySummary.offersGenerated} offers generated
           {weeklySummary.acceptanceRate > 0 && `, ${weeklySummary.acceptanceRate}% accepted`}.
           {profit.avgRealisedProfit !== null
@@ -151,11 +151,11 @@ function Row({ label, value, highlight }: {
     highlight === 'green' ? 'text-green-600' :
     highlight === 'amber' ? 'text-amber-600' :
     highlight === 'red' ? 'text-red-500' :
-    'text-gray-900'
+    'text-charcoal'
 
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-gray-500">{label}</span>
+      <span className="text-sm text-warm-gray">{label}</span>
       <span className={`text-sm font-semibold ${valClass}`}>{value}</span>
     </div>
   )

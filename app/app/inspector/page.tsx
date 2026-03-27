@@ -26,7 +26,7 @@ export default async function InspectorIndexPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Inspections</h1>
+      <h1 className="text-2xl font-bold text-charcoal mb-6">My Inspections</h1>
 
       <div className="space-y-3">
         {leads?.map((lead) => {
@@ -37,18 +37,18 @@ export default async function InspectorIndexPage() {
           return (
             <div
               key={lead.id}
-              className="bg-white rounded-lg border border-gray-200 p-5 flex items-center justify-between gap-4"
+              className="bg-surface rounded-lg border border-warm-border p-5 flex items-center justify-between gap-4"
             >
               <div>
-                <p className="font-semibold text-gray-900">
+                <p className="font-semibold text-charcoal">
                   {lead.reg}{' '}
-                  <span className="font-normal text-gray-500">
+                  <span className="font-normal text-warm-gray">
                     — {lead.make} {lead.model}
                   </span>
                 </p>
-                <p className="text-sm text-gray-500 mt-0.5">{lead.seller_name}</p>
+                <p className="text-sm text-warm-gray mt-0.5">{lead.seller_name}</p>
                 {appt && (
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-warm-gray mt-1">
                     {appt.type === 'in_person' ? 'In-person' : 'Video'} ·{' '}
                     {new Date(appt.start_at).toLocaleString('en-GB', {
                       dateStyle: 'medium',
@@ -70,7 +70,7 @@ export default async function InspectorIndexPage() {
                 </span>
                 <Link
                   href={`/inspector/${lead.id}`}
-                  className="text-sm font-medium text-blue-600 hover:underline"
+                  className="text-sm font-medium text-gold hover:underline"
                 >
                   {lead.status === 'inspected' ? 'View →' : 'Start →'}
                 </Link>
@@ -80,7 +80,7 @@ export default async function InspectorIndexPage() {
         })}
 
         {(!leads || leads.length === 0) && (
-          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center text-gray-400 text-sm">
+          <div className="bg-surface rounded-lg border border-warm-border p-8 text-center text-warm-gray text-sm">
             No inspections assigned to you yet.
           </div>
         )}
