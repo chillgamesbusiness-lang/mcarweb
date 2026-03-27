@@ -60,10 +60,10 @@ export default function HowItWorksSection() {
               key={item.step}
               className="relative group"
             >
-              {/* Connector line */}
+              {/* Connector line — spans the gap between grid columns */}
               {i < steps.length - 1 && (
-                <div className="hidden md:block absolute top-12 left-[calc(100%_-_12px)] w-[calc(100%_-_56px)] z-10">
-                  <div className="h-[2px] bg-gradient-to-r from-gold/30 to-gold/10" />
+                <div className="hidden md:block absolute top-[4.25rem] left-full w-6 z-10">
+                  <div className="h-[2px] bg-gradient-to-r from-gold/40 to-gold/10" />
                 </div>
               )}
               <div className="relative bg-white/[0.04] border border-white/[0.06] rounded-3xl p-8 sm:p-10 hover:bg-white/[0.07] hover:border-gold/20 transition-all duration-500 h-full">

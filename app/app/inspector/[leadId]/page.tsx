@@ -51,23 +51,23 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
   }
 
   return (
-    <div className="p-6 lg:p-10 max-w-2xl">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-2xl">
       <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-2">Inspection</p>
-      <h1 className="text-3xl font-extrabold tracking-tight text-charcoal leading-none mb-1">
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-none mb-1">
         {lead.reg}
       </h1>
-      <p className="text-sm text-charcoal-light mb-8">
+      <p className="text-sm text-foreground/60 mb-8">
         {lead.make} {lead.model} — {lead.seller_name}
       </p>
 
       {isSubmitted && (
-        <div className="mb-6 rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-700">
+        <div className="mb-6 rounded-xl bg-green-50 border border-green-200 p-4 text-sm text-green-700">
           Inspection submitted on{' '}
           {new Date(existingInspection!.submitted_at!).toLocaleString('en-GB')}. This form is read-only.
         </div>
       )}
 
-      <div className="mb-6">
+      <div className="card-premium p-5 sm:p-6 mb-6">
         <PhotoUpload
           leadId={leadId}
           signedUrls={signedUrls}
@@ -75,8 +75,9 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
         />
       </div>
 
-      <form action={submitInspection} className="space-y-6">
+      <form action={submitInspection} className="space-y-5">
         <input type="hidden" name="lead_id" value={leadId} />
+        <div className="card-premium p-5 sm:p-6">
         <ChecklistSection
           title="Bodywork"
           fields={['Paintwork', 'Panel gaps', 'Dents / scratches', 'Windscreen']}
@@ -101,8 +102,9 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
           readOnly={isSubmitted}
           existing={existingInspection?.checklist_json as Record<string, string> | null}
         />
+        </div>
 
-        <div className="mb-8 pb-8 border-b border-warm-border">
+        <div className="card-premium p-5 sm:p-6">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Recommended Offer</p>
           <div className="flex items-baseline gap-2">
             <span className="text-warm-gray text-sm">£</span>
@@ -114,20 +116,20 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
               max={500000}
               defaultValue={existingInspection?.recommended_offer ?? undefined}
               disabled={isSubmitted}
-              className="w-40 border-b border-warm-border bg-transparent px-1 py-2 text-lg font-bold text-charcoal focus:border-gold focus:outline-none disabled:text-warm-gray disabled:border-warm-border-light"
+              className="w-40 border-b border-[var(--card-border)] bg-transparent px-1 py-2 text-lg font-bold text-foreground focus:border-gold focus:outline-none disabled:text-warm-gray disabled:border-warm-border-light"
               placeholder="0"
             />
           </div>
         </div>
 
-        <div className="mb-8 pb-8 border-b border-warm-border">
+        <div className="card-premium p-5 sm:p-6">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">Notes</p>
           <textarea
             name="notes"
             rows={3}
             disabled={isSubmitted}
             defaultValue={existingInspection?.notes ?? ''}
-            className="w-full border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal placeholder:text-warm-gray/50 focus:border-gold focus:outline-none resize-y disabled:text-warm-gray disabled:border-warm-border-light"
+            className="w-full border-b border-[var(--card-border)] bg-transparent px-1 py-2 text-sm text-foreground placeholder:text-warm-gray/50 focus:border-gold focus:outline-none resize-y disabled:text-warm-gray disabled:border-warm-border-light"
             placeholder="Any additional observations..."
           />
         </div>
@@ -135,7 +137,7 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
         {!isSubmitted && (
           <SubmitButton
             loadingText="Submitting…"
-            className="text-sm font-semibold text-gold hover:text-gold-dark transition-colors disabled:opacity-60"
+            className="rounded-xl gradient-gold px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-gold/15 hover:shadow-lg hover:shadow-gold/25 transition-all disabled:opacity-60"
           >
             Submit Inspection
           </SubmitButton>
@@ -157,18 +159,18 @@ function ChecklistSection({
   existing: Record<string, string> | null
 }) {
   return (
-    <div className="mb-8 pb-8 border-b border-warm-border">
+    <div className="mb-6 pb-6 border-b border-[var(--card-border)] last:border-b-0 last:mb-0 last:pb-0">
       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-3">{title}</p>
       <div className="space-y-2">
         {fields.map((field) => (
           <div key={field} className="flex items-center justify-between gap-4">
-            <label className="text-sm text-charcoal-light w-40">{field}</label>
+            <label className="text-sm text-foreground/60 w-40">{field}</label>
             <select
               name={`checklist_${title}_${field}`}
               disabled={readOnly}
               required={!readOnly}
               defaultValue={existing?.[`${title}_${field}`] ?? ''}
-              className="flex-1 border-b border-warm-border bg-transparent px-1 py-1.5 text-sm text-charcoal focus:border-gold focus:outline-none disabled:text-warm-gray disabled:border-warm-border-light"
+              className="flex-1 border-b border-[var(--card-border)] bg-transparent px-1 py-1.5 text-sm text-foreground focus:border-gold focus:outline-none disabled:text-warm-gray disabled:border-warm-border-light"
             >
               <option value="">Select</option>
               <option value="good">Good</option>

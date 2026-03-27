@@ -50,7 +50,7 @@ export default function PhotoUpload({ leadId, signedUrls, disabled }: PhotoUploa
   }
 
   return (
-    <div className="mb-8 pb-8 border-b border-warm-border">
+    <div>
       <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-warm-gray mb-4">
         Photos{signedUrls.length > 0 ? ` (${signedUrls.length})` : ''}
       </p>
@@ -59,7 +59,7 @@ export default function PhotoUpload({ leadId, signedUrls, disabled }: PhotoUploa
         <div className="grid grid-cols-3 gap-2 mb-4">
           {signedUrls.map((url, i) => (
             <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-              className="aspect-square rounded overflow-hidden border border-warm-border-light block relative hover:opacity-80 transition-opacity"
+              className="aspect-square rounded-lg overflow-hidden border border-[var(--card-border)] block relative hover:opacity-80 transition-opacity"
             >
               <Image
                 src={url}
@@ -88,13 +88,13 @@ export default function PhotoUpload({ leadId, signedUrls, disabled }: PhotoUploa
             type="file"
             accept="image/jpeg,image/png,image/webp"
             multiple
-            className="block w-full text-sm text-charcoal-light file:mr-3 file:rounded file:border-0 file:bg-surface-warm file:px-3 file:py-2 file:text-sm file:font-medium file:text-charcoal hover:file:bg-warm-border-light"
+            className="block w-full text-sm text-foreground/60 file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--surface-warm)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground hover:file:bg-gold/10 hover:file:text-gold transition-colors"
           />
           <button
             type="button"
             onClick={handleUpload}
             disabled={uploading}
-            className="text-sm font-medium text-gold hover:text-gold-dark disabled:opacity-50 transition-colors"
+            className="rounded-lg gradient-gold px-4 py-2 text-sm font-bold text-white shadow-md shadow-gold/15 hover:shadow-lg hover:shadow-gold/25 transition-all disabled:opacity-50"
           >
             {uploading ? 'Uploading...' : 'Upload Photos'}
           </button>
@@ -103,7 +103,7 @@ export default function PhotoUpload({ leadId, signedUrls, disabled }: PhotoUploa
       )}
 
       {error && (
-        <div className="mt-3 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+        <div className="mt-3 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
           {error}
         </div>
       )}

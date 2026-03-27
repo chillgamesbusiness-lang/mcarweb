@@ -23,11 +23,11 @@ const BASE_URL = "https://mcarweb.vercel.app";
 
 export const metadata: Metadata = {
   title: {
-    default: "MCar — Sell Your Car Without the Hassle",
+    default: "MCar — See What Your Car Is Actually Worth",
     template: "%s | MCar",
   },
   description:
-    "Enter your registration for a free, no-obligation valuation backed by real vehicle data. A simpler way to sell your car.",
+    "Enter your reg. We pull DVLA records, MOT history, and live market data to show you what buyers are actually paying — before anyone tries to lowball you.",
   metadataBase: new URL(BASE_URL),
   alternates: {
     canonical: "/",
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "MCar",
-    title: "MCar — Sell Your Car Without the Hassle",
+    title: "MCar — See What Your Car Is Actually Worth",
     description:
-      "Enter your registration for a free, no-obligation valuation backed by real vehicle data. A simpler way to sell your car.",
+      "Enter your reg. We pull DVLA records, MOT history, and live market data to show you what buyers are actually paying — before anyone tries to lowball you.",
     url: BASE_URL,
   },
   robots: {

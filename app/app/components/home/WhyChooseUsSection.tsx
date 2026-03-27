@@ -45,7 +45,7 @@ export default function WhyChooseUsSection() {
 
   return (
     <section className="px-5 sm:px-8 lg:px-10 py-24 sm:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 gradient-mesh opacity-60" />
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-warm via-background to-surface-warm" />
       <div className="mx-auto max-w-[1280px] relative">
         <div className="grid lg:grid-cols-[1fr_1.3fr] gap-16 lg:gap-24 items-start">
           {/* Left — editorial headline */}

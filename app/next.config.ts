@@ -44,6 +44,19 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Remove X-Powered-By header — reduces response size + hides stack info
+  poweredByHeader: false,
+
+  // Tree-shake heavy packages — only ship used exports
+  experimental: {
+    optimizePackageImports: ['@supabase/supabase-js', '@vercel/analytics'],
+  },
+
+  // Prefer AVIF (smaller) with WebP fallback for next/image
+  images: {
+    formats: ['image/avif', 'image/webp'],
+  },
+
   env: {
     NEXT_PUBLIC_GIT_COMMIT_HASH: gitCommitHash,
   },

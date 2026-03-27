@@ -13,18 +13,19 @@ export default async function AdminCalendarPage() {
     .limit(50)
 
   return (
-    <div className="p-6 lg:p-10">
-      <h1 className="text-3xl font-bold tracking-tight text-charcoal mb-1">Calendar</h1>
+    <div className="p-4 sm:p-6 lg:p-10">
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">Calendar</h1>
       <p className="text-sm text-warm-gray mb-8">Upcoming & recent appointments</p>
 
-      {/* Clean divider-row list, no table wrapper */}
-      <div className="border-t border-warm-border">
+      {/* Premium card list */}
+      <div className="card-premium overflow-hidden">
+        <div className="divide-y divide-warm-border/50">
         {appointments?.map((appt) => {
           const lead = appt.leads as { seller_name: string; reg: string } | null
           return (
-            <div key={appt.id} className="flex items-center gap-6 py-4 border-b border-warm-border-light">
+            <div key={appt.id} className="group flex items-center gap-3 sm:gap-6 py-3 sm:py-4 px-3 sm:px-6 hover:bg-gold/[0.03] transition-all duration-200">
               {/* Date — prominent */}
-              <span className="w-40 text-sm tabular-nums text-charcoal shrink-0">
+              <span className="w-32 sm:w-40 text-xs sm:text-sm tabular-nums text-foreground shrink-0">
                 {new Date(appt.start_at).toLocaleString('en-GB', {
                   dateStyle: 'medium',
                   timeStyle: 'short',
@@ -32,18 +33,18 @@ export default async function AdminCalendarPage() {
               </span>
 
               {/* Type */}
-              <span className="w-20 text-xs uppercase tracking-wider text-warm-gray shrink-0">
+              <span className="w-16 sm:w-20 text-[11px] uppercase tracking-wider text-warm-gray shrink-0 hidden sm:block">
                 {appt.type.replace('_', '-')}
               </span>
 
               {/* Seller + Reg */}
               <div className="flex-1 min-w-0">
-                <span className="text-sm text-charcoal">{lead?.seller_name ?? '—'}</span>
+                <span className="text-sm text-foreground">{lead?.seller_name ?? '—'}</span>
                 <span className="ml-2 text-sm font-mono text-warm-gray">{lead?.reg ?? ''}</span>
               </div>
 
               {/* Status */}
-              <span className={`text-xs capitalize ${
+              <span className={`text-xs font-semibold capitalize shrink-0 ${
                 appt.status === 'completed' ? 'text-green-600' : 'text-warm-gray'
               }`}>
                 {appt.status}
@@ -53,10 +54,11 @@ export default async function AdminCalendarPage() {
         })}
 
         {(!appointments || appointments.length === 0) && (
-          <p className="py-12 text-center text-warm-gray text-sm">
+          <p className="py-16 text-center text-warm-gray text-sm">
             No appointments found.
           </p>
         )}
+        </div>
       </div>
 
       <p className="mt-8 text-[11px] text-warm-gray/50">Full calendar widget coming in a later session.</p>
