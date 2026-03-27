@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import SiteHeader from './components/home/SiteHeader'
 import HeroSection from './components/home/HeroSection'
+import RealitySection from './components/home/RealitySection'
 import WhyChooseUsSection from './components/home/WhyChooseUsSection'
 import HowItWorksSection from './components/home/HowItWorksSection'
 import TrustLegitimacySection from './components/home/TrustLegitimacySection'
@@ -10,9 +11,9 @@ import FinalCtaSection from './components/home/FinalCtaSection'
 import SiteFooter from './components/home/SiteFooter'
 
 export const metadata: Metadata = {
-  title: 'MCar — Sell Your Car Without the Hassle',
+  title: 'MCar — See What Your Car Is Actually Worth',
   description:
-    'Enter your registration for a free, no-obligation valuation backed by real vehicle data. A simpler way to sell your car.',
+    'Enter your reg. We pull DVLA records, MOT history, and live market data to show you what buyers are actually paying — before anyone tries to lowball you.',
 }
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
       <SiteHeader />
       <main>
         <HeroSection />
+        <RealitySection />
         <WhyChooseUsSection />
         <HowItWorksSection />
         <TrustLegitimacySection />

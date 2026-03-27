@@ -39,7 +39,7 @@ export default function SiteHeader() {
               href="/offer"
               className="rounded-xl gradient-gold text-white text-[13px] font-semibold px-5 py-2.5 hover:shadow-lg hover:shadow-gold/20 hover:scale-[1.02] transition-all duration-300 active:scale-[0.98]"
             >
-              Get a valuation
+              Check your value
             </Link>
           </nav>
         </div>

@@ -2,41 +2,42 @@ export default function WhyChooseUsSection() {
   const items = [
     {
       num: '01',
-      title: 'No more time-wasters',
-      text: 'No strangers at your door. No flaky buyers. No endless messages that go nowhere. You deal with one professional process.',
+      title: 'We show you the number before anyone else does',
+      text: 'Most buyers make you an offer first — then you\'re stuck negotiating from their anchor. We flip that. You see the real market value upfront, so you walk into any deal with leverage.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
       ),
     },
     {
       num: '02',
-      title: 'A valuation you can trust',
-      text: 'Your figure comes from real vehicle data — DVLA records, MOT history, mileage, condition. Not a number pulled from thin air.',
+      title: 'Every figure backed by 6+ data sources',
+      text: 'DVLA registration data. Full MOT history. Mileage verification. Condition scoring. Regional market adjustment. Resale evidence from actual listings. Nothing is guessed.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
         </svg>
       ),
     },
     {
       num: '03',
-      title: 'One clear next step',
-      text: 'Valuation, then appointment. That\u2019s it. No listing, no haggling, no wondering what happens next.',
+      title: 'No listing. No haggling. No strangers at your door.',
+      text: 'Private selling means weeks of photos, ads, tyre-kickers, and lowball texts at 11pm. We cut all of that. You get a valuation, book an appointment, done.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
         </svg>
       ),
     },
     {
       num: '04',
-      title: 'Handled properly',
-      text: 'Your details are encrypted. Your time is respected. The process works like it should — clean, professional, straightforward.',
+      title: 'Walk away at any point. Seriously.',
+      text: 'No account. No credit card. No chasing phone calls. Get your figure, think about it, come back next week or never. Zero obligation at every step.',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
         </svg>
       ),
     },
@@ -52,23 +53,22 @@ export default function WhyChooseUsSection() {
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
                 </svg>
               </div>
               <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold-dark">
-                Why this route
+                Why this works
               </span>
             </div>
             <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-charcoal-deep leading-[1.08]">
-              Selling privately
+              This isn&apos;t a quote
               <br />
-              is a headache you
+              generator. It&apos;s a
               <br />
-              <span className="gradient-gold-text">don&apos;t need.</span>
+              <span className="gradient-gold-text">pricing system.</span>
             </h2>
             <p className="mt-6 text-warm-gray leading-relaxed max-w-sm text-[16px]">
-              We built this because the alternatives are painful. Here&apos;s
-              what changes.
+              We built the same valuation engine a dealer would use internally — then made it public. Now you have the same information they do.
             </p>
           </div>
 

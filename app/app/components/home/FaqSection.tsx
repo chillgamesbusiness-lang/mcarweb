@@ -1,35 +1,35 @@
 const faqs = [
   {
-    q: 'Is the valuation free?',
-    a: 'Yes, completely free and with no obligation. You can get a valuation and decide in your own time — no pressure, no strings attached.',
+    q: 'Is this actually free? What\u2019s the catch?',
+    a: 'No catch. The valuation is free because we make money when you sell your car through us — not before. If you never sell, we never earn. That\u2019s the alignment.',
   },
   {
-    q: 'Am I under any obligation?',
-    a: 'None at all. The valuation is for your information. You\u2019re free to walk away at any point if it\u2019s not right for you.',
+    q: 'Will I get lowballed?',
+    a: 'The whole point of this system is to prevent that. We show you a data-backed range using DVLA records, MOT history, and live market listings. You see the number before anyone makes you an offer — so you\u2019ll know if it\u2019s fair.',
   },
   {
-    q: 'How long does the process take?',
-    a: 'Getting your valuation takes under two minutes. If you choose to proceed, the appointment and next steps are straightforward and handled quickly.',
+    q: 'How is this different from webuyanycar or AutoTrader?',
+    a: 'Most online valuations inflate numbers to get you through the door, then drop the price on the day. We give you a realistic range up front — grounded in the same data dealers use internally. No bait-and-switch.',
   },
   {
-    q: 'What information do I need?',
-    a: 'Just your vehicle registration to start. We\u2019ll pull the details from DVLA records. You\u2019ll also need your current mileage and a rough idea of condition.',
+    q: 'What data do you actually use?',
+    a: 'DVLA vehicle records, full MOT history (including advisories), current mileage, vehicle condition, regional market data, and comparable sold listings. Six verified sources, not one algorithm.',
   },
   {
-    q: 'How do appointments work?',
-    a: 'Once you have your valuation, you can choose a time slot that works for you. Appointments are available in person or via video call.',
+    q: 'Will you call me or spam me?',
+    a: 'No. We don\u2019t call. We don\u2019t pass your number to third parties. We send one OTP to verify your phone and that\u2019s it. If you book an appointment, we\u2019ll send a confirmation. Nothing else.',
   },
   {
-    q: 'Is my information secure?',
-    a: 'Absolutely. Your data is encrypted and handled in line with UK data protection standards. We only use your details for the valuation and appointment process.',
+    q: 'What if I don\u2019t like the valuation?',
+    a: 'Close the tab. Seriously. There\u2019s no obligation, no follow-up, no "but wait" email. The point is you now know what your car is worth. That\u2019s valuable whether you sell with us or not.',
   },
   {
-    q: 'What affects the valuation?',
-    a: 'The main factors are your vehicle\u2019s age, mileage, condition, MOT history, and current market data. We use real data to generate a grounded figure.',
+    q: 'How accurate is the valuation?',
+    a: 'It\u2019s a range, not a single number — because honest valuations are ranges. The final figure depends on in-person condition, but the range is tight and data-backed. We don\u2019t pad it to make you feel good.',
   },
   {
-    q: 'Which areas do you cover?',
-    a: 'We currently operate across the UK with both in-person and video appointment options to make the process as convenient as possible.',
+    q: 'How long does it take?',
+    a: 'Under two minutes to get your valuation. Enter your reg, confirm a couple of details, done. If you want to proceed, you can book an appointment in the same session.',
   },
 ]
 
@@ -49,7 +49,7 @@ export default function FaqSection() {
             </span>
           </div>
           <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-charcoal-deep leading-[1.08]">
-            Questions we<br />get asked<br /><span className="gradient-gold-text">a lot.</span>
+            The questions<br />you&apos;re actually<br /><span className="gradient-gold-text">thinking.</span>
           </h2>
         </div>
 
