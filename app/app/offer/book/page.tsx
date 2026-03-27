@@ -177,17 +177,17 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       <TrackEvent event="contact_submitted" />
       <StepIndicator current={3} />
 
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-charcoal tracking-tight">Book Appointment</h1>
+      <div className="text-center mb-8 animate-fade-in-up">
+        <h1 className="text-3xl font-extrabold text-charcoal-deep tracking-[-0.02em]">Book Appointment</h1>
         <p className="mt-2 text-warm-gray text-sm">Choose how and when you would like to meet</p>
       </div>
 
       {/* Offer summary — profit simulation centrepiece */}
       {autoQuote && lead.estimated_min > 0 ? (
-        <div className="bg-surface rounded-2xl shadow-xl border border-gold/20 p-8 mb-6 text-center">
-          <p className="text-xs text-warm-gray uppercase tracking-wider mb-3">Your Estimated Valuation</p>
+        <div className="card-premium p-8 mb-6 text-center animate-slide-up">
+          <p className="text-xs text-warm-gray uppercase tracking-widest mb-4 font-semibold">Your Estimated Valuation</p>
           {/* Big bold midpoint */}
-          <p className="text-5xl font-extrabold text-charcoal mb-1">
+          <p className="text-5xl font-extrabold gradient-gold-text mb-1">
             £{Math.round(((lead.estimated_min ?? 0) + (lead.estimated_max ?? 0)) / 2).toLocaleString()}
           </p>
           {/* Smaller min/max range */}
@@ -215,9 +215,9 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
           )}
         </div>
       ) : (
-        <div className="bg-surface rounded-2xl shadow-lg border border-gold/20 p-8 mb-6 text-center">
-          <p className="text-xs text-gold-dark uppercase tracking-wider mb-2">Review Required</p>
-          <p className="text-lg font-semibold text-charcoal">
+        <div className="card-premium p-8 mb-6 text-center animate-slide-up">
+          <p className="text-xs text-gold-dark uppercase tracking-widest mb-2 font-semibold">Review Required</p>
+          <p className="text-lg font-semibold text-charcoal-deep">
             We&apos;ll provide a personalised offer at your appointment
           </p>
           <p className="text-xs text-warm-gray mt-3">

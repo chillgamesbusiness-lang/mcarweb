@@ -14,7 +14,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-lg bg-gold px-4 py-3.5 text-sm font-semibold text-white hover:bg-gold-dark transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full rounded-2xl gradient-gold px-4 py-4 text-[15px] font-bold text-white transition-all duration-300 shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
     >
       {pending ? 'Processing…' : 'Continue'}
     </button>
@@ -23,9 +23,9 @@ function SubmitButton() {
 
 export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFormProps) {
   return (
-    <form action={submitDetails} className="bg-surface rounded-2xl shadow-lg border border-warm-border p-7 space-y-5">
+    <form action={submitDetails} className="card-premium p-7 sm:p-8 space-y-5 animate-slide-up">
       <div>
-        <label htmlFor="mileage" className="block text-sm font-medium text-charcoal mb-1.5">
+        <label htmlFor="mileage" className="block text-sm font-semibold text-charcoal-deep mb-2">
           Current Mileage
         </label>
         <input
@@ -37,17 +37,18 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           required
           defaultValue={defaultMileage ?? undefined}
           placeholder="e.g. 45000"
-          className="w-full rounded-lg border border-warm-border px-4 py-3 text-sm text-charcoal focus:border-gold focus:ring-2 focus:ring-gold/15 outline-none transition-shadow bg-surface"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white"
         />
         {defaultMileage != null && (
-          <p className="text-xs text-warm-gray mt-1.5">
+          <p className="text-xs text-warm-gray mt-2 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
             Pre-filled from MOT records — please update if different
           </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="condition" className="block text-sm font-medium text-charcoal mb-1.5">
+        <label htmlFor="condition" className="block text-sm font-semibold text-charcoal-deep mb-2">
           Overall Condition
         </label>
         <select
@@ -55,7 +56,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           name="condition"
           required
           defaultValue=""
-          className="w-full rounded-lg border border-warm-border px-4 py-3 text-sm text-charcoal focus:border-gold focus:ring-2 focus:ring-gold/15 outline-none transition-shadow bg-surface"
+          className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-charcoal-deep input-premium focus:outline-none bg-white appearance-none"
         >
           <option value="" disabled>Select condition</option>
           <option value="excellent">Excellent</option>

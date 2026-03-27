@@ -35,35 +35,43 @@ const faqs = [
 
 export default function FaqSection() {
   return (
-    <section id="faq" className="px-5 sm:px-8 lg:px-10 py-20 sm:py-28 bg-surface-warm">
-      <div className="mx-auto max-w-[1280px] grid lg:grid-cols-[0.4fr_1fr] gap-12 lg:gap-20 items-start">
+    <section id="faq" className="px-5 sm:px-8 lg:px-10 py-24 sm:py-32 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-surface-warm via-background to-surface-warm" />
+      <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[0.4fr_1fr] gap-12 lg:gap-20 items-start">
         {/* Left – sticky heading */}
         <div className="lg:sticky lg:top-28">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="h-px w-8 bg-gold/50" />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold/70">
+          <div className="inline-flex items-center gap-2 bg-gold/[0.08] border border-gold/15 rounded-full px-4 py-1.5 mb-6">
+            <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+            </svg>
+            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold-dark">
               FAQ
             </span>
           </div>
-          <h2 className="text-[clamp(1.75rem,3.5vw,2.75rem)] font-bold tracking-tight text-charcoal leading-[1.1]">
-            Questions we get asked a lot.
+          <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-charcoal-deep leading-[1.08]">
+            Questions we<br />get asked<br /><span className="gradient-gold-text">a lot.</span>
           </h2>
         </div>
 
-        {/* Right – accordion */}
-        <div className="divide-y divide-warm-border">
-          {faqs.map((faq) => (
+        {/* Right – premium accordion */}
+        <div className="space-y-3">
+          {faqs.map((faq, i) => (
             <details
               key={faq.q}
-              className="group"
+              className="group card-premium overflow-hidden"
             >
-              <summary className="py-5 cursor-pointer font-medium text-[15px] text-charcoal flex items-center justify-between gap-4 list-none [&::-webkit-details-marker]:hidden select-none">
-                <span>{faq.q}</span>
-                <span className="text-warm-gray text-lg leading-none transition-transform duration-200 group-open:rotate-45 flex-shrink-0">
-                  +
+              <summary className="px-6 py-5 cursor-pointer font-semibold text-[15px] text-charcoal-deep flex items-center justify-between gap-4 list-none [&::-webkit-details-marker]:hidden select-none hover:text-gold-dark transition-colors">
+                <span className="flex items-center gap-3">
+                  <span className="text-[11px] font-mono text-gold/40">{String(i + 1).padStart(2, '0')}</span>
+                  {faq.q}
                 </span>
+                <div className="w-8 h-8 rounded-xl bg-surface-warm flex items-center justify-center shrink-0 group-hover:bg-gold/10 transition-all duration-300">
+                  <svg className="w-4 h-4 text-warm-gray transition-transform duration-300 group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </div>
               </summary>
-              <div className="pb-5 text-warm-gray text-[14px] leading-relaxed max-w-xl">
+              <div className="px-6 pb-5 text-warm-gray text-[14px] leading-relaxed max-w-xl ml-8">
                 {faq.a}
               </div>
             </details>

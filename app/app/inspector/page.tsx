@@ -25,11 +25,12 @@ export default async function InspectorIndexPage() {
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold tracking-tight text-charcoal mb-1">My Inspections</h1>
+    <div className="p-6 lg:p-10">
+      <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-charcoal-deep mb-1">My Inspections</h1>
       <p className="text-sm text-warm-gray mb-8">Assigned vehicles awaiting or completed inspection</p>
 
-      <div className="border-t border-warm-border">
+      <div className="card-premium overflow-hidden">
+        <div className="divide-y divide-warm-border/50">
         {leads?.map((lead) => {
           const appt = Array.isArray(lead.appointments)
             ? lead.appointments[0]
@@ -39,18 +40,18 @@ export default async function InspectorIndexPage() {
             <Link
               key={lead.id}
               href={`/inspector/${lead.id}`}
-              className="group flex items-center gap-6 py-4 border-b border-warm-border-light hover:bg-surface-warm/50 px-2 -mx-2 transition-colors"
+              className="group flex items-center gap-6 py-4 px-6 hover:bg-gold/[0.03] transition-all duration-200"
             >
               {/* Reg — bold anchor */}
-              <span className="w-24 text-sm font-bold font-mono text-charcoal tracking-wide shrink-0">
+              <span className="w-24 text-sm font-bold font-mono text-charcoal-deep tracking-wide shrink-0">
                 {lead.reg}
               </span>
 
               {/* Vehicle + seller */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-charcoal truncate">
+                <p className="text-sm text-charcoal-deep truncate font-medium">
                   {lead.make} {lead.model}
-                  <span className="text-warm-gray ml-2">— {lead.seller_name}</span>
+                  <span className="text-warm-gray ml-2 font-normal">— {lead.seller_name}</span>
                 </p>
                 {appt && (
                   <p className="text-xs text-warm-gray/60 mt-0.5">
@@ -65,7 +66,7 @@ export default async function InspectorIndexPage() {
 
               {/* Status */}
               <span
-                className={`text-xs font-medium rounded-full px-3 py-1 shrink-0 ${
+                className={`text-xs font-semibold rounded-full px-3 py-1.5 shrink-0 ${
                   lead.status === 'inspected'
                     ? 'bg-green-100 text-green-700'
                     : 'bg-purple-100 text-purple-700'
@@ -75,7 +76,7 @@ export default async function InspectorIndexPage() {
               </span>
 
               {/* Arrow */}
-              <span className="text-warm-gray/30 group-hover:text-gold transition-colors shrink-0">
+              <span className="text-warm-gray/20 group-hover:text-gold transition-colors duration-200 shrink-0 font-medium">
                 {lead.status === 'inspected' ? 'View →' : 'Start →'}
               </span>
             </Link>
@@ -83,10 +84,11 @@ export default async function InspectorIndexPage() {
         })}
 
         {(!leads || leads.length === 0) && (
-          <p className="py-12 text-center text-warm-gray text-sm">
+          <p className="py-16 text-center text-warm-gray text-sm">
             No inspections assigned to you yet.
           </p>
         )}
+        </div>
       </div>
     </div>
   )

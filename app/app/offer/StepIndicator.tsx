@@ -3,7 +3,7 @@
 /**
  * 3-step progress indicator for the offer funnel.
  * Steps: Vehicle → Your Details → Valuation
- * Premium design with gold accent.
+ * Premium design with gradient accents & animations.
  */
 
 const STEPS = [
@@ -25,18 +25,18 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
             <div className="flex flex-col items-center">
               <div
                 className={`
-                  w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold
-                  transition-all duration-300
+                  w-11 h-11 rounded-2xl flex items-center justify-center text-xs font-bold
+                  transition-all duration-500
                   ${isDone
-                    ? 'bg-gold text-white shadow-sm'
+                    ? 'gradient-gold text-white shadow-lg shadow-gold/20'
                     : isActive
-                    ? 'bg-gold text-white shadow-md ring-4 ring-gold-light'
-                    : 'bg-surface-warm text-warm-gray border border-warm-border'
+                    ? 'gradient-gold text-white shadow-xl shadow-gold/30 ring-4 ring-gold/15 scale-110'
+                    : 'bg-white text-warm-gray border border-warm-border shadow-sm'
                   }
                 `}
               >
                 {isDone ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 ) : (
@@ -44,21 +44,25 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
                 )}
               </div>
               <span
-                className={`mt-1.5 text-[10px] font-medium tracking-wide uppercase ${
-                  isActive ? 'text-gold-dark' : isDone ? 'text-gold' : 'text-warm-gray/50'
+                className={`mt-2 text-[10px] font-bold tracking-wide uppercase ${
+                  isActive ? 'text-gold-dark' : isDone ? 'text-gold' : 'text-warm-gray/40'
                 }`}
               >
                 {s.label}
               </span>
             </div>
 
-            {/* Connector line */}
+            {/* Connector line with gradient */}
             {i < STEPS.length - 1 && (
-              <div
-                className={`w-12 sm:w-16 h-0.5 mx-2 mt-[-14px] rounded-full transition-colors duration-300 ${
-                  s.step < current ? 'bg-gold/40' : 'bg-warm-border'
-                }`}
-              />
+              <div className="w-12 sm:w-20 h-[3px] mx-3 mt-[-14px] rounded-full overflow-hidden bg-warm-border/50">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${
+                    s.step < current
+                      ? 'w-full gradient-gold'
+                      : 'w-0 bg-transparent'
+                  }`}
+                />
+              </div>
             )}
           </div>
         )

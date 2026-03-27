@@ -94,27 +94,30 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
 
   return (
     <div className="p-6 lg:p-10">
-      {/* Title — big, tight, editorial */}
-      <h1 className="text-3xl font-bold tracking-tight text-charcoal mb-1">
+      {/* Title */}
+      <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-charcoal-deep mb-1">
         Leads
       </h1>
       {totalCount > 0 && (
         <p className="text-sm text-warm-gray mb-8">{totalCount} total</p>
       )}
 
-      {/* Search + Filter — inline, minimal chrome */}
-      <form method="GET" action="/admin/leads" className="flex gap-3 mb-8 max-w-2xl">
-        <input
-          type="text"
-          name="q"
-          defaultValue={q}
-          placeholder="Search reg, name, email..."
-          className="flex-1 border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal placeholder:text-warm-gray/60 focus:border-gold focus:outline-none transition-colors"
-        />
+      {/* Search + Filter — premium card bar */}
+      <form method="GET" action="/admin/leads" className="card-premium p-4 flex gap-3 mb-8 max-w-3xl">
+        <div className="flex-1 relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-gray/50" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+          <input
+            type="text"
+            name="q"
+            defaultValue={q}
+            placeholder="Search reg, name, email..."
+            className="w-full rounded-xl border border-warm-border bg-white pl-10 pr-4 py-2.5 text-sm text-charcoal-deep placeholder:text-warm-gray/50 input-premium focus:outline-none"
+          />
+        </div>
         <select
           name="status"
           defaultValue={statusFilter}
-          className="border-b border-warm-border bg-transparent px-1 py-2 text-sm text-charcoal focus:border-gold focus:outline-none transition-colors"
+          className="rounded-xl border border-warm-border bg-white px-4 py-2.5 text-sm text-charcoal-deep input-premium focus:outline-none appearance-none"
         >
           <option value="">All Statuses</option>
           {Object.entries(STATUS_LABELS).map(([val, label]) => (
@@ -123,36 +126,37 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
         </select>
         <button
           type="submit"
-          className="text-sm font-medium text-gold hover:text-gold-dark transition-colors"
+          className="rounded-xl gradient-gold px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-gold/15 hover:shadow-lg hover:shadow-gold/25 transition-all"
         >
           Search
         </button>
         {(q || statusFilter) && (
           <Link
             href="/admin/leads"
-            className="text-sm text-warm-gray hover:text-charcoal transition-colors"
+            className="rounded-xl border border-warm-border px-4 py-2.5 text-sm text-warm-gray hover:text-charcoal-deep hover:border-charcoal/20 transition-all"
           >
             Clear
           </Link>
         )}
       </form>
 
-      {/* Lead rows — no table wrapper card, just clean divider-separated rows */}
-      <div className="border-t border-warm-border">
+      {/* Lead rows — premium card container */}
+      <div className="card-premium overflow-hidden">
+        <div className="divide-y divide-warm-border/50">
         {leads?.map((lead) => (
           <Link
             key={lead.id}
             href={`/admin/leads/${lead.id}`}
-            className="group flex items-center gap-6 py-4 border-b border-warm-border-light hover:bg-surface-warm/50 px-2 -mx-2 transition-colors"
+            className="group flex items-center gap-6 py-4 px-6 hover:bg-gold/[0.03] transition-all duration-200"
           >
             {/* Reg — monospace, bold, anchors the row */}
-            <span className="w-24 text-sm font-bold font-mono text-charcoal tracking-wide shrink-0">
+            <span className="w-24 text-sm font-bold font-mono text-charcoal-deep tracking-wide shrink-0">
               {lead.reg}
             </span>
 
             {/* Seller + vehicle */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-charcoal truncate">
+              <p className="text-sm text-charcoal-deep truncate font-medium">
                 {lead.seller_name}
                 <span className="text-warm-gray ml-2 font-normal">
                   {lead.make} {lead.model}
@@ -163,7 +167,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
 
             {/* Status badge */}
             <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium shrink-0 ${STATUS_COLOURS[lead.status as Lead['status']]}`}
+              className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold shrink-0 ${STATUS_COLOURS[lead.status as Lead['status']]}`}
             >
               {STATUS_LABELS[lead.status as Lead['status']]}
             </span>
@@ -179,28 +183,29 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
             </span>
 
             {/* Arrow */}
-            <span className="text-warm-gray/30 group-hover:text-gold transition-colors shrink-0">→</span>
+            <span className="text-warm-gray/20 group-hover:text-gold transition-colors duration-200 shrink-0">→</span>
           </Link>
         ))}
 
         {(!leads || leads.length === 0) && (
-          <p className="py-12 text-center text-warm-gray text-sm">
+          <p className="py-16 text-center text-warm-gray text-sm">
             {q || statusFilter ? 'No leads match your search.' : 'No leads yet.'}
           </p>
         )}
+        </div>
       </div>
 
       {/* Pagination — minimal */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between mt-6 pt-4">
-          <p className="text-xs text-warm-gray">
+          <p className="text-xs text-warm-gray font-medium">
             {from + 1}–{Math.min(from + PAGE_SIZE, totalCount)} of {totalCount}
           </p>
           <div className="flex gap-1.5">
             {page > 1 && (
               <Link
                 href={buildUrl(page - 1)}
-                className="px-3 py-1.5 text-xs text-warm-gray hover:text-charcoal transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-warm-gray hover:text-charcoal-deep transition-colors rounded-lg hover:bg-surface"
               >
                 ← Prev
               </Link>
@@ -215,10 +220,10 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
                     {showEllipsis && <span className="text-warm-gray/40 px-1 text-xs">…</span>}
                     <Link
                       href={buildUrl(p)}
-                      className={`px-2.5 py-1 text-xs rounded ${
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
                         p === page
-                          ? 'bg-charcoal text-white'
-                          : 'text-warm-gray hover:text-charcoal transition-colors'
+                          ? 'gradient-gold text-white shadow-sm'
+                          : 'text-warm-gray hover:text-charcoal-deep hover:bg-surface'
                       }`}
                     >
                       {p}
@@ -229,7 +234,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
             {page < totalPages && (
               <Link
                 href={buildUrl(page + 1)}
-                className="px-3 py-1.5 text-xs text-warm-gray hover:text-charcoal transition-colors"
+                className="px-3 py-1.5 text-xs font-medium text-warm-gray hover:text-charcoal-deep transition-colors rounded-lg hover:bg-surface"
               >
                 Next →
               </Link>

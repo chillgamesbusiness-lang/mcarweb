@@ -94,21 +94,21 @@ function OfferForm() {
 
   return (
     <OfferShell>
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-charcoal tracking-tight">
+      <div className="text-center mb-8 animate-fade-in-up">
+        <h1 className="text-[32px] font-extrabold text-charcoal-deep tracking-[-0.02em]">
           Get Your Valuation
         </h1>
-        <p className="mt-2 text-warm-gray text-sm leading-relaxed">
+        <p className="mt-3 text-warm-gray text-[15px] leading-relaxed">
           Enter your registration below for a free, no-obligation valuation
         </p>
       </div>
 
       {/* Loading state — premium shimmer */}
       {loading ? (
-        <div className="bg-surface rounded-2xl shadow-lg border border-warm-border p-8 text-center animate-fade-in">
-          <div className="w-16 h-16 rounded-full bg-gold-light mx-auto flex items-center justify-center mb-4">
+        <div className="card-premium p-8 text-center animate-scale-in">
+          <div className="w-16 h-16 rounded-2xl gradient-gold mx-auto flex items-center justify-center mb-5 shadow-lg shadow-gold/20 animate-pulse-glow">
             <svg
-              className="w-7 h-7 text-gold animate-spin"
+              className="w-7 h-7 text-white animate-spin"
               fill="none"
               viewBox="0 0 24 24"
             >
@@ -116,11 +116,11 @@ function OfferForm() {
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           </div>
-          <p className="text-charcoal font-medium mb-2">
+          <p className="text-charcoal-deep font-bold text-lg mb-2">
             Checking vehicle details&hellip;
           </p>
-          <p className="text-warm-gray text-xs">This usually takes a few seconds</p>
-          <div className="mt-4 h-1.5 bg-warm-border-light rounded-full overflow-hidden">
+          <p className="text-warm-gray text-sm">This usually takes a few seconds</p>
+          <div className="mt-5 h-2 bg-warm-border-light rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-gold/60 via-gold to-gold/60 rounded-full"
               style={{
@@ -133,7 +133,7 @@ function OfferForm() {
       ) : (
         <form
           onSubmit={handleSubmit}
-          className="bg-surface rounded-2xl shadow-lg border border-warm-border p-7 space-y-5"
+          className="card-premium p-7 sm:p-8 space-y-5 animate-slide-up"
         >
           <div>
             <label
@@ -164,7 +164,7 @@ function OfferForm() {
                 onChange={(e) => setReg(e.target.value.toUpperCase())}
                 placeholder="Enter reg"
                 required
-                className="flex-1 px-4 py-4 text-2xl font-bold uppercase tracking-[0.15em] text-center text-charcoal placeholder:text-warm-border focus:outline-none bg-gold-50/30"
+                className="flex-1 px-4 py-5 text-2xl font-bold uppercase tracking-[0.15em] text-center text-charcoal-deep placeholder:text-warm-border focus:outline-none bg-gold-50/30"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -182,7 +182,7 @@ function OfferForm() {
           <button
             type="submit"
             disabled={loading || reg.trim().length < 2 || (hasTurnstile && !turnstileToken)}
-            className="w-full rounded-lg bg-gold px-4 py-4 text-base font-semibold text-white hover:bg-gold-dark disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+            className="w-full rounded-2xl gradient-gold px-4 py-4 text-base font-bold text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 active:scale-[0.98]"
           >
             Get Valuation
           </button>
