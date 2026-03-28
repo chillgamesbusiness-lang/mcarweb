@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // ── Parse + validate body ────────────────────────────────────────────
     const body = await request.json()
-    const { make, model, year, mileage, fuel, postcode, skipScrape } = body ?? {}
+    const { make, model, year, mileage, fuel, postcode, skipScrape, engineCC } = body ?? {}
 
     if (!make || typeof make !== 'string') {
       return NextResponse.json({ error: 'make is required (string)' }, { status: 400 })
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       mileage: Math.round(mileage),
       fuel: fuel?.toUpperCase().trim(),
       postcode: postcode?.toUpperCase().trim(),
+      engineCC: typeof engineCC === 'number' && engineCC > 0 ? engineCC : undefined,
       skipScrape: skipScrape === true,
     })
 

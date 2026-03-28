@@ -21,6 +21,7 @@ import { cleanListings } from '@/lib/liveValuation/dataCleaner'
 import { removeOutliers, getMedian, getPercentile, getMAD } from '@/lib/liveValuation/outlierDetection'
 import { getCachedValuation, setCachedValuation } from '@/lib/liveValuation/cache'
 import { getMarketValue } from '@/lib/marketData'
+import { getEnhancedMarketValue } from '@/lib/advancedValuation'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -100,10 +101,15 @@ function buildFallbackResult(
   mileage: number,
   fuel: string,
   reason: string,
+  engineCC?: number,
 ): LiveValuationResult {
-  const marketResult = getMarketValue(make, model, year, fuel)
+  // Use enhanced valuation engine (mileage-adjusted + universal fallback)
+  const enhanced = getEnhancedMarketValue(make, model, year, fuel, {
+    mileage,
+    engineCC,
+  })
 
-  if (!marketResult) {
+  if (!enhanced) {
     return {
       make, model, year, mileage,
       valuation: 0,
@@ -113,51 +119,54 @@ function buildFallbackResult(
       dataSource: 'fallback',
       flags: {
         lowSample: true,
-        fallbackReason: `${reason}; no MARKET_DATA match`,
+        fallbackReason: `${reason}; no MARKET_DATA or universal model match`,
       },
     }
   }
 
-  const avgRetail = marketResult.avgRetail
-  const mileageAdj = computeMileageAdjustment(year, mileage)
-  const adjusted = Math.max(500, avgRetail - mileageAdj)
+  const adjusted = enhanced.retailValue
 
-  // Spread based on volatility
-  const spreadPct = marketResult.volatility === 'volatile' ? 0.12
-    : marketResult.volatility === 'moderate' ? 0.08
+  // Spread based on source + volatility
+  const isUniversal = enhanced.methodology === 'universal_model'
+  const spreadPct = isUniversal ? 0.15
+    : enhanced.volatility === 'volatile' ? 0.12
+    : enhanced.volatility === 'moderate' ? 0.08
     : 0.05
 
   const low = Math.round(adjusted * (1 - spreadPct))
   const high = Math.round(adjusted * (1 + spreadPct))
 
-  // Confidence: lower for fallback data
-  let confidence = 55
-  if (marketResult.matchQuality === 'fuel_fuzzy') confidence -= 10
-  if (marketResult.matchQuality === 'year_fuzzy') confidence -= 15
-  if (marketResult.matchQuality === 'partial') confidence -= 20
-  if (marketResult.volatility === 'volatile') confidence -= 10
+  // Build mileage adjustment value for debug output
+  const mileageAdj = Math.round(enhanced.baseRetail - enhanced.retailValue)
 
   return {
     make, model, year, mileage,
     valuation: Math.round(adjusted),
     range: { low, high },
-    confidence: Math.max(10, confidence),
+    confidence: Math.max(10, enhanced.confidence),
     sampleSize: 0,
     dataSource: 'fallback',
     flags: {
       lowSample: true,
-      mileageAdjusted: mileageAdj !== 0,
+      mileageAdjusted: enhanced.adjustments.some(a => a.name === 'mileage'),
       fallbackReason: reason,
+      ...(isUniversal && { universalModel: true }),
     },
     debug: {
       rawListingCount: 0,
       cleanListingCount: 0,
       outlierCount: 0,
-      medianPrice: avgRetail,
+      medianPrice: enhanced.baseRetail,
       madValue: 0,
       mileageAdjustment: mileageAdj,
       freshnessDecay: 0,
       sources: {},
+      enhancedSource: enhanced.methodology,
+      adjustments: enhanced.adjustments.map(a => ({
+        type: a.name,
+        pct: a.pct,
+        description: a.reason,
+      })),
     },
   }
 }
@@ -171,6 +180,7 @@ export interface LiveValuationInput {
   mileage: number
   fuel?: string
   postcode?: string
+  engineCC?: number
   /** Skip scraping and use only cache/fallback */
   skipScrape?: boolean
 }
@@ -193,7 +203,7 @@ export interface LiveValuationInput {
 export async function computeLiveValuation(
   input: LiveValuationInput,
 ): Promise<LiveValuationResult> {
-  const { make, model, year, mileage, fuel, postcode } = input
+  const { make, model, year, mileage, fuel, postcode, engineCC } = input
 
   // ── Step 1: Check cache ──────────────────────────────────────────────
   const cached = getCachedValuation(make, model, year, fuel)
@@ -222,7 +232,7 @@ export async function computeLiveValuation(
 
   // ── Step 2: Scrape live listings ─────────────────────────────────────
   if (input.skipScrape) {
-    return buildFallbackResult(make, model, year, mileage, fuel || 'PETROL', 'Scraping skipped')
+    return buildFallbackResult(make, model, year, mileage, fuel || 'PETROL', 'Scraping skipped', engineCC)
   }
 
   const query: ScraperQuery = {
@@ -274,7 +284,7 @@ export async function computeLiveValuation(
       ? `Scraping returned 0 listings${errors.length ? ` (${errors.join('; ')})` : ''}`
       : `Only ${cleanCount} clean listings after filtering (${rawCount} raw, ${discarded} discarded, ${deduped} dupes, ${outlierCount} outliers)`
 
-    return buildFallbackResult(make, model, year, mileage, fuel || 'PETROL', reason)
+    return buildFallbackResult(make, model, year, mileage, fuel || 'PETROL', reason, engineCC)
   }
 
   // ── Step 7: LIVE valuation (median-based) ────────────────────────────
@@ -297,7 +307,7 @@ export async function computeLiveValuation(
 
   // If confidence too low, fall back
   if (confidence < CONFIDENCE_FALLBACK_THRESHOLD) {
-    return buildFallbackResult(make, model, year, mileage, fuel || 'PETROL', `Low confidence (${confidence}/100)`)
+    return buildFallbackResult(make, model, year, mileage, fuel || 'PETROL', `Low confidence (${confidence}/100)`, engineCC)
   }
 
   // Variance flag

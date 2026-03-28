@@ -70,6 +70,7 @@ export interface LiveValuationResult {
     outlierFiltered?: boolean
     evSplit?: boolean
     fallbackReason?: string
+    universalModel?: boolean
   }
 
   // Admin detail
@@ -82,6 +83,8 @@ export interface LiveValuationResult {
     mileageAdjustment: number
     freshnessDecay: number
     sources: Record<string, number>
+    enhancedSource?: string
+    adjustments?: Array<{ type: string; pct: number; description: string }>
   }
 }
 
