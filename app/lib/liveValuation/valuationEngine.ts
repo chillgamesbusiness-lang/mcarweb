@@ -115,6 +115,7 @@ function buildFallbackResult(
       valuation: 0,
       range: { low: 0, high: 0 },
       confidence: 0,
+      confidenceLevel: 'low' as const,
       sampleSize: 0,
       dataSource: 'fallback',
       flags: {
@@ -144,6 +145,7 @@ function buildFallbackResult(
     valuation: Math.round(adjusted),
     range: { low, high },
     confidence: Math.max(10, enhanced.confidence),
+    confidenceLevel: enhanced.confidenceLevel,
     sampleSize: 0,
     dataSource: 'fallback',
     flags: {
@@ -151,7 +153,9 @@ function buildFallbackResult(
       mileageAdjusted: enhanced.adjustments.some(a => a.name === 'mileage'),
       fallbackReason: reason,
       ...(isUniversal && { universalModel: true }),
+      ...(enhanced.anomaly && { anomaly: true }),
     },
+    explanation: enhanced.explanation,
     debug: {
       rawListingCount: 0,
       cleanListingCount: 0,
@@ -321,6 +325,10 @@ export async function computeLiveValuation(
   }
 
   // ── Step 10: Build result ────────────────────────────────────────────
+  const confidenceLevel = confidence >= 80 ? 'high' as const
+    : confidence >= 50 ? 'medium' as const
+    : 'low' as const
+
   const result: LiveValuationResult = {
     make,
     model,
@@ -329,6 +337,7 @@ export async function computeLiveValuation(
     valuation: adjustedValue,
     range: { low: rangeLow, high: rangeHigh },
     confidence,
+    confidenceLevel,
     sampleSize: cleanCount,
     dataSource: 'live',
     flags: {
@@ -338,6 +347,14 @@ export async function computeLiveValuation(
       mileageAdjusted: mileageAdj !== 0,
       outlierFiltered: outlierCount > 0,
       evSplit: fuelSplitWarning,
+    },
+    explanation: {
+      baseValue: medianPrice,
+      mileageAdjustment: -mileageAdj,
+      engineAdjustment: 0,
+      retentionAdjustment: 0,
+      finalValue: adjustedValue,
+      summary: `Live median: £${medianPrice.toLocaleString()} → Mileage: ${mileageAdj > 0 ? '-' : '+'}£${Math.abs(mileageAdj).toLocaleString()} → Final: £${adjustedValue.toLocaleString()} (${cleanCount} listings)`,
     },
     debug: {
       rawListingCount: rawCount,

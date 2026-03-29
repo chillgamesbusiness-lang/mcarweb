@@ -58,6 +58,7 @@ export interface LiveValuationResult {
   }
 
   confidence: number        // 0–100
+  confidenceLevel: 'high' | 'medium' | 'low'
   sampleSize: number
 
   dataSource: 'live' | 'fallback'
@@ -71,6 +72,16 @@ export interface LiveValuationResult {
     evSplit?: boolean
     fallbackReason?: string
     universalModel?: boolean
+    anomaly?: boolean
+  }
+
+  explanation?: {
+    baseValue: number
+    mileageAdjustment: number
+    engineAdjustment: number
+    retentionAdjustment: number
+    finalValue: number
+    summary: string
   }
 
   // Admin detail

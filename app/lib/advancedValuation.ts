@@ -47,17 +47,31 @@ export interface ValuationAdjustment {
   reason: string
 }
 
+export type ConfidenceLevel = 'high' | 'medium' | 'low'
+
+export interface ValuationExplanation {
+  baseValue: number
+  mileageAdjustment: number
+  engineAdjustment: number
+  retentionAdjustment: number
+  finalValue: number
+  summary: string
+}
+
 export interface EnhancedValuationResult {
   retailValue: number
   tradeValue: number
   privateValue: number
   confidence: number
+  confidenceLevel: ConfidenceLevel
   methodology: 'market_data' | 'market_data_fuzzy' | 'universal_model'
   segment: MarketSegment | null
   baseRetail: number
   adjustments: ValuationAdjustment[]
   volatility: Volatility
   matchQuality: MarketMatchQuality | 'universal'
+  explanation: ValuationExplanation
+  anomaly: boolean
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -447,7 +461,7 @@ function getEngineSizePremiumPct(engineCC: number, segment: MarketSegment): numb
   const typicalCC = SEGMENT_TYPICAL_CC[segment]
   if (!typicalCC || engineCC <= 0) return 0
   const ratio = engineCC / typicalCC
-  return Math.max(-0.15, Math.min(0.15, (ratio - 1.0) * 0.16))
+  return Math.max(-0.10, Math.min(0.10, (ratio - 1.0) * 0.10))
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -631,19 +645,68 @@ function universalModelEstimate(
   if (age > 15) confidence -= 5
   if (!MAKE_RETENTION[normMake]) confidence -= 5 // Unknown make
   if (options?.mileage === undefined) confidence -= 3
+  confidence = Math.max(20, confidence)
+
+  const baseRetailVal = Math.round(estimatedNewPrice * retained * makeRetention)
+  const anomaly = detectAnomaly(adjustments)
+  if (anomaly) confidence = Math.max(20, confidence - 10)
 
   return {
     retailValue,
     tradeValue: Math.round(retailValue * 0.85),
     privateValue: Math.round(retailValue * 0.92),
-    confidence: Math.max(20, confidence),
+    confidence,
+    confidenceLevel: getConfidenceLevel(confidence),
     methodology: 'universal_model',
     segment,
-    baseRetail: Math.round(estimatedNewPrice * retained * makeRetention),
+    baseRetail: baseRetailVal,
     adjustments,
     volatility: 'moderate',
     matchQuality: 'universal',
+    explanation: buildExplanation(baseRetailVal, adjustments, retailValue, 'universal_model'),
+    anomaly,
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Helpers — Confidence level + Explainability + Anomaly detection
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getConfidenceLevel(score: number): ConfidenceLevel {
+  if (score >= 80) return 'high'
+  if (score >= 50) return 'medium'
+  return 'low'
+}
+
+function buildExplanation(
+  baseRetail: number,
+  adjustments: ValuationAdjustment[],
+  finalValue: number,
+  methodology: string,
+): ValuationExplanation {
+  const mileageAdj = adjustments.find(a => a.name === 'mileage')?.amount ?? 0
+  const engineAdj = adjustments.find(a => a.name === 'engine_size')?.amount ?? 0
+  const retentionAdj = adjustments.find(a => a.name === 'make_retention')?.amount ?? 0
+
+  const parts: string[] = [`Base: £${baseRetail.toLocaleString()}`]
+  if (mileageAdj) parts.push(`Mileage: ${mileageAdj > 0 ? '+' : ''}£${mileageAdj.toLocaleString()}`)
+  if (engineAdj) parts.push(`Engine: ${engineAdj > 0 ? '+' : ''}£${engineAdj.toLocaleString()}`)
+  if (retentionAdj) parts.push(`Retention: ${retentionAdj > 0 ? '+' : ''}£${retentionAdj.toLocaleString()}`)
+  parts.push(`Final: £${finalValue.toLocaleString()} (${methodology})`)
+
+  return {
+    baseValue: baseRetail,
+    mileageAdjustment: mileageAdj,
+    engineAdjustment: engineAdj,
+    retentionAdjustment: retentionAdj,
+    finalValue,
+    summary: parts.join(' → '),
+  }
+}
+
+function detectAnomaly(adjustments: ValuationAdjustment[]): boolean {
+  const totalAbsPct = adjustments.reduce((sum, a) => sum + Math.abs(a.pct), 0)
+  return totalAbsPct > 0.25
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -723,17 +786,26 @@ export function getEnhancedMarketValue(
     if (marketResult.matchQuality === 'partial') confidence = 55
     if (marketResult.volatility === 'volatile') confidence -= 5
 
+    const anomaly = detectAnomaly(adjustments)
+    if (anomaly) confidence = Math.max(40, confidence - 10)
+    confidence = Math.max(40, confidence)
+
+    const methodology = isFuzzy ? 'market_data_fuzzy' as const : 'market_data' as const
+
     return {
       retailValue,
       tradeValue: Math.round(retailValue * 0.85),
       privateValue: Math.round(retailValue * 0.92),
-      confidence: Math.max(40, confidence),
-      methodology: isFuzzy ? 'market_data_fuzzy' : 'market_data',
+      confidence,
+      confidenceLevel: getConfidenceLevel(confidence),
+      methodology,
       segment,
       baseRetail: marketResult.avgRetail,
       adjustments,
       volatility: marketResult.volatility,
       matchQuality: marketResult.matchQuality,
+      explanation: buildExplanation(marketResult.avgRetail, adjustments, retailValue, methodology),
+      anomaly,
     }
   }
 
