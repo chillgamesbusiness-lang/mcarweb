@@ -23,12 +23,9 @@ export default function FinalCtaSection() {
       <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[1.2fr_1fr] gap-10 sm:gap-12 lg:gap-20 items-center">
         {/* Left — headline */}
         <div>
-          <div className="inline-flex items-center gap-2 bg-white/[0.06] border border-white/[0.08] rounded-full px-4 py-1.5 mb-8">
-            <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/80">
-              Takes under 2 minutes
-            </span>
-          </div>
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/60 block mb-6">
+            Takes under 2 minutes
+          </span>
           <h2 className="text-[clamp(1.75rem,6vw,4rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.05] mb-5 sm:mb-6">
             Don&apos;t sell your car without seeing <span className="gradient-gold-text">this number.</span>
           </h2>

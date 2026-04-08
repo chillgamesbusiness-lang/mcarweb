@@ -9,6 +9,7 @@ import PrivateSaleComparisonSection from './components/home/PrivateSaleCompariso
 import FaqSection from './components/home/FaqSection'
 import FinalCtaSection from './components/home/FinalCtaSection'
 import SiteFooter from './components/home/SiteFooter'
+import BackToTop from './components/home/BackToTop'
 
 export const metadata: Metadata = {
   title: 'MCar — See What Your Car Is Actually Worth',
@@ -31,6 +32,7 @@ export default function Home() {
         <FinalCtaSection />
       </main>
       <SiteFooter />
+      <BackToTop />
     </>
   )
 }

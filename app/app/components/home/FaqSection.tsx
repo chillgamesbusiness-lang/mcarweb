@@ -43,14 +43,9 @@ export default function FaqSection() {
         {/* Left – sticky heading */}
         <ScrollReveal>
         <div className="lg:sticky lg:top-28">
-          <div className="inline-flex items-center gap-2 bg-gold/[0.08] border border-gold/15 rounded-full px-4 py-1.5 mb-6">
-            <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
-            </svg>
-            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold">
-              FAQ
-            </span>
-          </div>
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/60 block mb-2">
+            FAQ
+          </span>
           <h2 className="text-[clamp(2rem,5vw,3.25rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.08]">
             The questions<br />you&apos;re actually<br /><span className="gradient-gold-text">thinking.</span>
           </h2>

@@ -23,10 +23,10 @@ export default function HowItWorksSection() {
   ]
 
   return (
-    <section id="how" className="relative px-5 sm:px-8 lg:px-10 py-24 sm:py-32 overflow-hidden">
+    <section id="how" className="relative px-5 sm:px-8 lg:px-10 py-24 sm:py-32">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gold/[0.06] blur-[120px]" />
 
-      <div className="mx-auto max-w-[680px] relative">
+      <div className="mx-auto max-w-3xl relative">
         <ScrollReveal>
           <div className="mb-16">
             <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/60 block mb-4">
@@ -38,36 +38,30 @@ export default function HowItWorksSection() {
           </div>
         </ScrollReveal>
 
-        {/* Vertical timeline */}
-        <div className="relative">
-          {/* Thin gold connecting line */}
-          <div className="absolute left-[22px] sm:left-[27px] top-4 bottom-4 w-px bg-gradient-to-b from-gold/30 via-gold/15 to-transparent hidden sm:block" />
+        <div className="flex flex-col gap-0">
+          {steps.map((item, i) => (
+            <ScrollReveal key={item.num} delay={i * 0.08}>
+              <div className={`flex items-start gap-5 sm:gap-7 py-7 sm:py-8 ${i < steps.length - 1 ? 'border-b border-white/[0.06]' : ''}`}>
+                {/* Step number */}
+                <span className="font-mono text-[28px] sm:text-[44px] font-black text-gold/[0.15] leading-none select-none shrink-0 w-[38px] sm:w-[52px] text-center">
+                  {item.num}
+                </span>
 
-          <div className="flex flex-col gap-0">
-            {steps.map((item, i) => (
-              <ScrollReveal key={item.num} delay={i * 0.08}>
-                <div className={`flex gap-4 sm:gap-8 py-7 sm:py-8 ${i < steps.length - 1 ? 'border-b border-white/[0.06]' : ''}`}>
-                  {/* Step number */}
-                  <span className="font-mono text-[32px] sm:text-[56px] font-black text-gold/[0.12] leading-none select-none shrink-0 w-[44px] sm:w-[55px] text-right">
-                    {item.num}
+                {/* Content */}
+                <div className="min-w-0 flex-1 pt-0.5">
+                  <h3 className="text-[17px] font-bold text-white mb-2 tracking-[-0.01em]">
+                    {item.title}
+                  </h3>
+                  <p className="text-[14px] text-white/45 leading-relaxed mb-3">
+                    {item.text}
+                  </p>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-gold/50">
+                    {item.tag}
                   </span>
-
-                  {/* Content */}
-                  <div className="pt-1">
-                    <h3 className="text-[17px] font-bold text-white mb-2 tracking-[-0.01em]">
-                      {item.title}
-                    </h3>
-                    <p className="text-[14px] text-white/45 leading-relaxed mb-3">
-                      {item.text}
-                    </p>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-gold/50">
-                      {item.tag}
-                    </span>
-                  </div>
                 </div>
-              </ScrollReveal>
-            ))}
-          </div>
+              </div>
+            </ScrollReveal>
+          ))}
         </div>
       </div>
     </section>

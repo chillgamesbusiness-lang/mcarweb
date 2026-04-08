@@ -15,11 +15,9 @@ export default function PrivateSaleComparisonSection() {
       <div className="mx-auto max-w-[1280px] relative">
         <ScrollReveal>
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2.5 border-l-2 border-gold pl-3 mb-6 mx-auto">
-              <span className="text-[12px] font-semibold text-gold tracking-wide">
-                The real cost of selling
-              </span>
-            </div>
+            <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/60 block mb-4">
+              The real cost of selling
+            </span>
             <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.08] max-w-3xl mx-auto">
               Selling privately costs you time.<br />
               Selling to a dealer costs you <span className="gradient-gold-text">money.</span>

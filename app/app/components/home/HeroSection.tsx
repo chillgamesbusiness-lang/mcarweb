@@ -184,9 +184,9 @@ export default function HeroSection() {
                 <button
                   type="submit"
                   disabled={reg.trim().length < 2}
-                  className="gradient-gold text-white px-5 sm:px-8 text-[13px] sm:text-[14px] font-bold tracking-wide flex-shrink-0 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
+                  className="gradient-gold text-white px-4 sm:px-8 text-[13px] sm:text-[14px] font-bold tracking-wide shrink-0 whitespace-nowrap disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
                 >
-                  Check
+                  Go
                 </button>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-white/40">
