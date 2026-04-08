@@ -24,7 +24,6 @@ export default function HowItWorksSection() {
 
   return (
     <section id="how" className="relative px-5 sm:px-8 lg:px-10 py-24 sm:py-32 overflow-hidden">
-      <div className="absolute inset-0 bg-[#111111]" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gold/[0.06] blur-[120px]" />
 
       <div className="mx-auto max-w-[680px] relative">

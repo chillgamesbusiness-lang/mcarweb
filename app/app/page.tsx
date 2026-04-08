@@ -20,7 +20,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader />
-      <main>
+      <main className="bg-[#111111]">
         <HeroSection />
         <DataMarquee />
         <RealitySection />

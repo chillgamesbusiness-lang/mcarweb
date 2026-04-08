@@ -11,7 +11,6 @@ export default function PrivateSaleComparisonSection() {
 
   return (
     <section className="px-5 sm:px-8 lg:px-10 py-24 sm:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[#111111]" />
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-gold/[0.05] blur-[130px]" />
       <div className="mx-auto max-w-[1280px] relative">
         <ScrollReveal>

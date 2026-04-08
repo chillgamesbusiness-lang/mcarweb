@@ -3,7 +3,7 @@ import ScrollReveal from './ScrollReveal'
 export default function WhyChooseUsSection() {
   return (
     <section className="px-5 sm:px-8 lg:px-10 py-24 sm:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-surface-warm via-background to-surface-warm" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full bg-gold/[0.04] blur-[160px] pointer-events-none" />
       <div className="mx-auto max-w-[1280px] relative">
         <ScrollReveal>
           <div className="text-center mb-14">
@@ -11,14 +11,14 @@ export default function WhyChooseUsSection() {
               <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
               </svg>
-              <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold-dark">Why this works</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold">Why this works</span>
             </div>
-            <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-charcoal-deep leading-[1.08]">
+            <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.08]">
               This isn&apos;t a quote generator.
               <br />
               It&apos;s a <span className="gradient-gold-text">pricing system.</span>
             </h2>
-            <p className="mt-5 text-warm-gray text-[16px] leading-relaxed max-w-xl mx-auto">
+            <p className="mt-5 text-white/50 text-[16px] leading-relaxed max-w-xl mx-auto">
               We built the same valuation engine a dealer uses internally — then made it public.
             </p>
           </div>
@@ -36,14 +36,14 @@ export default function WhyChooseUsSection() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <h3 className="text-[20px] font-bold text-charcoal-deep mb-3 leading-snug">
+                <h3 className="text-[20px] font-bold text-white mb-3 leading-snug">
                   You see the number before anyone makes an offer.
                 </h3>
-                <p className="text-[15px] text-warm-gray leading-relaxed">
+                <p className="text-[15px] text-white/50 leading-relaxed">
                   Most buyers anchor you with their price first — then you&apos;re stuck negotiating from their number. We flip that. You walk in knowing exactly what the market says.
                 </p>
               </div>
-              <div className="mt-8 flex items-center gap-3 text-[12px] font-semibold text-gold-dark">
+              <div className="mt-8 flex items-center gap-3 text-[12px] font-semibold text-gold">
                 <span className="w-8 h-[2px] bg-gold/30 rounded-full" />
                 Leverage, not guesswork
               </div>
@@ -60,8 +60,8 @@ export default function WhyChooseUsSection() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-[16px] font-bold text-charcoal-deep mb-1.5">6+ verified data sources</h3>
-                  <p className="text-[14px] text-warm-gray leading-relaxed">
+                  <h3 className="text-[16px] font-bold text-white mb-1.5">6+ verified data sources</h3>
+                  <p className="text-[14px] text-white/50 leading-relaxed">
                     DVLA. MOT history. Mileage checks. Regional pricing. Resale evidence. Nothing is guessed.
                   </p>
                 </div>
@@ -79,8 +79,8 @@ export default function WhyChooseUsSection() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-[16px] font-bold text-charcoal-deep mb-1.5">No listing. No haggling.</h3>
-                  <p className="text-[14px] text-warm-gray leading-relaxed">
+                  <h3 className="text-[16px] font-bold text-white mb-1.5">No listing. No haggling.</h3>
+                  <p className="text-[14px] text-white/50 leading-relaxed">
                     No photos, tyre-kickers, or lowball texts at 11pm. Get your valuation, book an appointment, done.
                   </p>
                 </div>
@@ -98,8 +98,8 @@ export default function WhyChooseUsSection() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-[16px] font-bold text-charcoal-deep mb-1.5">Walk away at any point. Seriously.</h3>
-                  <p className="text-[14px] text-warm-gray leading-relaxed max-w-lg">
+                  <h3 className="text-[16px] font-bold text-white mb-1.5">Walk away at any point. Seriously.</h3>
+                  <p className="text-[14px] text-white/50 leading-relaxed max-w-lg">
                     No account. No credit card. No chasing calls. Get your figure, think about it, come back next week or never. Zero obligation at every step.
                   </p>
                 </div>
@@ -110,23 +110,23 @@ export default function WhyChooseUsSection() {
 
         {/* Trust badges (absorbed from TrustLegitimacy) */}
         <ScrollReveal delay={0.3}>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[12px] text-warm-gray/70">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-[12px] text-white/25">
             <span className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-gold/60" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-gold/50" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
               </svg>
               Encrypted &amp; UK GDPR compliant
             </span>
-            <span className="text-warm-border">·</span>
+            <span className="text-white/10">·</span>
             <span className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-gold/60" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-gold/50" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
               </svg>
               No third-party data sharing
             </span>
-            <span className="text-warm-border">·</span>
+            <span className="text-white/10">·</span>
             <span className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-gold/60" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-gold/50" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
               No spam, no calls, no pressure
@@ -134,8 +134,6 @@ export default function WhyChooseUsSection() {
           </div>
         </ScrollReveal>
       </div>
-      {/* Crossfade into unified dark zone */}
-      <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-b from-transparent to-[#111111] pointer-events-none" />
     </section>
   )
 }

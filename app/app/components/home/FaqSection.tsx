@@ -38,7 +38,6 @@ const faqs = [
 export default function FaqSection() {
   return (
     <section id="faq" className="px-5 sm:px-8 lg:px-10 py-24 sm:py-32 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[#111111]" />
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full bg-gold/[0.04] blur-[140px]" />
       <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[0.4fr_1fr] gap-12 lg:gap-20 items-start">
         {/* Left – sticky heading */}

@@ -17,7 +17,6 @@ export default function FinalCtaSection() {
 
   return (
     <section className="relative px-5 sm:px-8 lg:px-10 py-24 sm:py-32 overflow-hidden">
-      <div className="absolute inset-0 bg-[#111111]" />
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-gold/[0.08] blur-[120px] animate-float" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-gold/[0.05] blur-[100px] animate-float" style={{ animationDelay: '3s' }} />
 

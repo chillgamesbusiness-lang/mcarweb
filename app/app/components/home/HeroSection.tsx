@@ -120,10 +120,8 @@ export default function HeroSection() {
 
   return (
     <section className="relative pt-28 sm:pt-36 pb-20 sm:pb-28 overflow-hidden">
-      {/* Background: dot grid + warm gradient */}
-      <div className="absolute inset-0 hero-dot-grid" />
-      <div className="absolute inset-0 bg-gradient-to-b from-surface-warm/80 to-background" />
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
+      <div className="absolute inset-0 hero-dot-grid opacity-[0.15]" />
+      <div className="absolute top-0 inset-x-0 h-[600px] bg-gradient-to-b from-gold/[0.05] to-transparent" />
 
       <div className="relative mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-10">
         <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
@@ -132,7 +130,7 @@ export default function HeroSection() {
             {/* Warning badge */}
             <div className="flex items-center gap-3 mb-8 animate-fade-in-up">
               <div className="flex items-center gap-2.5 border-l-2 border-gold pl-3">
-                <span className="text-[12px] font-semibold text-gold-dark tracking-wide">
+                <span className="text-[12px] font-semibold text-gold tracking-wide">
                   Most sellers lose £500–£2,000 selling their car
                 </span>
               </div>
@@ -140,7 +138,7 @@ export default function HeroSection() {
 
             {/* Headline */}
             <h1 className="animate-fade-in-up stagger-1">
-              <span className="block text-[clamp(2.6rem,6.5vw,5rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-charcoal-deep">
+              <span className="block text-[clamp(2.6rem,6.5vw,5rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-white">
                 The number dealers
               </span>
               <span className="block text-[clamp(2.6rem,6.5vw,5rem)] font-extrabold leading-[1.02] tracking-[-0.03em] gradient-gold-text">
@@ -148,7 +146,7 @@ export default function HeroSection() {
               </span>
             </h1>
 
-            <p className="mt-6 text-[17px] sm:text-[19px] text-warm-gray max-w-lg leading-[1.7] animate-fade-in-up stagger-2">
+            <p className="mt-6 text-[17px] sm:text-[19px] text-white/55 max-w-lg leading-[1.7] animate-fade-in-up stagger-2">
               We pull DVLA records, MOT history, and real market data to show
               what your car is{' '}
               <strong className="text-foreground font-semibold">
@@ -162,7 +160,7 @@ export default function HeroSection() {
               onSubmit={handleSubmit}
               className="mt-9 max-w-md animate-fade-in-up stagger-3"
             >
-              <div className="flex items-stretch rounded-2xl border-2 border-charcoal-deep overflow-hidden shadow-xl shadow-charcoal/10 hover:shadow-2xl hover:shadow-charcoal/15 transition-all duration-500 group">
+              <div className="flex items-stretch rounded-2xl border-2 border-white/[0.15] overflow-hidden shadow-xl shadow-black/30 hover:shadow-2xl hover:shadow-black/40 transition-all duration-500 group">
                 <div className="bg-[#003399] text-white w-14 flex flex-col items-center justify-center gap-1 flex-shrink-0 border-r border-charcoal/20">
                   <svg viewBox="0 0 30 20" className="w-5 h-3.5" fill="none">
                     <circle cx="15" cy="10" r="4" stroke="white" strokeWidth="0.8" fill="none" />
@@ -191,7 +189,7 @@ export default function HeroSection() {
                   Check
                 </button>
               </div>
-              <div className="mt-4 flex items-center gap-4 text-[12px] text-warm-gray/80">
+              <div className="mt-4 flex items-center gap-4 text-[12px] text-white/40">
                 {['Free & instant', 'No sign-up', 'DVLA verified'].map((label) => (
                   <span key={label} className="flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5 text-gold" fill="currentColor" viewBox="0 0 20 20">
@@ -212,12 +210,12 @@ export default function HeroSection() {
               ].map((stat, i) => (
                 <div
                   key={stat.label}
-                  className={i > 0 ? 'border-l border-warm-border pl-6 sm:pl-10' : ''}
+                  className={i > 0 ? 'border-l border-white/[0.08] pl-6 sm:pl-10' : ''}
                 >
-                  <p className="text-[24px] sm:text-[28px] font-extrabold text-charcoal-deep tracking-tight">
+                  <p className="text-[24px] sm:text-[28px] font-extrabold text-white tracking-tight">
                     {stat.value}
                   </p>
-                  <p className="text-[11px] text-warm-gray uppercase tracking-wider font-medium mt-0.5">
+                  <p className="text-[11px] text-white/40 uppercase tracking-wider font-medium mt-0.5">
                     {stat.label}
                   </p>
                 </div>
@@ -231,21 +229,21 @@ export default function HeroSection() {
                   <span className="inline-flex items-center bg-charcoal-deep text-white font-mono text-[11px] font-bold px-2.5 py-1 rounded-md">
                     <span className="text-[8px] text-gold mr-1">GB</span>BD18 XYZ
                   </span>
-                  <span className="text-[13px] font-semibold text-charcoal-deep">BMW 3 Series</span>
-                  <span className="text-[11px] text-warm-gray">2018</span>
+                  <span className="text-[13px] font-semibold text-white">BMW 3 Series</span>
+                  <span className="text-[11px] text-white/40">2018</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-gold mb-0.5">Market value</p>
-                    <p className="text-[22px] font-extrabold text-charcoal-deep">£12,400</p>
+                    <p className="text-[22px] font-extrabold text-white">£12,400</p>
                   </div>
-                  <div className="w-px h-10 bg-warm-border" />
+                  <div className="w-px h-10 bg-white/[0.08]" />
                   <div className="flex-1 text-right">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-warm-gray mb-0.5">Dealer offer</p>
                     <p className="text-[22px] font-extrabold text-warm-gray/60 line-through">£9,500</p>
                   </div>
                 </div>
-                <p className="mt-3 text-[12px] text-gold-dark font-semibold">
+                <p className="mt-3 text-[12px] text-gold font-semibold">
                   You&apos;d save £2,900 knowing this first
                 </p>
               </div>
