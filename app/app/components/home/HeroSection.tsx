@@ -46,7 +46,7 @@ function LiveDemo() {
           <div className="flex gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
             <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
-            <div className="w-2.5 h-2.5 rounded-full bg-accent-emerald/60" />
+            <div className="w-2.5 h-2.5 rounded-full bg-gold/60" />
           </div>
         </div>
 
@@ -64,7 +64,7 @@ function LiveDemo() {
             >
               <svg
                 className={`w-3.5 h-3.5 shrink-0 transition-colors duration-300 ${
-                  i < step ? 'text-accent-emerald' : 'text-white/10'
+                  i < step ? 'text-gold' : 'text-white/10'
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
@@ -131,10 +131,9 @@ export default function HeroSection() {
           <div>
             {/* Warning badge */}
             <div className="flex items-center gap-3 mb-8 animate-fade-in-up">
-              <div className="flex items-center gap-2 bg-red-500/[0.08] border border-red-400/20 rounded-full px-4 py-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-red-600 dark:text-red-400">
-                  Most sellers lose £500–£2,000
+              <div className="flex items-center gap-2.5 border-l-2 border-gold pl-3">
+                <span className="text-[12px] font-semibold text-gold-dark tracking-wide">
+                  Most sellers lose £500–£2,000 selling their car
                 </span>
               </div>
             </div>
@@ -195,7 +194,7 @@ export default function HeroSection() {
               <div className="mt-4 flex items-center gap-4 text-[12px] text-warm-gray/80">
                 {['Free & instant', 'No sign-up', 'DVLA verified'].map((label) => (
                   <span key={label} className="flex items-center gap-1.5">
-                    <svg className="w-3.5 h-3.5 text-accent-emerald" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-3.5 h-3.5 text-gold" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                     {label}
@@ -237,16 +236,16 @@ export default function HeroSection() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-accent-emerald mb-0.5">Market value</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-gold mb-0.5">Market value</p>
                     <p className="text-[22px] font-extrabold text-charcoal-deep">£12,400</p>
                   </div>
                   <div className="w-px h-10 bg-warm-border" />
                   <div className="flex-1 text-right">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-0.5">Dealer offer</p>
-                    <p className="text-[22px] font-extrabold text-red-500/70 line-through">£9,500</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-warm-gray mb-0.5">Dealer offer</p>
+                    <p className="text-[22px] font-extrabold text-warm-gray/60 line-through">£9,500</p>
                   </div>
                 </div>
-                <p className="mt-3 text-[12px] text-accent-emerald font-semibold">
+                <p className="mt-3 text-[12px] text-gold-dark font-semibold">
                   You&apos;d save £2,900 knowing this first
                 </p>
               </div>

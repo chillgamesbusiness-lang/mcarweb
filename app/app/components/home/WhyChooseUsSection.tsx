@@ -54,7 +54,7 @@ export default function WhyChooseUsSection() {
           <ScrollReveal delay={0.15}>
             <div className="card-premium p-7 group h-full">
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-xl bg-accent-blue/10 flex items-center justify-center text-accent-blue shrink-0 group-hover:bg-accent-blue group-hover:text-white transition-all duration-500">
+                <div className="w-11 h-11 rounded-xl bg-gold/[0.08] flex items-center justify-center text-gold shrink-0 group-hover:bg-gold group-hover:text-white transition-all duration-500">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" />
                   </svg>
@@ -73,7 +73,7 @@ export default function WhyChooseUsSection() {
           <ScrollReveal delay={0.25}>
             <div className="card-premium p-7 group h-full">
               <div className="flex items-start gap-4">
-                <div className="w-11 h-11 rounded-xl bg-accent-emerald/10 flex items-center justify-center text-accent-emerald shrink-0 group-hover:bg-accent-emerald group-hover:text-white transition-all duration-500">
+                <div className="w-11 h-11 rounded-xl bg-gold/[0.08] flex items-center justify-center text-gold shrink-0 group-hover:bg-gold group-hover:text-white transition-all duration-500">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                   </svg>
@@ -92,7 +92,7 @@ export default function WhyChooseUsSection() {
           <ScrollReveal className="md:col-span-2" delay={0.2}>
             <div className="card-premium p-7 group h-full">
               <div className="flex items-start gap-5">
-                <div className="w-11 h-11 rounded-xl bg-accent-violet/10 flex items-center justify-center text-accent-violet shrink-0 group-hover:bg-accent-violet group-hover:text-white transition-all duration-500">
+                <div className="w-11 h-11 rounded-xl bg-gold/[0.08] flex items-center justify-center text-gold shrink-0 group-hover:bg-gold group-hover:text-white transition-all duration-500">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
                   </svg>
