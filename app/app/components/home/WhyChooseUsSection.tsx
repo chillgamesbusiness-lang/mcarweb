@@ -134,6 +134,8 @@ export default function WhyChooseUsSection() {
           </div>
         </ScrollReveal>
       </div>
+      {/* Crossfade into unified dark zone */}
+      <div className="absolute bottom-0 inset-x-0 h-28 bg-gradient-to-b from-transparent to-[#111111] pointer-events-none" />
     </section>
   )
 }
