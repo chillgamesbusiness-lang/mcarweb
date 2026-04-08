@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import SiteHeader from './components/home/SiteHeader'
 import HeroSection from './components/home/HeroSection'
+import DataMarquee from './components/home/DataMarquee'
 import RealitySection from './components/home/RealitySection'
 import WhyChooseUsSection from './components/home/WhyChooseUsSection'
 import HowItWorksSection from './components/home/HowItWorksSection'
-import TrustLegitimacySection from './components/home/TrustLegitimacySection'
 import PrivateSaleComparisonSection from './components/home/PrivateSaleComparisonSection'
 import FaqSection from './components/home/FaqSection'
 import FinalCtaSection from './components/home/FinalCtaSection'
@@ -22,10 +22,10 @@ export default function Home() {
       <SiteHeader />
       <main>
         <HeroSection />
+        <DataMarquee />
         <RealitySection />
         <WhyChooseUsSection />
         <HowItWorksSection />
-        <TrustLegitimacySection />
         <PrivateSaleComparisonSection />
         <FaqSection />
         <FinalCtaSection />

@@ -1,3 +1,5 @@
+import ScrollReveal from './ScrollReveal'
+
 export default function HowItWorksSection() {
   const steps = [
     {
@@ -42,6 +44,7 @@ export default function HowItWorksSection() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-gold/[0.06] blur-[120px]" />
 
       <div className="mx-auto max-w-[1280px] relative">
+        <ScrollReveal>
         <div className="text-center mb-16">
           <div className="inline-flex items-center gap-2 bg-white/[0.06] border border-white/[0.08] rounded-full px-4 py-1.5 mb-6">
             <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
@@ -53,7 +56,9 @@ export default function HowItWorksSection() {
             How the engine <span className="text-gold">actually works.</span>
           </h2>
         </div>
+        </ScrollReveal>
 
+        <ScrollReveal delay={0.12}>
         <div className="grid md:grid-cols-3 gap-6">
           {steps.map((item, i) => (
             <div
@@ -89,6 +94,7 @@ export default function HowItWorksSection() {
             </div>
           ))}
         </div>
+        </ScrollReveal>
       </div>
     </section>
   )

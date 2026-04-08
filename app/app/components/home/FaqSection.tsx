@@ -1,3 +1,5 @@
+import ScrollReveal from './ScrollReveal'
+
 const faqs = [
   {
     q: 'Is this actually free? What\u2019s the catch?',
@@ -39,6 +41,7 @@ export default function FaqSection() {
       <div className="absolute inset-0 bg-gradient-to-br from-surface-warm via-background to-surface-warm" />
       <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[0.4fr_1fr] gap-12 lg:gap-20 items-start">
         {/* Left – sticky heading */}
+        <ScrollReveal>
         <div className="lg:sticky lg:top-28">
           <div className="inline-flex items-center gap-2 bg-gold/[0.08] border border-gold/15 rounded-full px-4 py-1.5 mb-6">
             <svg className="w-4 h-4 text-gold" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
@@ -52,8 +55,10 @@ export default function FaqSection() {
             The questions<br />you&apos;re actually<br /><span className="gradient-gold-text">thinking.</span>
           </h2>
         </div>
+        </ScrollReveal>
 
         {/* Right – premium accordion */}
+        <ScrollReveal delay={0.1}>
         <div className="space-y-3">
           {faqs.map((faq, i) => (
             <details
@@ -77,6 +82,7 @@ export default function FaqSection() {
             </details>
           ))}
         </div>
+        </ScrollReveal>
       </div>
     </section>
   )

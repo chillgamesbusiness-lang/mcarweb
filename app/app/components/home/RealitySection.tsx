@@ -1,9 +1,12 @@
+import ScrollReveal from './ScrollReveal'
+
 export default function RealitySection() {
   return (
     <section className="px-5 sm:px-8 lg:px-10 py-20 sm:py-28 relative overflow-hidden">
       <div className="absolute inset-0 gradient-mesh opacity-60" />
       <div className="mx-auto max-w-[1280px] relative">
         <div className="max-w-3xl mx-auto text-center">
+          <ScrollReveal>
           {/* The hook */}
           <div className="inline-flex items-center gap-2 bg-red-500/[0.08] border border-red-400/15 rounded-full px-4 py-1.5 mb-8">
             <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -29,8 +32,10 @@ export default function RealitySection() {
               Because they didn&apos;t know the real value before someone made them an offer.
             </p>
           </div>
+          </ScrollReveal>
 
           {/* Data pipeline — what makes this a system */}
+          <ScrollReveal delay={0.15}>
           <div className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
             <div className="card-premium p-5 text-left">
               <div className="w-9 h-9 rounded-xl bg-accent-blue/10 flex items-center justify-center mb-3">
@@ -62,6 +67,7 @@ export default function RealitySection() {
               <p className="text-[12px] text-warm-gray leading-snug">Not a generic estimate — specific to your car</p>
             </div>
           </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>
