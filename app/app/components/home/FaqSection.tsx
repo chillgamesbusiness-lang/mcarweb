@@ -39,7 +39,7 @@ export default function FaqSection() {
   return (
     <section id="faq" className="px-5 sm:px-8 lg:px-10 py-24 sm:py-32 relative overflow-hidden">
       <div className="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full bg-gold/[0.04] blur-[140px]" />
-      <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[0.4fr_1fr] gap-12 lg:gap-20 items-start">
+      <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[0.4fr_1fr] gap-8 sm:gap-12 lg:gap-20 items-start">
         {/* Left – sticky heading */}
         <ScrollReveal>
         <div className="lg:sticky lg:top-28">
@@ -51,7 +51,7 @@ export default function FaqSection() {
               FAQ
             </span>
           </div>
-          <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.08]">
+          <h2 className="text-[clamp(2rem,5vw,3.25rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.08]">
             The questions<br />you&apos;re actually<br /><span className="gradient-gold-text">thinking.</span>
           </h2>
         </div>
@@ -65,10 +65,10 @@ export default function FaqSection() {
               key={faq.q}
               className="group bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden hover:border-gold/15 transition-colors duration-300"
             >
-              <summary className="px-6 py-5 cursor-pointer font-semibold text-[15px] text-white/70 flex items-center justify-between gap-4 list-none [&::-webkit-details-marker]:hidden select-none hover:text-white transition-colors">
-                <span className="flex items-center gap-3">
-                  <span className="text-[11px] font-mono text-gold/30">{String(i + 1).padStart(2, '0')}</span>
-                  {faq.q}
+              <summary className="px-4 sm:px-6 py-4 sm:py-5 cursor-pointer font-semibold text-[14px] sm:text-[15px] text-white/70 flex items-center justify-between gap-3 list-none [&::-webkit-details-marker]:hidden select-none hover:text-white transition-colors">
+                <span className="flex items-center gap-2 sm:gap-3 min-w-0">
+                  <span className="text-[11px] font-mono text-gold/30 shrink-0">{String(i + 1).padStart(2, '0')}</span>
+                  <span className="min-w-0">{faq.q}</span>
                 </span>
                 <div className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center shrink-0 group-hover:bg-gold/10 transition-all duration-300">
                   <svg className="w-4 h-4 text-white/30 transition-transform duration-300 group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -76,7 +76,7 @@ export default function FaqSection() {
                   </svg>
                 </div>
               </summary>
-              <div className="px-6 pb-5 text-white/40 text-[14px] leading-relaxed max-w-xl ml-8">
+              <div className="px-4 sm:px-6 pb-4 sm:pb-5 text-white/40 text-[13px] sm:text-[14px] leading-relaxed sm:ml-8">
                 {faq.a}
               </div>
             </details>

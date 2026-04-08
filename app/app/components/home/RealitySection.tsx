@@ -4,7 +4,7 @@ export default function RealitySection() {
   return (
     <section className="px-5 sm:px-8 lg:px-10 py-20 sm:py-28 relative overflow-hidden">
       <div className="mx-auto max-w-[1280px] relative">
-        <div className="grid lg:grid-cols-[1fr_1fr] gap-12 lg:gap-20 items-center">
+        <div className="grid lg:grid-cols-[1fr_1fr] gap-8 sm:gap-12 lg:gap-20 items-center">
           {/* Left — editorial statement */}
           <ScrollReveal>
             <div className="border-l-2 border-gold pl-6 sm:pl-8 mb-6">

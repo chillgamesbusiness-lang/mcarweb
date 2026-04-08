@@ -119,7 +119,7 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="relative pt-28 sm:pt-36 pb-20 sm:pb-28 overflow-hidden">
+    <section className="relative pt-24 sm:pt-32 lg:pt-36 pb-16 sm:pb-24 lg:pb-28 overflow-hidden">
       <div className="absolute inset-0 hero-dot-grid opacity-[0.15]" />
       <div className="absolute top-0 inset-x-0 h-[600px] bg-gradient-to-b from-gold/[0.05] to-transparent" />
 
@@ -138,15 +138,15 @@ export default function HeroSection() {
 
             {/* Headline */}
             <h1 className="animate-fade-in-up stagger-1">
-              <span className="block text-[clamp(2.6rem,6.5vw,5rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-white">
+              <span className="block text-[clamp(1.75rem,8vw,5rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-white">
                 The number dealers
               </span>
-              <span className="block text-[clamp(2.6rem,6.5vw,5rem)] font-extrabold leading-[1.02] tracking-[-0.03em] gradient-gold-text">
+              <span className="block text-[clamp(1.75rem,8vw,5rem)] font-extrabold leading-[1.05] tracking-[-0.03em] gradient-gold-text">
                 don&apos;t want you to see.
               </span>
             </h1>
 
-            <p className="mt-6 text-[17px] sm:text-[19px] text-white/55 max-w-lg leading-[1.7] animate-fade-in-up stagger-2">
+            <p className="mt-5 text-[15px] sm:text-[17px] lg:text-[19px] text-white/55 max-w-lg leading-[1.7] animate-fade-in-up stagger-2">
               We pull DVLA records, MOT history, and real market data to show
               what your car is{' '}
               <strong className="text-foreground font-semibold">
@@ -189,7 +189,7 @@ export default function HeroSection() {
                   Check
                 </button>
               </div>
-              <div className="mt-4 flex items-center gap-4 text-[12px] text-white/40">
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-white/40">
                 {['Free & instant', 'No sign-up', 'DVLA verified'].map((label) => (
                   <span key={label} className="flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5 text-gold" fill="currentColor" viewBox="0 0 20 20">
@@ -202,7 +202,7 @@ export default function HeroSection() {
             </form>
 
             {/* Stats strip */}
-            <div className="mt-12 flex items-center gap-6 sm:gap-10 animate-fade-in-up stagger-4">
+            <div className="mt-10 sm:mt-12 flex flex-wrap items-center gap-x-6 gap-y-4 sm:gap-x-10 animate-fade-in-up stagger-4">
               {[
                 { value: '6', label: 'Data sources' },
                 { value: '15+', label: 'Valuation checks' },

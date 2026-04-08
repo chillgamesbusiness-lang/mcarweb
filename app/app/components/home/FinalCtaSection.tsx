@@ -20,7 +20,7 @@ export default function FinalCtaSection() {
       <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-gold/[0.08] blur-[120px] animate-float" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-gold/[0.05] blur-[100px] animate-float" style={{ animationDelay: '3s' }} />
 
-      <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[1.2fr_1fr] gap-12 lg:gap-20 items-center">
+      <div className="mx-auto max-w-[1280px] relative grid lg:grid-cols-[1.2fr_1fr] gap-10 sm:gap-12 lg:gap-20 items-center">
         {/* Left — headline */}
         <div>
           <div className="inline-flex items-center gap-2 bg-white/[0.06] border border-white/[0.08] rounded-full px-4 py-1.5 mb-8">
@@ -29,8 +29,8 @@ export default function FinalCtaSection() {
               Takes under 2 minutes
             </span>
           </div>
-          <h2 className="text-[clamp(2.2rem,5vw,4rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.05] mb-6">
-            Don&apos;t sell your car<br />without seeing <span className="gradient-gold-text">this number.</span>
+          <h2 className="text-[clamp(1.75rem,6vw,4rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.05] mb-5 sm:mb-6">
+            Don&apos;t sell your car without seeing <span className="gradient-gold-text">this number.</span>
           </h2>
           <p className="text-white/40 text-[16px] leading-relaxed max-w-md">
             Enter your reg. We pull DVLA records, MOT history, and market data — and show you what buyers are actually paying for cars like yours.
@@ -38,7 +38,7 @@ export default function FinalCtaSection() {
         </div>
 
         {/* Right — premium form */}
-        <form onSubmit={handleSubmit} className="max-w-sm lg:ml-auto w-full">
+        <form onSubmit={handleSubmit} className="max-w-sm mx-auto lg:mx-0 lg:ml-auto w-full">
           <div className="bg-white/[0.06] border border-white/[0.08] rounded-3xl p-6 backdrop-blur-sm">
             <div className="flex items-stretch border-2 border-white/15 rounded-2xl overflow-hidden mb-5">
               <div className="bg-[#003DA5]/80 text-white w-12 flex flex-col items-center justify-center gap-1 flex-shrink-0">

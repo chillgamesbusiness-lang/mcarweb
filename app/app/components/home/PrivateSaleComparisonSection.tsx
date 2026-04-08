@@ -35,26 +35,26 @@ export default function PrivateSaleComparisonSection() {
           <div className="grid md:grid-cols-2 gap-5 max-w-4xl mx-auto">
             {/* Private sale column */}
             <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-0 overflow-hidden opacity-50">
-              <div className="px-6 py-4 border-b border-white/[0.06]">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/[0.06]">
                 <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-white/30">Private sale</span>
               </div>
               {rows.map((row, i) => (
-                <div key={row.label} className={`px-6 py-4 ${i < rows.length - 1 ? 'border-b border-white/[0.04]' : ''}`}>
+                <div key={row.label} className={`px-4 sm:px-6 py-3 sm:py-4 ${i < rows.length - 1 ? 'border-b border-white/[0.04]' : ''}`}>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-white/20 mb-1">{row.label}</p>
-                  <p className="text-[14px] text-white/35 leading-snug">{row.them}</p>
+                  <p className="text-[13px] sm:text-[14px] text-white/35 leading-snug">{row.them}</p>
                 </div>
               ))}
             </div>
 
             {/* MCar column */}
             <div className="bg-white/[0.04] border border-gold/20 rounded-2xl p-0 overflow-hidden shadow-lg shadow-gold/[0.06]">
-              <div className="px-6 py-4 border-b border-gold/10 bg-gold/[0.06]">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gold/10 bg-gold/[0.06]">
                 <span className="text-[11px] font-bold uppercase tracking-[0.15em] gradient-gold-text">MCar</span>
               </div>
               {rows.map((row, i) => (
-                <div key={row.label} className={`px-6 py-4 ${i < rows.length - 1 ? 'border-b border-white/[0.06]' : ''}`}>
+                <div key={row.label} className={`px-4 sm:px-6 py-3 sm:py-4 ${i < rows.length - 1 ? 'border-b border-white/[0.06]' : ''}`}>
                   <p className="text-[11px] font-bold uppercase tracking-wider text-gold/40 mb-1">{row.label}</p>
-                  <p className="text-[14px] text-white font-semibold leading-snug flex items-center gap-2">
+                  <p className="text-[13px] sm:text-[14px] text-white font-semibold leading-snug flex items-start gap-2">
                     <svg className="w-3.5 h-3.5 text-gold shrink-0" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>

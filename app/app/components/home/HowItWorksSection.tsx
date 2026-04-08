@@ -41,14 +41,14 @@ export default function HowItWorksSection() {
         {/* Vertical timeline */}
         <div className="relative">
           {/* Thin gold connecting line */}
-          <div className="absolute left-[27px] top-4 bottom-4 w-px bg-gradient-to-b from-gold/30 via-gold/15 to-transparent hidden sm:block" />
+          <div className="absolute left-[22px] sm:left-[27px] top-4 bottom-4 w-px bg-gradient-to-b from-gold/30 via-gold/15 to-transparent hidden sm:block" />
 
           <div className="flex flex-col gap-0">
             {steps.map((item, i) => (
               <ScrollReveal key={item.num} delay={i * 0.08}>
-                <div className={`flex gap-6 sm:gap-8 py-8 ${i < steps.length - 1 ? 'border-b border-white/[0.06]' : ''}`}>
+                <div className={`flex gap-4 sm:gap-8 py-7 sm:py-8 ${i < steps.length - 1 ? 'border-b border-white/[0.06]' : ''}`}>
                   {/* Step number */}
-                  <span className="font-mono text-[40px] sm:text-[56px] font-black text-gold/[0.12] leading-none select-none shrink-0 w-[55px] text-right">
+                  <span className="font-mono text-[32px] sm:text-[56px] font-black text-gold/[0.12] leading-none select-none shrink-0 w-[44px] sm:w-[55px] text-right">
                     {item.num}
                   </span>
 
