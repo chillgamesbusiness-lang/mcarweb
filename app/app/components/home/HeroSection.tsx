@@ -119,16 +119,16 @@ export default function HeroSection() {
   }
 
   return (
-    <section className="relative pt-24 sm:pt-32 lg:pt-36 pb-16 sm:pb-24 lg:pb-28 overflow-hidden">
+    <section className="relative pt-20 sm:pt-32 lg:pt-36 pb-14 sm:pb-24 lg:pb-28 overflow-hidden">
       <div className="absolute inset-0 hero-dot-grid opacity-[0.15]" />
       <div className="absolute top-0 inset-x-0 h-[600px] bg-gradient-to-b from-gold/[0.05] to-transparent" />
 
       <div className="relative mx-auto max-w-[1280px] px-5 sm:px-8 lg:px-10">
-        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-8 sm:gap-10 lg:gap-16 items-center">
           {/* ── Left column ─────────────────────────────────────────── */}
           <div>
             {/* Warning badge */}
-            <div className="flex items-center gap-3 mb-8 animate-fade-in-up">
+            <div className="flex items-center gap-3 mb-5 sm:mb-8 animate-fade-in-up">
               <div className="flex items-center gap-2.5 border-l-2 border-gold pl-3">
                 <span className="text-[12px] font-semibold text-gold tracking-wide">
                   Most sellers lose £500–£2,000 selling their car
@@ -149,7 +149,7 @@ export default function HeroSection() {
             <p className="mt-5 text-[15px] sm:text-[17px] lg:text-[19px] text-white/55 max-w-lg leading-[1.7] animate-fade-in-up stagger-2">
               We pull DVLA records, MOT history, and real market data to show
               what your car is{' '}
-              <strong className="text-foreground font-semibold">
+              <strong className="text-white font-semibold">
                 actually worth
               </strong>{' '}
               — before anyone lowballs you.
@@ -158,7 +158,7 @@ export default function HeroSection() {
             {/* Reg input */}
             <form
               onSubmit={handleSubmit}
-              className="mt-9 max-w-md animate-fade-in-up stagger-3"
+              className="mt-7 sm:mt-9 w-full max-w-md animate-fade-in-up stagger-3"
             >
               <div className="flex items-stretch rounded-2xl border-2 border-white/[0.15] overflow-hidden shadow-xl shadow-black/30 hover:shadow-2xl hover:shadow-black/40 transition-all duration-500 group">
                 <div className="bg-[#003399] text-white w-14 flex flex-col items-center justify-center gap-1 flex-shrink-0 border-r border-charcoal/20">
@@ -177,14 +177,14 @@ export default function HeroSection() {
                   placeholder="YOUR REG"
                   required
                   minLength={2}
-                  className="flex-1 px-5 py-5 text-[24px] font-bold uppercase tracking-[0.2em] text-charcoal-deep placeholder:text-charcoal/10 focus:outline-none bg-white"
+                  className="flex-1 px-3 sm:px-5 py-4 sm:py-5 text-[18px] sm:text-[22px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-charcoal-deep placeholder:text-charcoal/10 focus:outline-none bg-white"
                   autoComplete="off"
                   spellCheck={false}
                 />
                 <button
                   type="submit"
                   disabled={reg.trim().length < 2}
-                  className="gradient-gold text-white px-7 sm:px-8 text-[14px] font-bold tracking-wide flex-shrink-0 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
+                  className="gradient-gold text-white px-5 sm:px-8 text-[13px] sm:text-[14px] font-bold tracking-wide flex-shrink-0 disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
                 >
                   Check
                 </button>
@@ -202,7 +202,7 @@ export default function HeroSection() {
             </form>
 
             {/* Stats strip */}
-            <div className="mt-10 sm:mt-12 flex flex-wrap items-center gap-x-6 gap-y-4 sm:gap-x-10 animate-fade-in-up stagger-4">
+            <div className="mt-8 sm:mt-12 grid grid-cols-3 animate-fade-in-up stagger-4">
               {[
                 { value: '6', label: 'Data sources' },
                 { value: '15+', label: 'Valuation checks' },
@@ -210,12 +210,12 @@ export default function HeroSection() {
               ].map((stat, i) => (
                 <div
                   key={stat.label}
-                  className={i > 0 ? 'border-l border-white/[0.08] pl-6 sm:pl-10' : ''}
+                  className={`${i > 0 ? 'border-l border-white/[0.08] pl-4 sm:pl-8 lg:pl-10' : ''}`}
                 >
-                  <p className="text-[24px] sm:text-[28px] font-extrabold text-white tracking-tight">
+                  <p className="text-[22px] sm:text-[28px] font-extrabold text-white tracking-tight">
                     {stat.value}
                   </p>
-                  <p className="text-[11px] text-white/40 uppercase tracking-wider font-medium mt-0.5">
+                  <p className="text-[10px] sm:text-[11px] text-white/40 uppercase tracking-wider font-medium mt-0.5">
                     {stat.label}
                   </p>
                 </div>
@@ -239,8 +239,8 @@ export default function HeroSection() {
                   </div>
                   <div className="w-px h-10 bg-white/[0.08]" />
                   <div className="flex-1 text-right">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-warm-gray mb-0.5">Dealer offer</p>
-                    <p className="text-[22px] font-extrabold text-warm-gray/60 line-through">£9,500</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-0.5">Dealer offer</p>
+                    <p className="text-[22px] font-extrabold text-white/30 line-through">£9,500</p>
                   </div>
                 </div>
                 <p className="mt-3 text-[12px] text-gold font-semibold">
