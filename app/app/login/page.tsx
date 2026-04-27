@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="min-h-screen bg-background lg:grid lg:grid-cols-[minmax(340px,42vw)_1fr]">
-      <div className="hidden lg:flex min-h-screen flex-col justify-between overflow-hidden bg-charcoal-deep dark:bg-surface-elevated p-10 xl:p-14 relative">
+      <div className="hidden lg:flex min-h-screen flex-col justify-between overflow-hidden bg-surface-warm dark:bg-charcoal-deep p-10 xl:p-14 relative">
         <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)', backgroundSize: '44px 44px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
@@ -23,23 +23,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <span className="text-white font-extrabold text-lg">M</span>
             </div>
             <div>
-              <p className="text-lg font-extrabold tracking-tight text-white">MCar</p>
+              <p className="text-lg font-extrabold tracking-tight text-foreground dark:text-white">MCar</p>
               <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gold/80">Staff Desk</p>
             </div>
           </div>
-          <h2 className="max-w-sm text-4xl xl:text-5xl font-extrabold tracking-tight text-white leading-[1.05]">
+          <h2 className="max-w-sm text-4xl xl:text-5xl font-extrabold tracking-tight text-foreground dark:text-white leading-[1.05]">
             Acquisition control, without the noise.
           </h2>
-          <div className="mt-10 max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/20">
+            <div className="mt-10 max-w-md rounded-2xl border border-foreground/10 bg-foreground/[0.04] p-5 shadow-2xl shadow-black/20">
             {['Lead intake', 'Booking queue', 'Inspector review', 'Outcome tracking'].map((item, index) => (
-              <div key={item} className="flex items-center gap-3 border-b border-white/[0.07] py-3 first:pt-0 last:border-b-0 last:pb-0">
+              <div key={item} className="flex items-center gap-3 border-b border-foreground/[0.07] py-3 first:pt-0 last:border-b-0 last:pb-0">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-[11px] font-bold text-gold">{String(index + 1).padStart(2, '0')}</span>
-                <span className="text-sm font-medium text-white/75">{item}</span>
+                <span className="text-sm font-medium text-foreground/75">{item}</span>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-[11px] text-white/55 relative z-10">Secure staff access</p>
+        <p className="text-[11px] text-foreground/55 relative z-10">Secure staff access</p>
       </div>
 
       <div className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-6 lg:px-10">
@@ -83,6 +83,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <div className="mb-5 rounded-xl bg-amber-50 border border-amber-200/50 p-4 text-sm text-amber-700 flex items-center gap-2">
               <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
               Your session has expired. Please sign in again.
+            </div>
+          )}
+
+          {error === 'server_error' && (
+            <div className="mb-5 rounded-xl bg-red-50 border border-red-200/50 p-4 text-sm text-red-700 flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+              A server error occurred. Please try again in a moment.
             </div>
           )}
 
