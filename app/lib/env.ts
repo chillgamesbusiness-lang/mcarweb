@@ -11,8 +11,8 @@ const PRODUCTION_ENV_VARS = [
   'TWILIO_AUTH_TOKEN',
   'TWILIO_VERIFY_SERVICE_SID',
   'DVLA_VES_API_KEY',
-  'RESEND_API_KEY',
-  'RESEND_FROM_ADDRESS',
+  // RESEND_API_KEY and RESEND_FROM_ADDRESS are intentionally excluded from the
+  // hard assert: email.ts already degrades gracefully when they are absent.
 ] as const
 
 export type ProductionEnvVar = (typeof PRODUCTION_ENV_VARS)[number]
