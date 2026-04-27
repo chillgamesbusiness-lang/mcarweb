@@ -11,7 +11,8 @@
     "handoff:slots": "tsx scripts/test-booking-slots.ts",
     "handoff:tokens": "tsx scripts/test-token-replay.ts",
     "handoff:statuses": "tsx scripts/test-admin-statuses.ts",
-    "handoff:smoke": "tsx scripts/e2e-handoff-smoke.ts"
+    "handoff:smoke": "tsx scripts/e2e-handoff-smoke.ts",
+    "seed:dev-users": "tsx --env-file .env.local scripts/seed-dev-users.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
