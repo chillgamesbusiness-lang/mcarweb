@@ -248,7 +248,7 @@ export async function verifyOTP(
   }
 
   if (session.verified) {
-    throw new Error('Code already used. Please request a new code.')
+    return true
   }
 
   if (new Date() > new Date(session.expires_at)) {

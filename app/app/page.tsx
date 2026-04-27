@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader />
-      <main className="bg-[#111111]">
+      <main className="bg-background dark:bg-[#111111]">
         <HeroSection />
         <DataMarquee />
         <RealitySection />

@@ -5,7 +5,7 @@ import { fetchDvlaData, sanitiseReg, isValidRegFormat } from '@/lib/dvlaService'
 import { fetchMotHistory } from '@/lib/motService'
 import { buildMotAnalysis, newVehicleExemptAnalysis } from '@/lib/mileageAnalyser'
 import { checkRateLimit } from '@/lib/rateLimit'
-import { verifyTurnstile } from '@/lib/turnstile'
+import { verifyTurnstileDetailed } from '@/lib/turnstile'
 import { createRequestId, reportError } from '@/lib/reportError'
 
 /**
@@ -48,10 +48,25 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Turnstile verification ────────────────────────────────────────────
-    const turnstileOk = await verifyTurnstile(turnstileToken)
-    if (!turnstileOk) {
+    const turnstile = await verifyTurnstileDetailed(turnstileToken)
+    if (!turnstile.success) {
+      await reportError(new Error('Turnstile verification failed'), {
+        severity: turnstile.reason === 'missing-secret' ? 'critical' : 'warning',
+        area: 'vehicle_lookup',
+        operation: 'turnstile_verify',
+        provider: 'cloudflare',
+        requestId,
+        metadata: {
+          reason: turnstile.reason,
+          errorCodes: turnstile.errorCodes,
+          tokenPresent: Boolean(turnstileToken),
+        },
+      })
       return NextResponse.json(
-        { error: 'Bot verification failed. Please try again.' },
+        {
+          error: 'Bot verification failed. Please refresh the verification box and try again.',
+          code: 'TURNSTILE_FAILED',
+        },
         { status: 400 }
       )
     }
@@ -175,12 +190,38 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ vehicle, motSummary, token })
   } catch (err) {
+    const message = err instanceof Error ? err.message : ''
     await reportError(err, {
       severity: 'error',
       area: 'vehicle_lookup',
       operation: 'lookup_route',
       requestId,
     })
-    return NextResponse.json({ error: 'Vehicle lookup failed. Please try again.' }, { status: 400 })
+
+    if (message.includes("couldn't find") || message.includes('check the registration')) {
+      return NextResponse.json(
+        { error: "We couldn't find that registration. Please check and try again.", code: 'REG_NOT_FOUND' },
+        { status: 404 }
+      )
+    }
+
+    if (message.includes('temporarily unavailable') || message.includes('lookup is busy')) {
+      return NextResponse.json(
+        { error: 'Vehicle lookup is temporarily unavailable. Please try again in a minute.', code: 'LOOKUP_UNAVAILABLE' },
+        { status: 503 }
+      )
+    }
+
+    if (message.includes('configured') || message.includes('required in production')) {
+      return NextResponse.json(
+        { error: 'Vehicle lookup is temporarily unavailable. Please try again shortly.', code: 'LOOKUP_CONFIG_ERROR' },
+        { status: 503 }
+      )
+    }
+
+    return NextResponse.json(
+      { error: 'Vehicle lookup failed. Please try again.', code: 'LOOKUP_FAILED' },
+      { status: 502 }
+    )
   }
 }

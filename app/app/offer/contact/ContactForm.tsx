@@ -19,9 +19,12 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
   const [otpMessage, setOtpMessage] = useState('')
   const [otpError, setOtpError] = useState('')
   const [sendingOtp, setSendingOtp] = useState(false)
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
+  const [otpVerified, setOtpVerified] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [turnstileResetSignal, setTurnstileResetSignal] = useState(0)
   const hasTurnstile = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  const checkboxClass = 'mt-0.5 size-4 shrink-0 rounded border-warm-border accent-gold focus:ring-gold'
 
   function resetTurnstile() {
     setTurnstileToken(null)
@@ -31,6 +34,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
   async function requestOtp() {
     setOtpError('')
     setOtpMessage('')
+    setOtpVerified(false)
     setSendingOtp(true)
     try {
       const res = await fetch('/api/otp/send', {
@@ -50,6 +54,40 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
     } finally {
       resetTurnstile()
       setSendingOtp(false)
+    }
+  }
+
+  async function verifyOtpCode() {
+    setOtpError('')
+    setOtpMessage('')
+
+    if (!otpSessionId || otpCode.length !== 6) {
+      setOtpError('Enter the 6-digit verification code first.')
+      return
+    }
+
+    setVerifyingOtp(true)
+    try {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: otpSessionId, code: otpCode }),
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data.verified) {
+        setOtpVerified(false)
+        setOtpError(data.error ?? 'That code was not accepted. Please try again.')
+        return
+      }
+
+      setOtpVerified(true)
+      setOtpMessage('Phone verified. You can continue.')
+    } catch {
+      setOtpVerified(false)
+      setOtpError('Could not verify the code. Please try again.')
+    } finally {
+      setVerifyingOtp(false)
     }
   }
 
@@ -107,6 +145,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
             setOtpCode('')
             setOtpMessage('')
             setOtpError('')
+            setOtpVerified(false)
           }}
           className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)]"
         />
@@ -118,7 +157,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
           onExpire={() => setTurnstileToken(null)}
           resetSignal={turnstileResetSignal}
         />
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-end">
           <div className="flex-1">
             <label htmlFor="otpCode" className="block text-sm font-semibold text-foreground mb-2">
               SMS Verification Code
@@ -133,21 +172,33 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
               required
               disabled={!otpSessionId}
               value={otpCode}
-              onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+              readOnly={otpVerified}
+              onChange={(event) => {
+                setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))
+                setOtpVerified(false)
+              }}
               placeholder="123456"
-              className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] disabled:opacity-70 disabled:cursor-not-allowed read-only:border-green-400/50 read-only:bg-green-50 dark:read-only:bg-green-500/10"
             />
           </div>
           <button
             type="button"
             onClick={requestOtp}
             disabled={sendingOtp || phone.replace(/\D/g, '').length < 10 || (hasTurnstile && !turnstileToken)}
-            className="rounded-xl border border-warm-border px-4 py-3 text-sm font-bold text-foreground transition-all hover:border-gold disabled:opacity-70 disabled:cursor-not-allowed"
+            className="rounded-xl border border-warm-border px-4 py-3 text-sm font-bold text-foreground transition-all hover:border-gold disabled:opacity-70 disabled:cursor-not-allowed sm:whitespace-nowrap"
           >
             {sendingOtp ? 'Sending...' : otpSessionId ? 'Resend Code' : 'Send Code'}
           </button>
+          <button
+            type="button"
+            onClick={verifyOtpCode}
+            disabled={verifyingOtp || !otpSessionId || otpCode.length !== 6 || otpVerified}
+            className="rounded-xl gradient-gold px-4 py-3 text-sm font-bold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 sm:whitespace-nowrap"
+          >
+            {otpVerified ? 'Verified' : verifyingOtp ? 'Checking...' : 'Verify Code'}
+          </button>
         </div>
-        {otpMessage && <p className="text-xs text-green-700">{otpMessage}</p>}
+        {otpMessage && <p className="text-xs text-green-700 dark:text-green-300">{otpMessage}</p>}
         {otpError && <p className="text-xs text-red-700">{otpError}</p>}
       </div>
 
@@ -185,7 +236,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
           name="consent"
           type="checkbox"
           required
-          className="mt-1 w-4 h-4 rounded-md border-warm-border text-gold focus:ring-gold"
+          className={checkboxClass}
         />
         <label htmlFor="consent" className="text-xs text-warm-gray leading-snug">
           By submitting, you agree we may contact you about your vehicle.
@@ -201,7 +252,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
           id="consent_marketing"
           name="consent_marketing"
           type="checkbox"
-          className="mt-1 w-4 h-4 rounded-md border-warm-border text-gold focus:ring-gold"
+          className={checkboxClass}
         />
         <label htmlFor="consent_marketing" className="text-xs text-warm-gray leading-snug">
           I&apos;d like to receive occasional offers, tips and market updates (optional).
@@ -210,10 +261,10 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
 
       <button
         type="submit"
-        disabled={!otpSessionId || otpCode.length !== 6}
+        disabled={!otpVerified}
         className="w-full rounded-2xl gradient-gold px-4 py-4 text-[15px] font-bold text-white transition-all duration-300 shadow-lg shadow-gold/20 hover:shadow-xl hover:shadow-gold/30 active:scale-[0.98] disabled:opacity-70 disabled:saturate-50 disabled:cursor-not-allowed"
       >
-        Get My Valuation
+        {otpVerified ? 'Get My Valuation' : 'Verify your phone first'}
       </button>
     </form>
   )

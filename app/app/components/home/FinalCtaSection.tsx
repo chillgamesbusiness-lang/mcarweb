@@ -26,18 +26,18 @@ export default function FinalCtaSection() {
           <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/60 block mb-6">
             Takes under 2 minutes
           </span>
-          <h2 className="text-[clamp(1.75rem,6vw,4rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.05] mb-5 sm:mb-6">
+          <h2 className="text-[clamp(1.75rem,6vw,4rem)] font-extrabold tracking-[-0.02em] text-foreground leading-[1.05] mb-5 sm:mb-6 dark:text-white">
             Don&apos;t sell your car without seeing <span className="gradient-gold-text">this number.</span>
           </h2>
-          <p className="text-white/40 text-[16px] leading-relaxed max-w-md">
+          <p className="text-warm-gray text-[16px] leading-relaxed max-w-md dark:text-white/40">
             Enter your reg. We pull DVLA records, MOT history, and market data — and show you what buyers are actually paying for cars like yours.
           </p>
         </div>
 
         {/* Right — premium form */}
         <form onSubmit={handleSubmit} className="max-w-sm mx-auto lg:mx-0 lg:ml-auto w-full">
-          <div className="bg-white/[0.06] border border-white/[0.08] rounded-3xl p-6 backdrop-blur-sm">
-            <div className="flex items-stretch border-2 border-white/15 rounded-2xl overflow-hidden mb-5">
+          <div className="bg-white border border-warm-border rounded-3xl p-6 backdrop-blur-sm shadow-xl shadow-black/5 dark:bg-white/[0.06] dark:border-white/[0.08] dark:shadow-none">
+            <div className="flex items-stretch border-2 border-warm-border rounded-2xl overflow-hidden mb-5 dark:border-white/15">
               <div className="bg-[#003DA5]/80 text-white w-12 flex flex-col items-center justify-center gap-1 flex-shrink-0">
                 <svg viewBox="0 0 30 20" className="w-5 h-3.5" fill="none">
                   <circle cx="15" cy="10" r="4" stroke="white" strokeWidth="0.8" fill="none" />
@@ -56,7 +56,7 @@ export default function FinalCtaSection() {
                 placeholder="Enter reg"
                 required
                 minLength={2}
-                className="flex-1 px-4 py-5 text-xl font-bold uppercase tracking-[0.15em] text-center text-white placeholder:text-white/20 focus:outline-none bg-transparent"
+                className="flex-1 px-4 py-5 text-xl font-bold uppercase tracking-[0.15em] text-center text-foreground placeholder:text-warm-gray/50 focus:outline-none bg-transparent dark:text-white dark:placeholder:text-white/20"
                 autoComplete="off"
                 spellCheck={false}
               />
@@ -70,7 +70,7 @@ export default function FinalCtaSection() {
               Check your car’s real value
             </button>
 
-            <p className="text-xs text-white/30 text-center mt-4 flex items-center justify-center gap-3">
+            <p className="text-xs text-warm-gray text-center mt-4 flex items-center justify-center gap-3 dark:text-white/30">
               <span className="flex items-center gap-1">
                 <svg className="w-3 h-3 text-gold/60" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                 DVLA verified

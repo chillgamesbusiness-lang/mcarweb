@@ -16,7 +16,7 @@ export default function SiteHeader() {
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? 'bg-[#111111]/90 backdrop-blur-xl border-b border-white/[0.06] shadow-sm'
+          ? 'bg-white/90 backdrop-blur-xl border-b border-warm-border-light shadow-sm dark:bg-[#111111]/90 dark:border-white/[0.06]'
           : 'bg-transparent'
       }`}
     >
@@ -26,13 +26,13 @@ export default function SiteHeader() {
             <div className="w-9 h-9 rounded-xl gradient-gold flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
               <span className="text-[14px] font-extrabold text-white tracking-tight">M</span>
             </div>
-            <span className="text-[16px] font-bold tracking-tight text-white">MCar</span>
+            <span className="text-[16px] font-bold tracking-tight text-foreground dark:text-white">MCar</span>
           </Link>
           <nav className="flex items-center gap-8">
-            <Link href="#how" className="hidden md:block text-[13px] font-medium text-white/70 hover:text-white transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full">
+            <Link href="#how" className="hidden md:block text-[13px] font-medium text-warm-gray hover:text-foreground transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full dark:text-white/70 dark:hover:text-white">
               How it works
             </Link>
-            <Link href="#faq" className="hidden md:block text-[13px] font-medium text-white/70 hover:text-white transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full">
+            <Link href="#faq" className="hidden md:block text-[13px] font-medium text-warm-gray hover:text-foreground transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full dark:text-white/70 dark:hover:text-white">
               FAQs
             </Link>
             <Link

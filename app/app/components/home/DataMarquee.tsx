@@ -16,7 +16,7 @@ export default function DataMarquee() {
         {[...ITEMS, ...ITEMS].map((item, i) => (
           <span
             key={i}
-            className="flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.15em] text-white/20 whitespace-nowrap mx-6"
+            className="flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.15em] text-warm-gray/60 whitespace-nowrap mx-6 dark:text-white/20"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-gold/40" />
             {item}

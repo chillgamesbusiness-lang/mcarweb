@@ -9,15 +9,29 @@ import { reportError } from '@/lib/reportError'
 
 const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
-export async function verifyTurnstile(token: string | null): Promise<boolean> {
+export interface TurnstileVerificationResult {
+  success: boolean
+  reason?: 'missing-secret' | 'missing-token' | 'invalid-token' | 'network-error'
+  errorCodes?: string[]
+}
+
+export async function verifyTurnstileDetailed(token: string | null): Promise<TurnstileVerificationResult> {
   const secret = process.env.TURNSTILE_SECRET_KEY
 
   if (!secret) {
-    if (isStrictProductionEnv()) return false
-    return true
+    if (isStrictProductionEnv()) {
+      await reportError(new Error('TURNSTILE_SECRET_KEY is missing'), {
+        severity: 'critical',
+        area: 'bot_protection',
+        operation: 'turnstile_config',
+        provider: 'cloudflare',
+      })
+      return { success: false, reason: 'missing-secret' }
+    }
+    return { success: true }
   }
 
-  if (!token) return false
+  if (!token) return { success: false, reason: 'missing-token' }
 
   try {
     const res = await fetch(VERIFY_URL, {
@@ -30,7 +44,13 @@ export async function verifyTurnstile(token: string | null): Promise<boolean> {
     })
 
     const data = await res.json()
-    return data.success === true
+    if (data.success === true) return { success: true }
+
+    return {
+      success: false,
+      reason: 'invalid-token',
+      errorCodes: Array.isArray(data['error-codes']) ? data['error-codes'] : undefined,
+    }
   } catch (err) {
     await reportError(err, {
       severity: 'error',
@@ -38,6 +58,11 @@ export async function verifyTurnstile(token: string | null): Promise<boolean> {
       operation: 'turnstile_verify',
       provider: 'cloudflare',
     })
-    return false
+    return { success: false, reason: 'network-error' }
   }
+}
+
+export async function verifyTurnstile(token: string | null): Promise<boolean> {
+  const result = await verifyTurnstileDetailed(token)
+  return result.success
 }

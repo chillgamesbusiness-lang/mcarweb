@@ -30,22 +30,22 @@ function LiveDemo() {
       {/* Outer glow */}
       <div className="absolute -inset-8 rounded-[2.5rem] bg-gold/[0.04] blur-3xl pointer-events-none" />
 
-      <div className="relative bg-[#0f0f14] dark:bg-white/[0.04] rounded-3xl p-7 border border-white/[0.06] dark:border-white/[0.10] shadow-2xl shadow-black/25">
+      <div className="relative rounded-3xl border border-warm-border bg-white p-7 shadow-2xl shadow-black/10 dark:border-white/[0.10] dark:bg-white/[0.04] dark:shadow-black/25">
         {/* Card header */}
-        <div className="flex items-center justify-between mb-5 pb-4 border-b border-white/[0.06]">
+        <div className="mb-5 flex items-center justify-between border-b border-warm-border-light pb-4 dark:border-white/[0.06]">
           <div className="flex items-center gap-3">
-            <div className="flex items-center bg-white/[0.08] font-mono text-[13px] font-bold px-3 py-1.5 rounded-lg text-white/90 tracking-wider">
+            <div className="flex items-center rounded-lg border border-warm-border-light bg-surface-warm px-3 py-1.5 font-mono text-[13px] font-bold tracking-wider text-foreground dark:border-transparent dark:bg-white/[0.08] dark:text-white/90">
               <span className="text-gold text-[10px] mr-1.5 font-extrabold">GB</span>
               BD18 XYZ
             </div>
             <div>
-              <p className="text-[14px] font-bold text-white">BMW 3 Series</p>
-              <p className="text-[11px] text-white/30">2018 · 320d · Diesel · 45,200 mi</p>
+              <p className="text-[14px] font-bold text-foreground dark:text-white">BMW 3 Series</p>
+              <p className="text-[11px] text-warm-gray dark:text-white/30">2018 · 320d · Diesel · 45,200 mi</p>
             </div>
           </div>
           <div className="flex gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
-            <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+            <div className="w-2.5 h-2.5 rounded-full bg-warm-border dark:bg-white/10" />
+            <div className="w-2.5 h-2.5 rounded-full bg-warm-border dark:bg-white/10" />
             <div className="w-2.5 h-2.5 rounded-full bg-gold/60" />
           </div>
         </div>
@@ -64,7 +64,7 @@ function LiveDemo() {
             >
               <svg
                 className={`w-3.5 h-3.5 shrink-0 transition-colors duration-300 ${
-                  i < step ? 'text-gold' : 'text-white/10'
+                  i < step ? 'text-gold' : 'text-warm-border dark:text-white/10'
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
@@ -75,14 +75,14 @@ function LiveDemo() {
                   clipRule="evenodd"
                 />
               </svg>
-              <span className="text-white/50 font-mono">{line.text}</span>
+              <span className="font-mono text-warm-gray dark:text-white/50">{line.text}</span>
             </div>
           ))}
         </div>
 
         {/* Valuation result */}
         <div
-          className="rounded-2xl border border-gold/20 bg-gold/[0.06] p-5 text-center"
+          className="rounded-2xl border border-gold/25 bg-gold/[0.08] p-5 text-center dark:border-gold/20 dark:bg-gold/[0.06]"
           style={{
             opacity: showValue ? 1 : 0,
             transform: showValue ? 'scale(1)' : 'scale(0.96)',
@@ -92,10 +92,10 @@ function LiveDemo() {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold/70 mb-1.5">
             Estimated market value
           </p>
-          <p className="text-[34px] font-extrabold text-white tracking-tight leading-none">
+          <p className="text-[34px] font-extrabold text-foreground tracking-tight leading-none dark:text-white">
             £12,400
           </p>
-          <p className="text-[12px] text-white/30 mt-2 font-mono">
+          <p className="mt-2 font-mono text-[12px] text-warm-gray dark:text-white/30">
             Range: £11,800 — £13,200
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function HeroSection() {
 
             {/* Headline */}
             <h1 className="animate-fade-in-up stagger-1">
-              <span className="block text-[clamp(1.75rem,8vw,5rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-white">
+              <span className="block text-[clamp(1.75rem,8vw,5rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-foreground dark:text-white">
                 The number dealers
               </span>
               <span className="block text-[clamp(1.75rem,8vw,5rem)] font-extrabold leading-[1.05] tracking-[-0.03em] gradient-gold-text">
@@ -146,10 +146,10 @@ export default function HeroSection() {
               </span>
             </h1>
 
-            <p className="mt-5 text-[15px] sm:text-[17px] lg:text-[19px] text-white/55 max-w-lg leading-[1.7] animate-fade-in-up stagger-2">
+            <p className="mt-5 text-[15px] sm:text-[17px] lg:text-[19px] text-warm-gray max-w-lg leading-[1.7] animate-fade-in-up stagger-2 dark:text-white/55">
               We pull DVLA records, MOT history, and real market data to show
               what your car is{' '}
-              <strong className="text-white font-semibold">
+              <strong className="text-foreground font-semibold dark:text-white">
                 actually worth
               </strong>{' '}
               — before anyone lowballs you.
@@ -160,7 +160,7 @@ export default function HeroSection() {
               onSubmit={handleSubmit}
               className="mt-7 sm:mt-9 w-full max-w-md animate-fade-in-up stagger-3"
             >
-              <div className="flex items-stretch rounded-2xl border-2 border-white/[0.15] overflow-hidden shadow-xl shadow-black/30 hover:shadow-2xl hover:shadow-black/40 transition-all duration-500 group">
+              <div className="flex items-stretch rounded-2xl border-2 border-warm-border overflow-hidden shadow-xl shadow-black/10 hover:shadow-2xl hover:shadow-black/15 transition-all duration-500 group dark:border-white/[0.15] dark:shadow-black/30 dark:hover:shadow-black/40">
                 <div className="bg-[#003399] text-white w-14 flex flex-col items-center justify-center gap-1 flex-shrink-0 border-r border-charcoal/20">
                   <svg viewBox="0 0 30 20" className="w-5 h-3.5" fill="none">
                     <circle cx="15" cy="10" r="4" stroke="white" strokeWidth="0.8" fill="none" />
@@ -190,7 +190,7 @@ export default function HeroSection() {
                   Go
                 </button>
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-white/40">
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px] text-warm-gray dark:text-white/40">
                 {['Free & instant', 'No sign-up', 'DVLA verified'].map((label) => (
                   <span key={label} className="flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5 text-gold" fill="currentColor" viewBox="0 0 20 20">
@@ -211,12 +211,12 @@ export default function HeroSection() {
               ].map((stat, i) => (
                 <div
                   key={stat.label}
-                  className={`${i > 0 ? 'border-l border-white/[0.08] pl-4 sm:pl-8 lg:pl-10' : ''}`}
+                  className={`${i > 0 ? 'border-l border-warm-border pl-4 sm:pl-8 lg:pl-10 dark:border-white/[0.08]' : ''}`}
                 >
-                  <p className="text-[22px] sm:text-[28px] font-extrabold text-white tracking-tight">
+                  <p className="text-[22px] sm:text-[28px] font-extrabold text-foreground tracking-tight dark:text-white">
                     {stat.value}
                   </p>
-                  <p className="text-[10px] sm:text-[11px] text-white/40 uppercase tracking-wider font-medium mt-0.5">
+                  <p className="text-[10px] sm:text-[11px] text-warm-gray uppercase tracking-wider font-medium mt-0.5 dark:text-white/40">
                     {stat.label}
                   </p>
                 </div>
@@ -230,18 +230,18 @@ export default function HeroSection() {
                   <span className="inline-flex items-center bg-charcoal-deep text-white font-mono text-[11px] font-bold px-2.5 py-1 rounded-md">
                     <span className="text-[8px] text-gold mr-1">GB</span>BD18 XYZ
                   </span>
-                  <span className="text-[13px] font-semibold text-white">BMW 3 Series</span>
-                  <span className="text-[11px] text-white/40">2018</span>
+                  <span className="text-[13px] font-semibold text-foreground dark:text-white">BMW 3 Series</span>
+                  <span className="text-[11px] text-warm-gray dark:text-white/40">2018</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex-1">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-gold mb-0.5">Market value</p>
-                    <p className="text-[22px] font-extrabold text-white">£12,400</p>
+                    <p className="text-[22px] font-extrabold text-foreground dark:text-white">£12,400</p>
                   </div>
-                  <div className="w-px h-10 bg-white/[0.08]" />
+                  <div className="w-px h-10 bg-warm-border dark:bg-white/[0.08]" />
                   <div className="flex-1 text-right">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/35 mb-0.5">Dealer offer</p>
-                    <p className="text-[22px] font-extrabold text-white/30 line-through">£9,500</p>
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-warm-gray mb-0.5 dark:text-white/35">Dealer offer</p>
+                    <p className="text-[22px] font-extrabold text-warm-gray/70 line-through dark:text-white/30">£9,500</p>
                   </div>
                 </div>
                 <p className="mt-3 text-[12px] text-gold font-semibold">

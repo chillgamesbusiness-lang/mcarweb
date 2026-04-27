@@ -85,7 +85,7 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
       {/* Vehicle summary card */}
       <div className="card-premium p-6 mb-6 animate-slide-up">
         <div className="text-center">
-          <span className="inline-flex items-center gap-2 bg-charcoal-deep text-white font-mono text-base sm:text-lg font-bold px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl mb-4 shadow-md">
+          <span className="mb-4 inline-flex items-center gap-2 rounded-xl border border-warm-border bg-surface-warm px-4 py-2 font-mono text-base font-bold text-foreground shadow-md dark:border-transparent dark:bg-charcoal-deep dark:text-white sm:px-5 sm:py-2.5 sm:text-lg">
             <span className="text-[9px] text-gold font-sans">GB</span>
             {payload.reg}
           </span>

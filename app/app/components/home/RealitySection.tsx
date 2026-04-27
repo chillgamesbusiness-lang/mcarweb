@@ -12,13 +12,13 @@ export default function RealitySection() {
                 The reality of selling a car
               </span>
             </div>
-            <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.12] mb-8">
+            <h2 className="text-[clamp(1.8rem,4vw,3rem)] font-extrabold tracking-[-0.02em] text-foreground leading-[1.12] mb-8 dark:text-white">
               Most people lose <span className="gradient-gold-text">£500–£2,000</span> selling their car.
             </h2>
-            <div className="space-y-4 text-[17px] sm:text-[19px] text-white/50 leading-relaxed">
+            <div className="space-y-4 text-[17px] sm:text-[19px] text-warm-gray leading-relaxed dark:text-white/50">
               <p>Not because of the market.</p>
               <p>Not because of the car.</p>
-              <p className="text-white font-semibold">
+              <p className="text-foreground font-semibold dark:text-white">
                 Because they didn&apos;t know the real value before someone made them an offer.
               </p>
             </div>
@@ -27,7 +27,7 @@ export default function RealitySection() {
           {/* Right — data pipeline as a vertical "receipt" strip */}
           <ScrollReveal delay={0.15}>
             <div className="card-premium p-0 overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/[0.06]">
+              <div className="px-6 py-4 border-b border-warm-border-light dark:border-white/[0.06]">
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">What we check</span>
               </div>
               {[
@@ -35,11 +35,11 @@ export default function RealitySection() {
                 { label: 'Real market listings', desc: 'Compared against sold vehicles near you' },
                 { label: 'Condition + mileage', desc: 'Specific to your car, not a generic estimate' },
               ].map((item, i) => (
-                <div key={item.label} className={`px-6 py-5 flex items-start gap-4 ${i < 2 ? 'border-b border-white/[0.06]' : ''}`}>
+                <div key={item.label} className={`px-6 py-5 flex items-start gap-4 ${i < 2 ? 'border-b border-warm-border-light dark:border-white/[0.06]' : ''}`}>
                   <span className="text-[11px] font-mono text-gold/40 mt-0.5 select-none">{String(i + 1).padStart(2, '0')}</span>
                   <div>
-                    <p className="text-[14px] font-bold text-white mb-0.5">{item.label}</p>
-                    <p className="text-[13px] text-white/50 leading-snug">{item.desc}</p>
+                    <p className="text-[14px] font-bold text-foreground mb-0.5 dark:text-white">{item.label}</p>
+                    <p className="text-[13px] text-warm-gray leading-snug dark:text-white/50">{item.desc}</p>
                   </div>
                 </div>
               ))}

@@ -46,7 +46,7 @@ export default function FaqSection() {
           <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/60 block mb-2">
             FAQ
           </span>
-          <h2 className="text-[clamp(2rem,5vw,3.25rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.08]">
+          <h2 className="text-[clamp(2rem,5vw,3.25rem)] font-extrabold tracking-[-0.02em] text-foreground leading-[1.08] dark:text-white">
             The questions<br />you&apos;re actually<br /><span className="gradient-gold-text">thinking.</span>
           </h2>
         </div>
@@ -58,20 +58,20 @@ export default function FaqSection() {
           {faqs.map((faq, i) => (
             <details
               key={faq.q}
-              className="group bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden hover:border-gold/15 transition-colors duration-300"
+              className="group bg-white border border-warm-border-light rounded-2xl overflow-hidden hover:border-gold/30 transition-colors duration-300 dark:bg-white/[0.03] dark:border-white/[0.06] dark:hover:border-gold/15"
             >
-              <summary className="px-4 sm:px-6 py-4 sm:py-5 cursor-pointer font-semibold text-[14px] sm:text-[15px] text-white/70 flex items-center justify-between gap-3 list-none [&::-webkit-details-marker]:hidden select-none hover:text-white transition-colors">
+              <summary className="px-4 sm:px-6 py-4 sm:py-5 cursor-pointer font-semibold text-[14px] sm:text-[15px] text-foreground flex items-center justify-between gap-3 list-none [&::-webkit-details-marker]:hidden select-none hover:text-gold transition-colors dark:text-white/70 dark:hover:text-white">
                 <span className="flex items-center gap-2 sm:gap-3 min-w-0">
                   <span className="text-[11px] font-mono text-gold/30 shrink-0">{String(i + 1).padStart(2, '0')}</span>
                   <span className="min-w-0">{faq.q}</span>
                 </span>
-                <div className="w-8 h-8 rounded-xl bg-white/[0.06] flex items-center justify-center shrink-0 group-hover:bg-gold/10 transition-all duration-300">
-                  <svg className="w-4 h-4 text-white/30 transition-transform duration-300 group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <div className="w-8 h-8 rounded-xl bg-gold/10 flex items-center justify-center shrink-0 group-hover:bg-gold/15 transition-all duration-300 dark:bg-white/[0.06] dark:group-hover:bg-gold/10">
+                  <svg className="w-4 h-4 text-gold/60 transition-transform duration-300 group-open:rotate-45 dark:text-white/30" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                   </svg>
                 </div>
               </summary>
-              <div className="px-4 sm:px-6 pb-4 sm:pb-5 text-white/40 text-[13px] sm:text-[14px] leading-relaxed sm:ml-8">
+              <div className="px-4 sm:px-6 pb-4 sm:pb-5 text-warm-gray text-[13px] sm:text-[14px] leading-relaxed sm:ml-8 dark:text-white/40">
                 {faq.a}
               </div>
             </details>

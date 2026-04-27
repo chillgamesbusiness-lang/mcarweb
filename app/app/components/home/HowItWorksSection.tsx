@@ -32,7 +32,7 @@ export default function HowItWorksSection() {
             <span className="text-[11px] font-bold uppercase tracking-[0.15em] text-gold/60 block mb-4">
               The process
             </span>
-            <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-white leading-[1.08]">
+            <h2 className="text-[clamp(2rem,4vw,3.25rem)] font-extrabold tracking-[-0.02em] text-foreground leading-[1.08] dark:text-white">
               How the engine <span className="text-gold">actually works.</span>
             </h2>
           </div>
@@ -41,7 +41,7 @@ export default function HowItWorksSection() {
         <div className="flex flex-col gap-0">
           {steps.map((item, i) => (
             <ScrollReveal key={item.num} delay={i * 0.08}>
-              <div className={`flex items-start gap-5 sm:gap-7 py-7 sm:py-8 ${i < steps.length - 1 ? 'border-b border-white/[0.06]' : ''}`}>
+              <div className={`flex items-start gap-5 sm:gap-7 py-7 sm:py-8 ${i < steps.length - 1 ? 'border-b border-warm-border-light dark:border-white/[0.06]' : ''}`}>
                 {/* Step number */}
                 <span className="font-mono text-[28px] sm:text-[44px] font-black text-gold/[0.15] leading-none select-none shrink-0 w-[38px] sm:w-[52px] text-center">
                   {item.num}
@@ -49,10 +49,10 @@ export default function HowItWorksSection() {
 
                 {/* Content */}
                 <div className="min-w-0 flex-1 pt-0.5">
-                  <h3 className="text-[17px] font-bold text-white mb-2 tracking-[-0.01em]">
+                  <h3 className="text-[17px] font-bold text-foreground mb-2 tracking-[-0.01em] dark:text-white">
                     {item.title}
                   </h3>
-                  <p className="text-[14px] text-white/45 leading-relaxed mb-3">
+                  <p className="text-[14px] text-warm-gray leading-relaxed mb-3 dark:text-white/45">
                     {item.text}
                   </p>
                   <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-gold/50">
