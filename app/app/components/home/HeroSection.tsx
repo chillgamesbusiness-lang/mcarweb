@@ -177,14 +177,15 @@ export default function HeroSection() {
                   placeholder="YOUR REG"
                   required
                   minLength={2}
-                  className="flex-1 px-3 sm:px-5 py-4 sm:py-5 text-[18px] sm:text-[22px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-charcoal-deep placeholder:text-charcoal/10 focus:outline-none bg-white"
+                  aria-label="Vehicle registration"
+                  className="min-w-0 flex-1 px-3 sm:px-5 py-4 sm:py-5 text-[18px] sm:text-[22px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-charcoal-deep placeholder:text-charcoal/45 focus:outline-none bg-white"
                   autoComplete="off"
                   spellCheck={false}
                 />
                 <button
                   type="submit"
                   disabled={reg.trim().length < 2}
-                  className="gradient-gold text-white px-4 sm:px-8 text-[13px] sm:text-[14px] font-bold tracking-wide shrink-0 whitespace-nowrap disabled:opacity-20 disabled:cursor-not-allowed transition-all duration-300 hover:opacity-90 active:scale-[0.98]"
+                  className="gradient-gold text-white px-5 sm:px-8 text-[14px] sm:text-[15px] font-bold tracking-wide shrink-0 whitespace-nowrap disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-inner shadow-black/10"
                 >
                   Go
                 </button>

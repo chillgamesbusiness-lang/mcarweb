@@ -63,22 +63,48 @@ export default function ThemeToggle() {
     updateTheme(nextTheme, true)
   }
 
+  const isDark = theme === 'dark'
+  const label = isDark ? 'Switch to light mode' : 'Switch to dark mode'
+
   return (
     <button
       type="button"
       onClick={toggleTheme}
-      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      aria-pressed={theme === 'dark'}
-      className="theme-toggle fixed bottom-4 right-4 z-[80] flex h-11 w-11 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--card-bg)] text-foreground shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold focus:outline-none focus-visible:ring-4 focus-visible:ring-gold/25 sm:bottom-5 sm:right-5"
+      aria-label={label}
+      title={label}
+      aria-pressed={isDark}
+      className="theme-toggle fixed bottom-4 right-4 z-[80] inline-flex h-12 w-12 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--card-bg)] text-gold shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:border-gold hover:text-gold focus:outline-none focus-visible:ring-4 focus-visible:ring-gold/25 sm:bottom-5 sm:right-5"
     >
-      <span className="sr-only">{theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}</span>
-      {theme === 'dark' ? (
-        <svg className="h-5 w-5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21m8.25-9h-2.25M6 12H3.75m13.72-5.47-1.59 1.59M8.12 15.88l-1.59 1.59m10.94 0-1.59-1.59M8.12 8.12 6.53 6.53M12 8.25a3.75 3.75 0 1 1 0 7.5 3.75 3.75 0 0 1 0-7.5z" />
+      <span className="sr-only">{label}</span>
+      {isDark ? (
+        // Sun (solid) — currently dark, click to go light
+        <svg
+          className="h-[22px] w-[22px]"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <circle cx="12" cy="12" r="4.25" />
+          <g stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="12" y1="2.5" x2="12" y2="5" />
+            <line x1="12" y1="19" x2="12" y2="21.5" />
+            <line x1="2.5" y1="12" x2="5" y2="12" />
+            <line x1="19" y1="12" x2="21.5" y2="12" />
+            <line x1="5.1" y1="5.1" x2="6.9" y2="6.9" />
+            <line x1="17.1" y1="17.1" x2="18.9" y2="18.9" />
+            <line x1="5.1" y1="18.9" x2="6.9" y2="17.1" />
+            <line x1="17.1" y1="6.9" x2="18.9" y2="5.1" />
+          </g>
         </svg>
       ) : (
-        <svg className="h-5 w-5 text-gold-dark dark:text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 15.25A8.25 8.25 0 0 1 8.75 2.25 6.75 6.75 0 1 0 21.75 15.25z" />
+        // Moon (solid crescent) — currently light, click to go dark
+        <svg
+          className="h-[22px] w-[22px]"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d="M21 13.4A8.6 8.6 0 1 1 10.6 3a7 7 0 0 0 10.4 10.4z" />
         </svg>
       )}
     </button>

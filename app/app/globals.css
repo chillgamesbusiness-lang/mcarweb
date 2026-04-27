@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/*
+ * Tailwind v4 defaults `dark:` to the `prefers-color-scheme` media query.
+ * Our ThemeToggle adds/removes `.dark` and `.light` classes on <html> so the
+ * user's manual choice always wins over the system preference. Without this
+ * custom variant the `dark:` utilities sprinkled across the app would only
+ * react to the OS theme — making the toggle appear to do nothing.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #FAFAF8;
   --foreground: #111111;
@@ -180,10 +189,18 @@ body {
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /*
+   * Prevent rogue children from forcing a horizontal scrollbar on mobile.
+   * Some hero/section elements use clamp() font sizes and absolute decor
+   * blurs that can spill a few pixels past the viewport on narrow screens.
+   * Clipping at the body level avoids the page-wide horizontal scroll.
+   */
+  overflow-x: clip;
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 /* ── Glass morphism utilities ────────────────────────────────────────── */
