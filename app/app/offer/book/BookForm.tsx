@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 import { useFormStatus } from 'react-dom'
+import { generateAvailableSlots } from '@/lib/bookingSlots'
 
 interface BookFormProps {
   submitBooking: (formData: FormData) => Promise<void>
@@ -22,46 +23,10 @@ function SubmitButton() {
   )
 }
 
-/**
- * Generate the next 5 available weekday slots starting from tomorrow.
- * Simple: 10:00, 11:00, 14:00, 15:00 each day.
- */
-function generateSlots(): { label: string; value: string }[] {
-  const slots: { label: string; value: string }[] = []
-  const now = new Date()
-  let day = new Date(now)
-  day.setDate(day.getDate() + 1)
-  day.setHours(0, 0, 0, 0)
-
-  const hours = [10, 11, 14, 15]
-  let daysAdded = 0
-
-  while (daysAdded < 5) {
-    const dow = day.getDay()
-    if (dow !== 0 && dow !== 6) {
-      for (const h of hours) {
-        const slot = new Date(day)
-        slot.setHours(h, 0, 0, 0)
-        const label = slot.toLocaleDateString('en-GB', {
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-        }) + ` at ${h}:00`
-        slots.push({ label, value: slot.toISOString() })
-      }
-      daysAdded++
-    }
-    day = new Date(day)
-    day.setDate(day.getDate() + 1)
-  }
-
-  return slots
-}
-
 function BookFormInner({ submitBooking }: BookFormProps) {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
-  const slots = generateSlots()
+  const slots = generateAvailableSlots()
 
   return (
     <form action={submitBooking} className="card-premium p-7 sm:p-8 space-y-5 animate-slide-up">

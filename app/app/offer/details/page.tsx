@@ -25,6 +25,12 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
     redirect('/offer?error=Session+expired+or+invalid.+Please+start+again.')
   }
 
+  const motSummary = payload.motSummary
+  const monthsRemaining = typeof motSummary?.monthsRemaining === 'number' ? motSummary.monthsRemaining : null
+  const annualMileageEstimate = typeof motSummary?.annualMileageEstimate === 'number' ? motSummary.annualMileageEstimate : null
+  const recentFailCount = typeof motSummary?.recentFailCount === 'number' ? motSummary.recentFailCount : null
+  const mileageConsistency = motSummary?.mileageConsistency ?? 'consistent'
+
   // Pre-fill mileage from MOT analysis if available
   const defaultMileage = payload.motSummary?.latestMileage ?? null
 
@@ -50,7 +56,7 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
       motSummary: payload!.motSummary,
       mileage,
       condition: condition as 'excellent' | 'good' | 'fair' | 'poor',
-    })
+    }, { jti: payload!.jti })
 
     console.log(`[offer/details] submitDetails: newToken length=${newToken.length}, parts=${newToken.split('.').length}`)
 
@@ -84,7 +90,7 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
             {payload.reg}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <Field label="Make" value={payload.vehicle.make} />
             <Field label="Model" value={payload.vehicle.model || '—'} />
             <Field label="Year" value={payload.vehicle.year.toString()} />
@@ -109,7 +115,7 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
         </div>
 
       {/* MOT summary card (if available) */}
-      {payload.motSummary && (
+      {motSummary && (
         <div className="card-premium p-5 mb-6 text-sm animate-slide-up" style={{ animationDelay: '100ms' }}>
           <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
             <span className="w-6 h-6 rounded-lg gradient-gold flex items-center justify-center">
@@ -117,34 +123,40 @@ export default async function OfferDetailsPage({ searchParams }: DetailsPageProp
             </span>
             MOT Summary
           </h3>
-          <div className="grid grid-cols-2 gap-3 text-foreground/70">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-foreground/70">
+              {monthsRemaining !== null && (
               <div>
                 <span className="text-warm-gray text-xs">MOT Remaining</span>
                 <p className="font-medium">
-                  {payload.motSummary.monthsRemaining > 0
-                    ? `${payload.motSummary.monthsRemaining} months`
+                  {monthsRemaining > 0
+                    ? `${monthsRemaining} months`
                     : 'Expired'}
                 </p>
               </div>
-              {payload.motSummary.latestMileage != null && (
+              )}
+              {motSummary.latestMileage != null && (
                 <div>
                   <span className="text-warm-gray text-xs">Last Recorded Mileage</span>
-                  <p className="font-medium">{payload.motSummary.latestMileage.toLocaleString()} mi</p>
+                  <p className="font-medium">{motSummary.latestMileage.toLocaleString()} mi</p>
                 </div>
               )}
+              {annualMileageEstimate !== null && (
               <div>
                 <span className="text-warm-gray text-xs">Est. Annual Mileage</span>
-                <p className="font-medium">{payload.motSummary.annualMileageEstimate.toLocaleString()} mi/yr</p>
+                <p className="font-medium">{annualMileageEstimate.toLocaleString()} mi/yr</p>
               </div>
+              )}
+              {recentFailCount !== null && (
               <div>
                 <span className="text-warm-gray text-xs">Recent Failures</span>
-                <p className="font-medium">{payload.motSummary.recentFailCount}</p>
+                <p className="font-medium">{recentFailCount}</p>
               </div>
+              )}
             </div>
-            {payload.motSummary.mileageConsistency !== 'consistent' && (
+            {mileageConsistency !== 'consistent' && (
               <div className="mt-3 rounded-lg bg-gold-light/60 border border-gold/20 px-3 py-2 text-xs text-gold-dark flex items-start gap-1.5">
                 <svg className="w-4 h-4 shrink-0 mt-0.5 text-gold" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
-                <span>{payload.motSummary.mileageConsistency === 'rollback_detected'
+                <span>{mileageConsistency === 'rollback_detected'
                   ? 'Mileage discrepancy detected in MOT history'
                   : 'Unusual mileage pattern detected'}</span>
               </div>

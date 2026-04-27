@@ -31,7 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             Vehicle<br />Acquisition<br /><span className="gradient-gold-text">Platform</span>
           </h2>
         </div>
-        <p className="text-[11px] text-white/20 relative z-10">Staff access only</p>
+        <p className="text-[11px] text-white/55 relative z-10">Staff access only</p>
       </div>
 
       {/* Right — premium form */}

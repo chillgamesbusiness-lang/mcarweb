@@ -349,7 +349,11 @@ html {
 }
 
 .dark .text-warm-gray {
-  color: #8A8580;
+  color: #AFA8A0;
+}
+
+.dark .text-gold-dark {
+  color: #D4A94E;
 }
 
 .dark .bg-background {
@@ -412,6 +416,10 @@ html {
 
 .dark .bg-gold-50 { background-color: rgba(196, 150, 60, 0.08); }
 .dark .bg-gold-light { background-color: rgba(196, 150, 60, 0.12); }
+
+.theme-toggle {
+  color-scheme: light dark;
+}
 
 .dark .ring-green-200 { --tw-ring-color: rgba(16, 185, 129, 0.2); }
 .dark .ring-amber-200 { --tw-ring-color: rgba(245, 158, 11, 0.2); }

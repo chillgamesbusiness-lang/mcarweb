@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { checkOtpRateLimit } from '@/lib/rateLimit'
+import { writeAuditLog } from '@/lib/auditLog'
+import { createRequestId, reportError } from '@/lib/reportError'
 
 const MAX_FILES = 10
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -29,6 +31,7 @@ const MIME_TO_EXT: Record<string, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = createRequestId('upload')
   try {
     // 1. Auth check
     const supabase = await createClient()
@@ -162,18 +165,35 @@ export async function POST(request: NextRequest) {
     // Dedupe
     const uniqueUrls = [...new Set(allUrls)]
 
-    await serviceClient
+    const { error: leadUpdateError } = await serviceClient
       .from('leads')
       .update({ pending_photo_urls: uniqueUrls })
       .eq('id', leadId)
 
+    if (leadUpdateError) {
+      await reportError(leadUpdateError, {
+        severity: 'error',
+        area: 'inspection_upload',
+        operation: 'append_pending_photo_urls',
+        leadId,
+        requestId,
+        provider: 'supabase',
+      })
+      return NextResponse.json(
+        { error: 'Failed to attach uploaded files. Please try again.' },
+        { status: 500 }
+      )
+    }
+
     // 8. Audit log
-    await serviceClient.from('audit_log').insert({
-      lead_id: leadId,
+    await writeAuditLog(serviceClient, {
+      leadId,
       action: 'photos_uploaded',
-      actor_user_id: user.id,
-      new_value: { count: files.length, paths: uploadedUrls },
-    })
+      actorUserId: user.id,
+      actorKind: 'inspector',
+      newValue: { count: files.length, paths: uploadedUrls },
+      requestId,
+    }, { area: 'inspection_upload', blocking: false })
 
     return NextResponse.json({
       success: true,
@@ -181,7 +201,12 @@ export async function POST(request: NextRequest) {
       total: uniqueUrls.length,
     })
   } catch (err) {
-    console.error('Upload handler error:', err)
+    await reportError(err, {
+      severity: 'error',
+      area: 'inspection_upload',
+      operation: 'upload_handler',
+      requestId,
+    })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

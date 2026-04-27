@@ -29,10 +29,10 @@ export default function SiteHeader() {
             <span className="text-[16px] font-bold tracking-tight text-white">MCar</span>
           </Link>
           <nav className="flex items-center gap-8">
-            <Link href="#how" className="hidden md:block text-[13px] font-medium text-white/50 hover:text-white transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full">
+            <Link href="#how" className="hidden md:block text-[13px] font-medium text-white/70 hover:text-white transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full">
               How it works
             </Link>
-            <Link href="#faq" className="hidden md:block text-[13px] font-medium text-white/50 hover:text-white transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full">
+            <Link href="#faq" className="hidden md:block text-[13px] font-medium text-white/70 hover:text-white transition-all duration-300 relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[2px] after:bg-gold after:transition-all after:duration-300 hover:after:w-full">
               FAQs
             </Link>
             <Link

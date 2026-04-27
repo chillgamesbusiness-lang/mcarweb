@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createOfferToken } from '@/lib/offerSession'
 import type { MOTSummary } from '@/lib/offerSession'
-import { fetchDvlaData, sanitiseReg, isValidRegFormat, normaliseFuel } from '@/lib/dvlaService'
+import { fetchDvlaData, sanitiseReg, isValidRegFormat } from '@/lib/dvlaService'
 import { fetchMotHistory } from '@/lib/motService'
 import { buildMotAnalysis, newVehicleExemptAnalysis } from '@/lib/mileageAnalyser'
 import { checkRateLimit } from '@/lib/rateLimit'
 import { verifyTurnstile } from '@/lib/turnstile'
+import { createRequestId, reportError } from '@/lib/reportError'
 
 /**
  * POST /api/vehicle/lookup
@@ -18,6 +19,7 @@ import { verifyTurnstile } from '@/lib/turnstile'
 
 export async function POST(request: NextRequest) {
   const CURRENT_YEAR = new Date().getFullYear()
+  const requestId = createRequestId('lookup')
   try {
     // ── Rate limiting ─────────────────────────────────────────────────────
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -158,15 +160,27 @@ export async function POST(request: NextRequest) {
           totalTestCount: 0,
         }
       }
-    } catch {
-      // Non-critical — continue without MOT enrichment
+    } catch (motErr) {
+      await reportError(motErr, {
+        severity: 'warning',
+        area: 'vehicle_lookup',
+        operation: 'mot_enrichment',
+        provider: 'mot',
+        requestId,
+        metadata: { reg },
+      })
     }
 
     const token = createOfferToken({ reg, vehicle, motSummary })
 
     return NextResponse.json({ vehicle, motSummary, token })
   } catch (err) {
-    console.error('[vehicle-lookup] Error:', err)
+    await reportError(err, {
+      severity: 'error',
+      area: 'vehicle_lookup',
+      operation: 'lookup_route',
+      requestId,
+    })
     return NextResponse.json({ error: 'Vehicle lookup failed. Please try again.' }, { status: 400 })
   }
 }

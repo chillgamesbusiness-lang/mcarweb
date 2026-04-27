@@ -8,6 +8,9 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/server'
+import { isStrictProductionEnv } from '@/lib/env'
+import { checkCustomRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/reportError'
 import type { FuelType } from '@/lib/types'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -17,21 +20,23 @@ const DVLA_VES_URL =
 
 const CACHE_TTL_HOURS = 24
 
-// ── Rate limiter (1 req/s) ─────────────────────────────────────────────────────
-
-let lastDvlaCall = 0
-
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 async function throttle(): Promise<void> {
-  const now = Date.now()
-  const elapsed = now - lastDvlaCall
-  if (elapsed < 1000) {
-    await sleep(1000 - elapsed)
+  const maxPerSecond = Math.max(1, Number(process.env.DVLA_GLOBAL_RPS ?? '1') || 1)
+  const limit = await checkCustomRateLimit('dvla-ves-global', maxPerSecond, 1, 'mcar:dvla')
+  if (!limit.allowed) {
+    await reportError(new Error('DVLA global throttle reached'), {
+      severity: 'warning',
+      area: 'vehicle_lookup',
+      operation: 'dvla_global_throttle',
+      provider: 'dvla',
+      metadata: { remaining: limit.remaining, resetMs: limit.resetMs },
+    })
+    throw new Error('Vehicle lookup is busy. Please wait a moment and try again.')
   }
-  lastDvlaCall = Date.now()
 }
 
 // ── Input sanitisation ─────────────────────────────────────────────────────────
@@ -122,7 +127,14 @@ async function getCached(reg: string): Promise<DvlaRawResponse | null> {
       return data.payload as unknown as DvlaRawResponse
     }
     return null
-  } catch {
+  } catch (err) {
+    await reportError(err, {
+      severity: 'warning',
+      area: 'vehicle_lookup',
+      operation: 'read_cache',
+      provider: 'supabase',
+      metadata: { reg },
+    })
     return null
   }
 }
@@ -143,8 +155,14 @@ async function setCache(
         },
         { onConflict: 'reg' }
       )
-  } catch {
-    // Non-critical
+  } catch (err) {
+    await reportError(err, {
+      severity: 'warning',
+      area: 'vehicle_lookup',
+      operation: 'write_cache',
+      provider: 'supabase',
+      metadata: { reg },
+    })
   }
 }
 
@@ -187,8 +205,15 @@ async function callDvlaApi(reg: string, _retryCount = 0): Promise<DvlaRawRespons
           body: JSON.stringify({ registrationNumber: reg }),
           signal: retryController.signal,
         })
-      } catch {
+      } catch (err) {
         clearTimeout(retryTimeout)
+        await reportError(err, {
+          severity: 'error',
+          area: 'vehicle_lookup',
+          operation: 'dvla_retry_timeout',
+          provider: 'dvla',
+          metadata: { reg },
+        })
         throw new Error(
           'Service temporarily unavailable, please try again.'
         )
@@ -209,6 +234,13 @@ async function callDvlaApi(reg: string, _retryCount = 0): Promise<DvlaRawRespons
     throw new Error("We couldn't find that registration.")
   }
   if (res!.status === 429) {
+    await reportError(new Error('DVLA returned 429'), {
+      severity: 'warning',
+      area: 'vehicle_lookup',
+      operation: 'dvla_429',
+      provider: 'dvla',
+      metadata: { reg, retryCount: _retryCount },
+    })
     if (_retryCount >= 1) {
       throw new Error('Service temporarily unavailable, please try again.')
     }
@@ -217,7 +249,13 @@ async function callDvlaApi(reg: string, _retryCount = 0): Promise<DvlaRawRespons
   }
   if (!res!.ok) {
     const text = await res!.text().catch(() => '')
-    console.error('[DVLA VES] Error:', res!.status, text)
+    await reportError(new Error(`DVLA VES error ${res!.status}`), {
+      severity: 'error',
+      area: 'vehicle_lookup',
+      operation: 'dvla_response',
+      provider: 'dvla',
+      metadata: { reg, status: res!.status, body: text.slice(0, 250) },
+    })
     throw new Error(
       'Service temporarily unavailable, please try again.'
     )
@@ -246,9 +284,10 @@ export async function fetchDvlaData(
   }
   console.log('[dvlaService] Cache MISS for', cleanReg)
 
-  // If no API key, return null (allows mock/test flows)
+  // If no API key, return null only outside strict production (allows mock/test flows)
   if (!process.env.DVLA_VES_API_KEY) {
-    console.warn('[dvlaService] No DVLA_VES_API_KEY — skipping')
+    if (isStrictProductionEnv()) throw new Error('DVLA_VES_API_KEY is required in production')
+    console.warn('[dvlaService] No DVLA_VES_API_KEY; local lookup fallback is active')
     return null
   }
 

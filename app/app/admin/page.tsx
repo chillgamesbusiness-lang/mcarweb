@@ -6,6 +6,8 @@ export const metadata = { title: 'Dashboard' }
 
 export default async function AdminDashboardPage() {
   const svc = createServiceClient()
+  const today = new Date()
+  const tomorrow = new Date(today.getTime() + 86_400_000)
 
   // Parallel: basic counts + full KPI aggregation
   const [
@@ -20,8 +22,8 @@ export default async function AdminDashboardPage() {
       .from('appointments')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'booked')
-      .gte('start_at', new Date().toISOString().slice(0, 10))
-      .lt('start_at', new Date(Date.now() + 86_400_000).toISOString().slice(0, 10)),
+      .gte('start_at', today.toISOString().slice(0, 10))
+      .lt('start_at', tomorrow.toISOString().slice(0, 10)),
     fetchDashboardKPIs(),
   ])
 

@@ -8,7 +8,7 @@
  *   /offer/details  → v1: + mileage + condition
  */
 
-import { createHmac, timingSafeEqual } from 'crypto'
+import { createHmac, randomUUID, timingSafeEqual } from 'crypto'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -67,6 +67,7 @@ export interface ValuationSummary {
 
 export interface OfferTokenPayload {
   v: number
+  jti: string
   iat: number
   exp: number
   reg: string
@@ -119,13 +120,15 @@ const TOKEN_TTL_MS = 2 * 60 * 60 * 1000 // 2 hours
  * Create a signed offer-session token.
  */
 export function createOfferToken(
-  data: Omit<OfferTokenPayload, 'v' | 'iat' | 'exp'>
+  data: Omit<OfferTokenPayload, 'v' | 'jti' | 'iat' | 'exp'>,
+  options: { ttlMs?: number; jti?: string } = {}
 ): string {
   const now = Date.now()
   const payload: OfferTokenPayload = {
     v: 1,
+    jti: options.jti ?? randomUUID(),
     iat: now,
-    exp: now + TOKEN_TTL_MS,
+    exp: now + (options.ttlMs ?? TOKEN_TTL_MS),
     ...data,
   }
   const serialised = JSON.stringify(payload)
@@ -183,6 +186,11 @@ export function verifyOfferToken(token: string): OfferTokenPayload | null {
     // Check version
     if (payload.v !== 1) {
       console.error(`[offerSession] verify: unexpected version ${payload.v}`)
+      return null
+    }
+
+    if (!payload.jti || typeof payload.jti !== 'string') {
+      console.error('[offerSession] verify: missing jti')
       return null
     }
 

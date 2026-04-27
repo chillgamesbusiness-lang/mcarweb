@@ -7,11 +7,14 @@ import { checkMileageDiscrepancy } from '@/lib/mileageAnalyser'
 import { normaliseFuel, checkUlezCompliance } from '@/lib/dvlaService'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendAdminNewLeadAlert } from '@/lib/email'
-import { isValidEmail, isValidPostcode } from '@/lib/leadVerification'
+import { cleanPhone, isBlockedNumber, isValidEmail, isValidPostcode, isValidUkMobile, verifyOTP } from '@/lib/leadVerification'
 import { getCandidateCoefficients, getCurrentCoefficients, logShadowComparison } from '@/lib/coefficientStore'
 import { validateMileage, validateCondition, capRiskFlags, capBullets } from '@/lib/inputHardening'
 import { checkExposure } from '@/lib/exposureCap'
 import { getSegmentProfile } from '@/lib/segmentPricing'
+import { writeAuditLog } from '@/lib/auditLog'
+import { createRequestId, reportError } from '@/lib/reportError'
+import { CANONICAL_VALUATION_ENGINE } from '@/lib/valuationPolicy'
 import ContactForm from './ContactForm'
 import OfferShell from '../OfferShell'
 import StepIndicator from '../StepIndicator'
@@ -47,6 +50,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     'use server'
 
     try {
+    const requestId = createRequestId('contact')
     // Re-verify token (could have expired between render and submit)
     const p = token ? verifyOfferToken(token) : null
     if (!p || !p.mileage || !p.condition) {
@@ -57,6 +61,9 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     const phone = (formData.get('phone') as string | null)?.trim() ?? ''
     const email = (formData.get('email') as string | null)?.trim() ?? ''
     const postcode = (formData.get('postcode') as string | null)?.trim() ?? ''
+    const otpSessionId = (formData.get('otpSessionId') as string | null)?.trim() ?? ''
+    const otpCode = (formData.get('otpCode') as string | null)?.trim() ?? ''
+    const submitId = (formData.get('submitId') as string | null)?.trim() ?? ''
     const consentGiven = formData.get('consent') === 'on'
     const consentMarketing = formData.get('consent_marketing') === 'on'
 
@@ -65,10 +72,9 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
 
     if (!name || name.length < 2) errors.push('Name is required')
 
-    // Phone: 10-11 digits
-    const phoneDigits = phone.replace(/\D/g, '')
-    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
-      errors.push('Phone must be 10-11 digits')
+    const phoneDigits = cleanPhone(phone)
+    if (!isValidUkMobile(phoneDigits) || isBlockedNumber(phoneDigits)) {
+      errors.push('Please enter a valid UK mobile number')
     }
 
     // Email: proper validation
@@ -90,8 +96,28 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent(errors.join('. '))}`)
     }
 
-    // ── OTP verification (temporarily disabled — still in testing) ─────
-    // TODO: Re-enable SMS verification before production launch
+    if (!otpSessionId || !otpCode) {
+      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Please verify your phone number before continuing.')}`)
+    }
+
+    let otpVerified = false
+    try {
+      otpVerified = await verifyOTP(otpSessionId, otpCode, phoneDigits)
+    } catch (otpErr) {
+      await reportError(otpErr, {
+        severity: 'warning',
+        area: 'offer_contact',
+        operation: 'otp_verify_before_lead_insert',
+        requestId,
+        provider: 'twilio',
+        metadata: { reg: p.reg, phone: phoneDigits },
+      })
+      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent(otpErr instanceof Error ? otpErr.message : 'Phone verification failed.')}`)
+    }
+
+    if (!otpVerified) {
+      redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Invalid verification code. Please try again.')}`)
+    }
 
     // ── Build VehicleProfile for pricing engine ─────────────────────────
     // Validate engine-critical inputs (defense-in-depth)
@@ -185,14 +211,14 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     }
 
     // ── Run pricing engine (with timing) ────────────────────────────────
-    const t0 = performance.now()
+    const t0 = new Date().getTime()
     const currentCoeffs = await getCurrentCoefficients()
     const valuation = calculateValuation({
       vehicleProfile,
       condition: p.condition!,
       postcode: postcode.toUpperCase().replace(/\s+/g, ''),
     })
-    const valuationMs = Math.round(performance.now() - t0)
+    const valuationMs = new Date().getTime() - t0
     console.log(`[valuation] ${p.reg} completed in ${valuationMs}ms risk=${valuation.riskTier} mode=${valuation.quoteMode}`)
 
     // ── Enrich with v4 Resale Evidence Engine (async, non-blocking) ────
@@ -226,17 +252,34 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
     // ── Create lead ─────────────────────────────────────────────────────
     const serviceClient = createServiceClient()
 
-    // Duplicate lead prevention: check if a lead with same reg + email
-    // was created in the last 24 hours
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    const { data: existingLead } = await serviceClient
-      .from('leads')
-      .select('id')
-      .eq('reg', p.reg)
-      .eq('seller_email', email)
-      .gte('created_at', oneDayAgo)
-      .limit(1)
-      .maybeSingle()
+    // Duplicate lead prevention: reg + phone/email/jti in a recent window.
+    const oneDayAgo = new Date(new Date().getTime() - 24 * 60 * 60 * 1000).toISOString()
+    const [tokenLead, phoneLead, emailLead] = await Promise.all([
+      serviceClient
+        .from('leads')
+        .select('id')
+        .eq('offer_token_jti', p.jti)
+        .gte('created_at', oneDayAgo)
+        .limit(1)
+        .maybeSingle(),
+      serviceClient
+        .from('leads')
+        .select('id')
+        .eq('reg', p.reg)
+        .eq('seller_phone', phoneDigits)
+        .gte('created_at', oneDayAgo)
+        .limit(1)
+        .maybeSingle(),
+      serviceClient
+        .from('leads')
+        .select('id')
+        .eq('reg', p.reg)
+        .eq('seller_email', email)
+        .gte('created_at', oneDayAgo)
+        .limit(1)
+        .maybeSingle(),
+    ])
+    const existingLead = tokenLead.data ?? phoneLead.data ?? emailLead.data
 
     if (existingLead) {
       // Silently redirect to booking for the existing lead — no duplicate created
@@ -277,6 +320,9 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
         source: 'offer_funnel',
         consent_data_processing: consentGiven,
         consent_marketing: consentMarketing,
+        offer_token_jti: p.jti,
+        contact_submit_id: submitId || null,
+        otp_session_id: otpSessionId,
       })
       .select('id')
       .single()
@@ -309,6 +355,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       engine_version: 'v3',
       coefficient_version: currentCoeffs.versionId,
       git_commit_hash: process.env.NEXT_PUBLIC_GIT_COMMIT_HASH ?? 'unknown',
+      valuation_engine_version: CANONICAL_VALUATION_ENGINE,
     }
 
     const { error: snapErr } = await serviceClient
@@ -321,10 +368,27 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
         const { error: snapErr2 } = await serviceClient
           .from('valuation_snapshots')
           .insert(snapPayloadBase)
-        if (snapErr2) console.error('[valuation-snapshot] insert failed (fallback):', snapErr2.message)
-        else console.warn('[valuation-snapshot] inserted without v4 field — run patch_profit_sim_v4.sql to enable it')
+        if (snapErr2) {
+          await reportError(snapErr2, {
+            severity: 'critical',
+            area: 'offer_contact',
+            operation: 'valuation_snapshot_insert_fallback',
+            leadId: lead.id,
+            requestId,
+          })
+          redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('We could not save your valuation. Please try again.')}`)
+        } else {
+          console.warn('[valuation-snapshot] inserted without v4 field — run patch_profit_sim_v4.sql to enable it')
+        }
       } else {
-        console.error('[valuation-snapshot] insert failed:', snapErr.message)
+        await reportError(snapErr, {
+          severity: 'critical',
+          area: 'offer_contact',
+          operation: 'valuation_snapshot_insert',
+          leadId: lead.id,
+          requestId,
+        })
+        redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('We could not save your valuation. Please try again.')}`)
       }
     }
 
@@ -349,23 +413,37 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
           candidateMax: shadowVal.max,
         })
       } catch (err) {
-        console.error('[shadow-compare] failed:', err)
+        await reportError(err, {
+          severity: 'warning',
+          area: 'valuation',
+          operation: 'shadow_comparison',
+          leadId: lead.id,
+          requestId,
+        })
       }
-    }).catch(() => {})
+    }).catch((err) => reportError(err, {
+      severity: 'warning',
+      area: 'valuation',
+      operation: 'shadow_comparison_promise',
+      leadId: lead.id,
+      requestId,
+    }))
 
     // Write audit log entry
-    await serviceClient.from('audit_log').insert({
-      lead_id: lead.id,
-      action: 'status_change',
-      old_value: null,
-      new_value: {
+    await writeAuditLog(serviceClient, {
+      leadId: lead.id,
+      action: 'lead_created',
+      actorKind: 'public_user',
+      oldValue: null,
+      requestId,
+      newValue: {
         status: 'new',
         source: 'offer_funnel',
         confidenceScore: valuation.confidenceScore,
         riskTier: valuation.riskTier,
         quoteMode: valuation.quoteMode,
       },
-    })
+    }, { area: 'offer_contact', blocking: false })
 
     // Send admin alert email (fire-and-forget)
     sendAdminNewLeadAlert({
@@ -378,7 +456,14 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       model: p.vehicle.model,
       estimatedMin: valuation.min,
       estimatedMax: valuation.max,
-    }).catch(() => {})
+    }).catch((emailErr) => reportError(emailErr, {
+      severity: 'error',
+      area: 'email',
+      operation: 'admin_new_lead_alert',
+      leadId: lead.id,
+      requestId,
+      provider: 'resend',
+    }))
 
     // Create slim token for book page — drop motSummary to keep URL short.
     // Book page reads valuation from token, lead details from DB.

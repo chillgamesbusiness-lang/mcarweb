@@ -5,6 +5,7 @@
  */
 
 import { Resend } from 'resend'
+import { reportError } from '@/lib/reportError'
 
 let resendClient: Resend | null = null
 
@@ -102,7 +103,13 @@ export async function sendBookingConfirmation(data: BookingConfirmationData): Pr
       html,
     })
   } catch (err) {
-    console.error('[email] Failed to send booking confirmation:', err)
+    await reportError(err, {
+      severity: 'error',
+      area: 'email',
+      operation: 'send_booking_confirmation',
+      provider: 'resend',
+      metadata: { to: data.customerEmail, reg: data.reg },
+    })
   }
 }
 
@@ -145,6 +152,13 @@ export async function sendAdminNewLeadAlert(data: AdminNewLeadData): Promise<voi
       html,
     })
   } catch (err) {
-    console.error('[email] Failed to send admin alert:', err)
+    await reportError(err, {
+      severity: 'error',
+      area: 'email',
+      operation: 'send_admin_new_lead_alert',
+      provider: 'resend',
+      leadId: data.leadId,
+      metadata: { to: adminEmail, reg: data.reg },
+    })
   }
 }

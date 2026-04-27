@@ -1,57 +1,9 @@
 'use client'
 
-import { useState, type FormEvent, useEffect, useRef, useCallback } from 'react'
+import { Suspense, useState, type FormEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import TurnstileWidget from '@/app/components/TurnstileWidget'
 import OfferShell from './OfferShell'
-
-/**
- * Turnstile widget component.
- * When NEXT_PUBLIC_TURNSTILE_SITE_KEY is not set, renders nothing (dev passthrough).
- */
-function TurnstileWidget({ onToken }: { onToken: (token: string) => void }) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const widgetIdRef = useRef<string | null>(null)
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
-
-  const renderWidget = useCallback(() => {
-    if (!containerRef.current || !siteKey) return
-    if (widgetIdRef.current !== null) return
-
-    const w = window as unknown as {
-      turnstile?: {
-        render: (el: HTMLElement, opts: Record<string, unknown>) => string
-      }
-    }
-    if (w.turnstile) {
-      widgetIdRef.current = w.turnstile.render(containerRef.current, {
-        sitekey: siteKey,
-        callback: onToken,
-        'refresh-expired': 'auto',
-      })
-    }
-  }, [siteKey, onToken])
-
-  useEffect(() => {
-    if (!siteKey) return
-
-    const existingScript = document.querySelector('script[src*="turnstile"]')
-    if (existingScript) {
-      renderWidget()
-      return
-    }
-
-    const script = document.createElement('script')
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
-    script.async = true
-    script.onload = () => renderWidget()
-    document.head.appendChild(script)
-  }, [siteKey, renderWidget])
-
-  if (!siteKey) return null
-
-  return <div ref={containerRef} className="flex justify-center" />
-}
 
 function OfferForm() {
   const router = useRouter()
@@ -59,9 +11,15 @@ function OfferForm() {
   const [reg, setReg] = useState(searchParams.get('reg')?.toUpperCase() || '')
   const [loading, setLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const [turnstileResetSignal, setTurnstileResetSignal] = useState(0)
   const [error, setError] = useState<string | null>(
     searchParams.get('error') || null
   )
+
+  function resetTurnstile() {
+    setTurnstileToken(null)
+    setTurnstileResetSignal((value) => value + 1)
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -79,12 +37,14 @@ function OfferForm() {
 
       if (!res.ok) {
         setError(data.error || 'Lookup failed')
+        resetTurnstile()
         return
       }
 
       router.push(`/offer/details?token=${encodeURIComponent(data.token)}`)
     } catch {
       setError('Network error. Please try again.')
+      resetTurnstile()
     } finally {
       setLoading(false)
     }
@@ -171,7 +131,11 @@ function OfferForm() {
             </div>
           </div>
 
-          <TurnstileWidget onToken={setTurnstileToken} />
+          <TurnstileWidget
+            onToken={setTurnstileToken}
+            onExpire={() => setTurnstileToken(null)}
+            resetSignal={turnstileResetSignal}
+          />
 
           {error && (
             <div className="rounded-xl bg-red-50 ring-1 ring-red-300/30 p-3 text-sm text-red-700">

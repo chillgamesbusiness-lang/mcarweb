@@ -2,8 +2,11 @@
 
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { writeAuditLog } from '@/lib/auditLog'
+import { createRequestId, reportError } from '@/lib/reportError'
 
 export async function submitInspection(formData: FormData) {
+  const requestId = createRequestId('inspection')
   const authClient = await createClient()
 
   const {
@@ -129,7 +132,7 @@ export async function submitInspection(formData: FormData) {
   }
 
   // 6. Update lead: status = inspected, clear pending photos
-  await serviceClient
+  const { error: leadUpdateError } = await serviceClient
     .from('leads')
     .update({
       status: 'inspected',
@@ -137,25 +140,40 @@ export async function submitInspection(formData: FormData) {
     })
     .eq('id', leadId)
 
+  if (leadUpdateError) {
+    await reportError(leadUpdateError, {
+      severity: 'critical',
+      area: 'inspection',
+      operation: 'lead_status_update',
+      leadId,
+      requestId,
+      provider: 'supabase',
+    })
+    throw new Error('Failed to update lead after inspection. Please try again.')
+  }
+
   // 7. Audit log
-  await serviceClient.from('audit_log').insert([
-    {
-      lead_id: leadId,
-      action: 'inspection_submitted',
-      actor_user_id: user.id,
-      new_value: {
-        recommended_offer: recommendedOffer ? Number(recommendedOffer) : null,
-        photo_count: pendingPhotos.length,
-      },
+  await writeAuditLog(serviceClient, {
+    leadId,
+    action: 'inspection_submitted',
+    actorUserId: user.id,
+    actorKind: 'inspector',
+    newValue: {
+      recommended_offer: recommendedOffer ? Number(recommendedOffer) : null,
+      photo_count: pendingPhotos.length,
     },
-    {
-      lead_id: leadId,
-      action: 'status_change',
-      actor_user_id: user.id,
-      old_value: { status: previousStatus },
-      new_value: { status: 'inspected' },
-    },
-  ])
+    requestId,
+  }, { area: 'inspection', blocking: true })
+
+  await writeAuditLog(serviceClient, {
+    leadId,
+    action: 'status_change',
+    actorUserId: user.id,
+    actorKind: 'inspector',
+    oldValue: { status: previousStatus },
+    newValue: { status: 'inspected' },
+    requestId,
+  }, { area: 'inspection', blocking: true })
 
   redirect('/inspector')
 }

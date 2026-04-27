@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "handoff:env": "tsx scripts/check-prod-env.ts",
+    "handoff:slots": "tsx scripts/test-booking-slots.ts",
+    "handoff:tokens": "tsx scripts/test-token-replay.ts",
+    "handoff:statuses": "tsx scripts/test-admin-statuses.ts",
+    "handoff:smoke": "tsx scripts/e2e-handoff-smoke.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -14,7 +19,7 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.2",
     "@vercel/analytics": "^1.6.1",
-    "next": "16.1.6",
+    "next": "^16.2.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.2"
@@ -28,6 +33,7 @@
     "eslint-config-next": "16.1.6",
     "pg": "^8.18.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.6",
     "typescript": "^5"
   }
 }

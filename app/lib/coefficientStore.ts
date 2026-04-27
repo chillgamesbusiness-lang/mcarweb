@@ -12,6 +12,7 @@
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { CalibrationCoefficients } from '@/lib/calibrationStore'
+import { reportError } from '@/lib/reportError'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -268,8 +269,20 @@ export async function logShadowComparison(input: ShadowComparison): Promise<void
       delta_midpoint: deltaMidpoint,
       delta_pct: deltaPct,
     })
-    .then(({ error }) => {
-      if (error) console.error('[shadow-log] insert failed:', error.message)
+    .then(async ({ error }) => {
+      if (error) {
+        await reportError(error, {
+          severity: 'warning',
+          area: 'valuation',
+          operation: 'shadow_comparison_log_insert',
+          leadId: input.leadId,
+          provider: 'supabase',
+          metadata: {
+            currentVersion: input.currentVersion,
+            candidateVersion: input.candidateVersion,
+          },
+        })
+      }
     })
 }
 

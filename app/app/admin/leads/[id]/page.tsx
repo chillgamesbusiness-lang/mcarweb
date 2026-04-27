@@ -6,6 +6,7 @@ import OutcomeForm from './OutcomeForm'
 import { SubmitButton } from '@/app/components/SubmitButton'
 import { recordTransaction } from '@/lib/calibrationStore'
 import { validateUuid } from '@/lib/inputHardening'
+import { writeAuditLog } from '@/lib/auditLog'
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>
@@ -41,11 +42,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   const idCheck = validateUuid(id)
   if (!idCheck.valid) notFound()
 
-  const authClient = await createClient()
   const supabase = createServiceClient()
-
-  // Get current admin user for audit log actor_user_id
-  const { data: { user: adminUser } } = await authClient.auth.getUser()
 
   const { data: lead, error } = await supabase
     .from('leads')
@@ -133,13 +130,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         `[admin] Invalid status transition: ${currentStatus} → ${targetStatus} for lead ${leadId} (allowed by admin override)`
       )
       // Audit log
-      await svc.from('audit_log').insert({
-        lead_id: leadId,
+      await writeAuditLog(svc, {
+        leadId,
         action: 'status_change',
-        actor_user_id: adminUser?.id,
-        old_value: { status: currentStatus, warning: 'invalid_transition' },
-        new_value: { status: targetStatus },
-      })
+        actorUserId: caller.id,
+        actorKind: 'admin',
+        oldValue: { status: currentStatus, warning: 'invalid_transition' },
+        newValue: { status: targetStatus },
+      }, { area: 'admin_leads', blocking: true })
     }
 
     const updateData: Record<string, unknown> = {
@@ -205,13 +203,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     }
 
     // Audit log
-    await svc.from('audit_log').insert({
-      lead_id: leadId,
+    await writeAuditLog(svc, {
+      leadId,
       action: 'outcome_recorded',
-      actor_user_id: adminUser?.id,
-      old_value: { status: currentStatus },
-      new_value: updateData,
-    })
+      actorUserId: caller.id,
+      actorKind: 'admin',
+      oldValue: { status: currentStatus },
+      newValue: updateData,
+    }, { area: 'admin_leads', blocking: true })
 
     redirect(`/admin/leads/${leadId}`)
   }
@@ -235,16 +234,17 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
     await svc.from('notes').insert({
       lead_id: leadId,
-      author_user_id: adminUser?.id,
+      author_user_id: caller.id,
       body,
     })
 
-    await svc.from('audit_log').insert({
-      lead_id: leadId,
+    await writeAuditLog(svc, {
+      leadId,
       action: 'note_added',
-      actor_user_id: adminUser?.id,
-      new_value: { body: body.slice(0, 100) },
-    })
+      actorUserId: caller.id,
+      actorKind: 'admin',
+      newValue: { body: body.slice(0, 100) },
+    }, { area: 'admin_leads', blocking: true })
 
     redirect(`/admin/leads/${leadId}`)
   }
@@ -284,13 +284,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       .update({ assigned_inspector_id: newInspector })
       .eq('id', leadId)
 
-    await svc.from('audit_log').insert({
-      lead_id: leadId,
+    await writeAuditLog(svc, {
+      leadId,
       action: 'assignment_change',
-      actor_user_id: adminUser?.id,
-      old_value: { assigned_inspector_id: prevInspector },
-      new_value: { assigned_inspector_id: newInspector },
-    })
+      actorUserId: caller.id,
+      actorKind: 'admin',
+      oldValue: { assigned_inspector_id: prevInspector },
+      newValue: { assigned_inspector_id: newInspector },
+    }, { area: 'admin_leads', blocking: true })
 
     redirect(`/admin/leads/${leadId}`)
   }
@@ -329,13 +330,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       .update({ finance_status: newFinanceStatus })
       .eq('id', leadId)
 
-    await svc.from('audit_log').insert({
-      lead_id: leadId,
+    await writeAuditLog(svc, {
+      leadId,
       action: 'finance_change',
-      actor_user_id: adminUser?.id,
-      old_value: { finance_status: prevStatus },
-      new_value: { finance_status: newFinanceStatus },
-    })
+      actorUserId: caller.id,
+      actorKind: 'admin',
+      oldValue: { finance_status: prevStatus },
+      newValue: { finance_status: newFinanceStatus },
+    }, { area: 'admin_leads', blocking: true })
 
     redirect(`/admin/leads/${leadId}`)
   }
@@ -373,13 +375,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         `[admin] Invalid status transition attempted: ${currentStatus} → ${newStatus} for lead ${leadId}`
       )
       // Log but allow (admin override) — surface in audit log with warning
-      await svc.from('audit_log').insert({
-        lead_id: leadId,
+      await writeAuditLog(svc, {
+        leadId,
         action: 'status_change',
-        actor_user_id: adminUser?.id,
-        old_value: { status: currentStatus, warning: 'invalid_transition_override' },
-        new_value: { status: newStatus },
-      })
+        actorUserId: caller.id,
+        actorKind: 'admin',
+        oldValue: { status: currentStatus, warning: 'invalid_transition_override' },
+        newValue: { status: newStatus },
+      }, { area: 'admin_leads', blocking: true })
     }
 
     await svc
@@ -387,13 +390,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       .update({ status: newStatus })
       .eq('id', leadId)
 
-    await svc.from('audit_log').insert({
-      lead_id: leadId,
+    await writeAuditLog(svc, {
+      leadId,
       action: 'status_change',
-      actor_user_id: adminUser?.id,
-      old_value: { status: currentStatus },
-      new_value: { status: newStatus },
-    })
+      actorUserId: caller.id,
+      actorKind: 'admin',
+      oldValue: { status: currentStatus },
+      newValue: { status: newStatus },
+    }, { area: 'admin_leads', blocking: true })
 
     redirect(`/admin/leads/${leadId}`)
   }
@@ -771,7 +775,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         {appointment ? (
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 text-sm">
             <div><span className="text-warm-gray">Type</span> <span className="ml-2 text-foreground capitalize">{appointment.type.replace('_', '-')}</span></div>
-            <div><span className="text-warm-gray">When</span> <span className="ml-2 text-foreground">{new Date(appointment.start_at).toLocaleString('en-GB')}</span></div>
+            <div><span className="text-warm-gray">When</span> <span className="ml-2 text-foreground">{new Date(appointment.start_at).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</span></div>
             <div><span className="text-warm-gray">Status</span> <span className="ml-2 text-foreground capitalize">{appointment.status}</span></div>
           </div>
         ) : (

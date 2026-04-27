@@ -1,5 +1,5 @@
 -- ============================================================
--- Vehicle Acquisition & CRM System v1 — Full Migration
+-- Vehicle Acquisition & CRM System v1 ï¿½ Full Migration
 -- Safe to run multiple times (idempotent).
 -- ============================================================
 
@@ -13,8 +13,8 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TYPE lead_status AS ENUM (
-    'new', 'contacted', 'appointment_booked',
-    'inspected', 'offer_approved', 'won', 'lost'
+    'new', 'verified', 'contacted', 'appointment_booked',
+    'inspected', 'offer_made', 'won', 'lost', 'expired', 'no_response'
   );
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
@@ -66,6 +66,9 @@ CREATE TABLE IF NOT EXISTS leads (
   finance_status        finance_status NOT NULL DEFAULT 'not_checked',
   assigned_inspector_id uuid REFERENCES users(id) ON DELETE SET NULL,
   source                text,
+  offer_token_jti       text,
+  contact_submit_id     text,
+  otp_session_id        uuid,
   consent_marketing        boolean NOT NULL DEFAULT false,
   consent_data_processing  boolean NOT NULL DEFAULT true
 );
@@ -78,6 +81,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   end_at           timestamptz NOT NULL,
   status           appointment_status NOT NULL DEFAULT 'booked',
   location_or_link text,
+  booking_submit_id text,
   created_at       timestamptz NOT NULL DEFAULT now()
 );
 
@@ -113,9 +117,11 @@ CREATE TABLE IF NOT EXISTS audit_log (
   lead_id       uuid NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
   action        text NOT NULL CHECK (action IN (
                   'status_change', 'finance_change', 'assignment_change',
-                  'note_added', 'inspection_submitted'
+                  'note_added', 'inspection_submitted', 'outcome_recorded',
+                  'photos_uploaded', 'booking_created', 'lead_created'
                 )),
-  actor_user_id uuid NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  actor_user_id uuid REFERENCES users(id) ON DELETE RESTRICT,
+  actor_kind    text NOT NULL DEFAULT 'system' CHECK (actor_kind IN ('system', 'public_user', 'admin', 'inspector')),
   old_value     jsonb,
   new_value     jsonb,
   created_at    timestamptz NOT NULL DEFAULT now()
@@ -131,11 +137,16 @@ CREATE OR REPLACE RULE no_delete_audit_log AS ON DELETE TO audit_log DO INSTEAD 
 CREATE INDEX IF NOT EXISTS idx_leads_reg             ON leads (reg);
 CREATE INDEX IF NOT EXISTS idx_leads_status          ON leads (status);
 CREATE INDEX IF NOT EXISTS idx_leads_created_at      ON leads (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_reg_phone_created ON leads (reg, seller_phone, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_offer_token_jti_unique ON leads (offer_token_jti) WHERE offer_token_jti IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_leads_contact_submit_id_unique ON leads (contact_submit_id) WHERE contact_submit_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_leads_inspector       ON leads (assigned_inspector_id);
 CREATE INDEX IF NOT EXISTS idx_leads_finance_status  ON leads (finance_status);
 CREATE INDEX IF NOT EXISTS idx_appointments_lead_id  ON appointments (lead_id);
 CREATE INDEX IF NOT EXISTS idx_appointments_start_at ON appointments (start_at);
 CREATE INDEX IF NOT EXISTS idx_appointments_status   ON appointments (status);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_booking_submit_id_unique ON appointments (booking_submit_id) WHERE booking_submit_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_one_booked_per_lead ON appointments (lead_id) WHERE status = 'booked';
 CREATE INDEX IF NOT EXISTS idx_inspections_lead_id      ON inspections (lead_id);
 CREATE INDEX IF NOT EXISTS idx_inspections_inspector_id ON inspections (inspector_id);
 CREATE INDEX IF NOT EXISTS idx_notes_lead_id         ON notes (lead_id);

@@ -2,6 +2,9 @@ import { notFound, redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/server'
 import { verifyOfferToken } from '@/lib/offerSession'
 import { sendBookingConfirmation } from '@/lib/email'
+import { writeAuditLog } from '@/lib/auditLog'
+import { formatBookingSlotLabel, validateBookingSlot } from '@/lib/bookingSlots'
+import { createRequestId, reportError } from '@/lib/reportError'
 import BookForm from './BookForm'
 import TrackEvent from '@/app/components/TrackEvent'
 import OfferShell from '../OfferShell'
@@ -40,36 +43,42 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
 
   // ── Quote expiry check (server-side enforcement) ──────────────────────
   // Check valuation snapshot for 7-day expiry
-  const { data: snapshot } = await serviceClient
+  const { data: snapshot, error: snapshotError } = await serviceClient
     .from('valuation_snapshots')
-    .select('created_at')
+    .select('created_at, result_min, result_max, result_midpoint, auto_quote, customer_explanation, valuation_engine_version, engine_version')
     .eq('lead_id', leadId)
     .maybeSingle()
 
   const QUOTE_TTL_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
-  const quoteExpired = snapshot
-    ? Date.now() > new Date(snapshot.created_at).getTime() + QUOTE_TTL_MS
-    : false
+  const nowMs = new Date().getTime()
+  if (!snapshot || snapshotError) {
+    redirect('/offer?error=Your+quote+has+expired.+Please+get+a+new+valuation.')
+  }
 
-  if (quoteExpired) {
+  const activeSnapshot = snapshot
+  if (nowMs > new Date(activeSnapshot.created_at).getTime() + QUOTE_TTL_MS) {
     redirect('/offer?error=Your+quote+has+expired.+Please+get+a+new+valuation.')
   }
 
   const valuation = payload?.valuation ?? null
-  const autoQuote = valuation?.quoteMode === 'auto' || (lead.estimated_min > 0 && !valuation)
+  const autoQuote = activeSnapshot.auto_quote === true
 
   async function submitBooking(formData: FormData) {
     'use server'
+    const requestId = createRequestId('booking')
 
+    const currentLeadId = leadId!
+    const currentToken = token!
     const type = formData.get('type') as string
     const slot = formData.get('slot') as string
+    const submitId = (formData.get('submitId') as string | null)?.trim() ?? ''
 
     if (!type || !['in_person', 'video'].includes(type)) {
-      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=Invalid+appointment+type`)
+      redirect(`/offer/book?leadId=${currentLeadId}&token=${encodeURIComponent(currentToken)}&error=Invalid+appointment+type`)
     }
 
     if (!slot) {
-      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=Please+select+a+time+slot`)
+      redirect(`/offer/book?leadId=${currentLeadId}&token=${encodeURIComponent(currentToken)}&error=Please+select+a+time+slot`)
     }
 
     const svc = createServiceClient()
@@ -78,28 +87,59 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
     if (!lead) redirect('/offer?error=Lead+not+found')
 
     // ── Re-check quote expiry at submit time ──────────────────────────
-    const { data: snap } = await svc
+    const { data: snap, error: snapError } = await svc
       .from('valuation_snapshots')
       .select('created_at')
-      .eq('lead_id', leadId)
+      .eq('lead_id', currentLeadId)
       .maybeSingle()
 
     const QUOTE_TTL = 7 * 24 * 60 * 60 * 1000
-    if (snap && Date.now() > new Date(snap.created_at).getTime() + QUOTE_TTL) {
+    if (snapError || !snap || new Date().getTime() > new Date(snap.created_at).getTime() + QUOTE_TTL) {
       // Mark lead as expired
-      await svc.from('leads').update({ status: 'expired' }).eq('id', leadId)
-      await svc.from('audit_log').insert({
-        lead_id: leadId,
+      await svc.from('leads').update({ status: 'expired' }).eq('id', currentLeadId)
+      await writeAuditLog(svc, {
+        leadId: currentLeadId,
         action: 'status_change',
-        old_value: { status: lead.status },
-        new_value: { status: 'expired', reason: 'quote_expired_at_booking' },
-      })
+        actorKind: 'public_user',
+        oldValue: { status: lead.status },
+        newValue: { status: 'expired', reason: snap ? 'quote_expired_at_booking' : 'missing_snapshot_at_booking' },
+        requestId,
+      }, { area: 'offer_booking', blocking: false })
       redirect('/offer?error=Your+quote+has+expired.+Please+get+a+new+valuation.')
     }
 
-    // Parse slot into start/end times
-    const startAt = new Date(slot)
-    const endAt = new Date(startAt.getTime() + 30 * 60 * 1000) // 30 min slots
+    const slotValidation = validateBookingSlot(slot)
+    if (!slotValidation.valid || !slotValidation.startAt || !slotValidation.endAt) {
+      redirect(`/offer/book?leadId=${currentLeadId}&token=${encodeURIComponent(currentToken)}&error=${encodeURIComponent(slotValidation.error ?? 'Invalid appointment slot')}`)
+    }
+
+    const startAt = slotValidation.startAt
+    const endAt = slotValidation.endAt
+
+    const { data: existingLeadBooking } = await svc
+      .from('appointments')
+      .select('id')
+      .eq('lead_id', currentLeadId)
+      .eq('status', 'booked')
+      .limit(1)
+      .maybeSingle()
+
+    if (existingLeadBooking) {
+      redirect('/offer/done')
+    }
+
+    if (submitId) {
+      const { data: existingSubmit } = await svc
+        .from('appointments')
+        .select('id')
+        .eq('booking_submit_id', submitId)
+        .limit(1)
+        .maybeSingle()
+
+      if (existingSubmit) {
+        redirect('/offer/done')
+      }
+    }
 
     // ── Slot collision check: prevent double-booking ──────────────────
     const { data: existingSlot } = await svc
@@ -112,38 +152,65 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       .maybeSingle()
 
     if (existingSlot) {
-      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=That+slot+was+just+taken.+Please+choose+another.`)
+      redirect(`/offer/book?leadId=${currentLeadId}&token=${encodeURIComponent(currentToken)}&error=That+slot+was+just+taken.+Please+choose+another.`)
     }
 
     // Create appointment
     const { error: apptErr } = await svc
       .from('appointments')
       .insert({
-        lead_id: leadId,
+        lead_id: currentLeadId,
         type,
         start_at: startAt.toISOString(),
         end_at: endAt.toISOString(),
         status: 'booked',
         location_or_link: type === 'video' ? 'Link will be sent via email' : 'Address to be confirmed',
+        booking_submit_id: submitId || null,
       })
 
     if (apptErr) {
-      redirect(`/offer/book?leadId=${leadId}&token=${encodeURIComponent(token!)}&error=Failed+to+book.+Please+try+again.`)
+      redirect(`/offer/book?leadId=${currentLeadId}&token=${encodeURIComponent(currentToken)}&error=Failed+to+book.+Please+try+again.`)
     }
 
     // Update lead status
-    await svc
+    const { error: leadUpdateErr } = await svc
       .from('leads')
       .update({ status: 'appointment_booked' })
-      .eq('id', leadId)
+      .eq('id', currentLeadId)
+
+    if (leadUpdateErr) {
+      await reportError(leadUpdateErr, {
+        severity: 'critical',
+        area: 'offer_booking',
+        operation: 'lead_status_update',
+        leadId: currentLeadId,
+        requestId,
+      })
+      redirect(`/offer/book?leadId=${currentLeadId}&token=${encodeURIComponent(currentToken)}&error=Failed+to+book.+Please+try+again.`)
+    }
 
     // Audit log
-    await svc.from('audit_log').insert({
-      lead_id: leadId,
+    await writeAuditLog(svc, {
+      leadId: currentLeadId,
       action: 'status_change',
-      old_value: { status: lead.status },
-      new_value: { status: 'appointment_booked' },
-    })
+      actorKind: 'public_user',
+      oldValue: { status: lead.status },
+      newValue: { status: 'appointment_booked', appointment_start_at: startAt.toISOString() },
+      requestId,
+    }, { area: 'offer_booking', blocking: false })
+
+    await writeAuditLog(svc, {
+      leadId: currentLeadId,
+      action: 'booking_created',
+      actorKind: 'public_user',
+      oldValue: null,
+      newValue: {
+        appointment_type: type,
+        start_at: startAt.toISOString(),
+        end_at: endAt.toISOString(),
+      },
+      requestId,
+    }, { area: 'offer_booking', blocking: false })
 
     // Send booking confirmation email (fire-and-forget)
     if (lead) {
@@ -155,17 +222,17 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
         model: lead.model ?? '',
         year: lead.year ?? 0,
         appointmentType: type,
-        appointmentDate: startAt.toLocaleString('en-GB', {
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        appointmentDate: formatBookingSlotLabel(startAt),
         estimatedMin: lead.estimated_min ?? 0,
         estimatedMax: lead.estimated_max ?? 0,
-      }).catch(() => {})
+      }).catch((emailErr) => reportError(emailErr, {
+        severity: 'error',
+        area: 'email',
+        operation: 'booking_confirmation',
+        leadId: currentLeadId,
+        requestId,
+        provider: 'resend',
+      }))
     }
 
     redirect('/offer/done')
@@ -183,16 +250,16 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       </div>
 
       {/* Offer summary — profit simulation centrepiece */}
-      {autoQuote && lead.estimated_min > 0 ? (
+      {autoQuote && activeSnapshot.result_min > 0 ? (
         <div className="card-premium p-8 mb-6 text-center animate-slide-up">
           <p className="text-xs text-warm-gray uppercase tracking-widest mb-4 font-semibold">Your Estimated Valuation</p>
           {/* Big bold midpoint */}
           <p className="text-5xl font-extrabold gradient-gold-text mb-1">
-            £{Math.round(((lead.estimated_min ?? 0) + (lead.estimated_max ?? 0)) / 2).toLocaleString()}
+            £{Math.round(activeSnapshot.result_midpoint ?? ((activeSnapshot.result_min + activeSnapshot.result_max) / 2)).toLocaleString()}
           </p>
           {/* Smaller min/max range */}
           <p className="text-sm text-warm-gray">
-            £{lead.estimated_min?.toLocaleString()} – £{lead.estimated_max?.toLocaleString()}
+            £{activeSnapshot.result_min?.toLocaleString()} – £{activeSnapshot.result_max?.toLocaleString()}
           </p>
           <p className="text-xs text-warm-gray mt-3">
             {lead.reg} — {lead.make} {lead.model} ({lead.year})
@@ -230,10 +297,10 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
       )}
 
       {/* Quote expiry notice */}
-      {snapshot && (
+      {activeSnapshot && (
         <p className="text-xs text-warm-gray text-center mb-4">
           Quote valid until{' '}
-          {new Date(new Date(snapshot.created_at).getTime() + QUOTE_TTL_MS).toLocaleDateString('en-GB', {
+          {new Date(new Date(activeSnapshot.created_at).getTime() + QUOTE_TTL_MS).toLocaleDateString('en-GB', {
             day: 'numeric',
             month: 'short',
             year: 'numeric',

@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 import { execSync } from "child_process";
+import { assertProductionEnv } from "./lib/env";
+
+assertProductionEnv('next-config')
 
 // Capture git commit hash at build time for reproducibility
 let gitCommitHash = 'unknown';
@@ -19,7 +22,7 @@ const securityHeaders = [
   // Disable browser features the app doesn't use (camera allowed for self — inspector photo capture)
   { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(), payment=()' },
   // Content Security Policy
-  // - script-src: self + Cloudflare Turnstile + Next.js needs unsafe-inline for RSC hydration
+  // - script-src: self + Cloudflare Turnstile + Vercel Analytics + Next.js needs unsafe-inline for RSC hydration
   // - style-src: self + unsafe-inline (Tailwind inline styles)
   // - img-src: self + blob + data (Next/Image, base64 previews)
   // - connect-src: self + Supabase + Cloudflare Turnstile
@@ -28,10 +31,10 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       `default-src 'self'`,
-      `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com`,
+      `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://va.vercel-scripts.com`,
       `style-src 'self' 'unsafe-inline'`,
       `img-src 'self' blob: data: https://*.supabase.co`,
-      `connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com`,
+      `connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com https://*.vercel-insights.com https://va.vercel-scripts.com`,
       `frame-src https://challenges.cloudflare.com`,
       `font-src 'self'`,
       `object-src 'none'`,

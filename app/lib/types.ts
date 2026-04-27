@@ -26,13 +26,11 @@ export type QuoteMode = 'auto' | 'manual_review' | 'blocked'
 
 export type LeadStatus =
   | 'new'
+  | 'verified'
   | 'contacted'
   | 'appointment_booked'
   | 'inspected'
-  | 'offer_approved'
-  | 'offered'
-  | 'purchased'
-  | 'rejected'
+  | 'offer_made'
   | 'no_response'
   | 'expired'
   | 'won'
@@ -44,18 +42,16 @@ export type LeadStatus =
  * Any transition not in this map is considered invalid and will be logged.
  */
 export const VALID_STATUS_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
-  new:               ['contacted', 'appointment_booked', 'no_response', 'expired', 'rejected'],
-  contacted:         ['appointment_booked', 'no_response', 'expired', 'rejected'],
-  appointment_booked:['inspected', 'no_response', 'expired', 'rejected'],
-  inspected:         ['offer_approved', 'rejected', 'no_response'],
-  offer_approved:    ['offered', 'rejected'],
-  offered:           ['purchased', 'won', 'rejected', 'lost'],
-  purchased:         ['won', 'lost'],
-  rejected:          ['new'],               // Allow re-opening a rejected lead
-  no_response:       ['contacted', 'expired'],
-  expired:           ['new'],               // Allow re-quoting an expired lead
-  won:               [],                    // Terminal state
-  lost:              ['new'],               // Allow re-opening
+  new:                ['verified', 'contacted', 'appointment_booked', 'no_response', 'expired', 'lost'],
+  verified:           ['contacted', 'appointment_booked', 'no_response', 'expired', 'lost'],
+  contacted:          ['appointment_booked', 'offer_made', 'no_response', 'expired', 'lost'],
+  appointment_booked: ['inspected', 'no_response', 'expired', 'lost'],
+  inspected:          ['offer_made', 'no_response', 'lost'],
+  offer_made:         ['won', 'lost', 'no_response'],
+  no_response:        ['contacted', 'expired', 'lost'],
+  expired:            ['new'],
+  won:                [],
+  lost:               ['new'],
 }
 
 /**

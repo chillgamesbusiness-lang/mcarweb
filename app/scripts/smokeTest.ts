@@ -226,9 +226,11 @@ async function main() {
 
     assert('snapshot readable', !readErr && !!readSnap, readErr?.message)
     if (readSnap) {
-      assert('customer_explanation persisted', (readSnap.customer_explanation as any)?.bullets?.length > 0)
+      const customerExplanation = readSnap.customer_explanation as { bullets?: unknown[] } | null
+      const profitSimulation = readSnap.profit_simulation as { expectedProfitMid?: unknown } | null
+      assert('customer_explanation persisted', (customerExplanation?.bullets?.length ?? 0) > 0)
       assert('admin_explanation persisted', Array.isArray(readSnap.admin_explanation))
-      assert('profit_simulation persisted', (readSnap.profit_simulation as any)?.expectedProfitMid !== undefined)
+      assert('profit_simulation persisted', profitSimulation?.expectedProfitMid !== undefined)
       assert('engine_version = v3', readSnap.engine_version === 'v3')
     }
 

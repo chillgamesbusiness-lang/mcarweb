@@ -1,8 +1,8 @@
 /**
  * Rate limiter using Upstash Redis.
  *
- * Falls through (allows request) when Upstash env vars are missing,
- * so dev/preview environments aren't blocked.
+ * Falls through with a warning only in local/dev. Strict production requires
+ * Upstash so abuse controls cannot silently fail open.
  *
  * Provides:
  *  - checkRateLimit(): generic 10/10min sliding window (vehicle lookups)
@@ -11,16 +11,28 @@
 
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { isStrictProductionEnv } from '@/lib/env'
+import { reportError } from '@/lib/reportError'
 
 let redis: Redis | null = null
+let warnedMissingRedis = false
 
-function getRedis(): Redis | null {
+export function getRedisClient(): Redis | null {
   if (redis) return redis
 
   const url = process.env.UPSTASH_REDIS_REST_URL
   const token = process.env.UPSTASH_REDIS_REST_TOKEN
 
-  if (!url || !token) return null
+  if (!url || !token) {
+    if (isStrictProductionEnv()) {
+      throw new Error('UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production')
+    }
+    if (!warnedMissingRedis) {
+      warnedMissingRedis = true
+      console.warn('[rateLimit] Upstash Redis is not configured; local fail-open rate limits are active')
+    }
+    return null
+  }
 
   redis = new Redis({ url, token })
   return redis
@@ -31,7 +43,7 @@ let ratelimit: Ratelimit | null = null
 function getRatelimit(): Ratelimit | null {
   if (ratelimit) return ratelimit
 
-  const r = getRedis()
+  const r = getRedisClient()
   if (!r) return null
 
   ratelimit = new Ratelimit({
@@ -53,7 +65,7 @@ export interface RateLimitResult {
 
 /**
  * Check rate limit for a given identifier (e.g. IP address).
- * Returns { allowed: true } when Upstash is not configured.
+ * Returns { allowed: true } when Upstash is not configured outside strict production.
  */
 export async function checkRateLimit(identifier: string): Promise<RateLimitResult> {
   const rl = getRatelimit()
@@ -69,8 +81,14 @@ export async function checkRateLimit(identifier: string): Promise<RateLimitResul
       resetMs: reset,
     }
   } catch (err) {
-    console.error('[rateLimit] Upstash error:', err)
-    // Fail open — don't block users if Redis is down
+    await reportError(err, {
+      severity: isStrictProductionEnv() ? 'critical' : 'warning',
+      area: 'rate_limit',
+      operation: 'generic_limit',
+      provider: 'upstash',
+      metadata: { identifier },
+    })
+    if (isStrictProductionEnv()) throw err
     return { allowed: true, remaining: 999, resetMs: 0 }
   }
 }
@@ -93,7 +111,7 @@ export async function checkOtpRateLimit(
   max: number,
   windowSec: number
 ): Promise<RateLimitResult> {
-  const r = getRedis()
+  const r = getRedisClient()
   if (!r) {
     return { allowed: true, remaining: 999, resetMs: 0 }
   }
@@ -119,8 +137,53 @@ export async function checkOtpRateLimit(
       resetMs: reset,
     }
   } catch (err) {
-    console.error('[otpRateLimit] Upstash error:', err)
-    // Fail open
+    await reportError(err, {
+      severity: isStrictProductionEnv() ? 'critical' : 'warning',
+      area: 'rate_limit',
+      operation: 'otp_limit',
+      provider: 'upstash',
+      metadata: { key, max, windowSec },
+    })
+    if (isStrictProductionEnv()) throw err
+    return { allowed: true, remaining: 999, resetMs: 0 }
+  }
+}
+
+const customLimiters = new Map<string, Ratelimit>()
+
+export async function checkCustomRateLimit(
+  key: string,
+  max: number,
+  windowSec: number,
+  prefix: string
+): Promise<RateLimitResult> {
+  const r = getRedisClient()
+  if (!r) return { allowed: true, remaining: 999, resetMs: 0 }
+
+  const cacheKey = `${prefix}:${max}:${windowSec}`
+  let limiter = customLimiters.get(cacheKey)
+  if (!limiter) {
+    limiter = new Ratelimit({
+      redis: r,
+      limiter: Ratelimit.slidingWindow(max, `${windowSec} s`),
+      analytics: true,
+      prefix,
+    })
+    customLimiters.set(cacheKey, limiter)
+  }
+
+  try {
+    const { success, remaining, reset } = await limiter.limit(key)
+    return { allowed: success, remaining, resetMs: reset }
+  } catch (err) {
+    await reportError(err, {
+      severity: isStrictProductionEnv() ? 'critical' : 'warning',
+      area: 'rate_limit',
+      operation: 'custom_limit',
+      provider: 'upstash',
+      metadata: { key, max, windowSec, prefix },
+    })
+    if (isStrictProductionEnv()) throw err
     return { allowed: true, remaining: 999, resetMs: 0 }
   }
 }

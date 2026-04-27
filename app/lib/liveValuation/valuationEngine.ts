@@ -248,7 +248,7 @@ export async function computeLiveValuation(
     postcode,
   }
 
-  let rawListings: RawListing[] = []
+  const rawListings: RawListing[] = []
   const errors: string[] = []
 
   // Scrape AutoTrader + eBay in parallel

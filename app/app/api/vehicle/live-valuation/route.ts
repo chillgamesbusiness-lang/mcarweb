@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { computeLiveValuation } from '@/lib/liveValuation'
 import { checkRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/reportError'
+import { isExperimentalLiveValuationEnabled } from '@/lib/valuationPolicy'
 
 /**
  * POST /api/vehicle/live-valuation
@@ -21,6 +23,13 @@ import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isExperimentalLiveValuationEnabled()) {
+      return NextResponse.json(
+        { error: 'Experimental live valuation is disabled. Customer-facing offers use the canonical pricing engine.' },
+        { status: 404 },
+      )
+    }
+
     // ── Rate limiting ────────────────────────────────────────────────────
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
       || request.headers.get('x-real-ip')
@@ -76,7 +85,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result)
   } catch (err) {
-    console.error('[live-valuation] Error:', err)
+    await reportError(err, {
+      severity: 'warning',
+      area: 'valuation',
+      operation: 'experimental_live_valuation',
+    })
     return NextResponse.json(
       { error: 'Internal error computing valuation' },
       { status: 500 },

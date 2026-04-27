@@ -8,30 +8,26 @@ const PAGE_SIZE = 25
 
 const STATUS_LABELS: Record<Lead['status'], string> = {
   new: 'New',
+  verified: 'Verified',
   contacted: 'Contacted',
   appointment_booked: 'Appt Booked',
   inspected: 'Inspected',
-  offer_approved: 'Offer Approved',
-  offered: 'Offered',
-  purchased: 'Purchased',
+  offer_made: 'Offer Made',
   won: 'Won',
   lost: 'Lost',
-  rejected: 'Rejected',
   no_response: 'No Response',
   expired: 'Expired',
 }
 
 const STATUS_COLOURS: Record<Lead['status'], string> = {
   new: 'bg-blue-100 text-blue-700',
+  verified: 'bg-cyan-100 text-cyan-700',
   contacted: 'bg-yellow-100 text-yellow-700',
   appointment_booked: 'bg-purple-100 text-purple-700',
   inspected: 'bg-orange-100 text-orange-700',
-  offer_approved: 'bg-teal-100 text-teal-700',
-  offered: 'bg-indigo-100 text-indigo-700',
-  purchased: 'bg-emerald-100 text-emerald-700',
+  offer_made: 'bg-teal-100 text-teal-700',
   won: 'bg-green-100 text-green-700',
   lost: 'bg-gray-100 text-gray-500',
-  rejected: 'bg-red-100 text-red-700',
   no_response: 'bg-slate-100 text-slate-500',
   expired: 'bg-amber-100 text-amber-600',
 }

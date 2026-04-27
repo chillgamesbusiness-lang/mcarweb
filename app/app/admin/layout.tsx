@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
             <div>
               <p className="text-lg font-extrabold tracking-tight text-white">MCar</p>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gold/50">Admin</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gold/80">Admin</p>
             </div>
           </div>
         </div>
@@ -54,7 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <form action={logout}>
             <button
               type="submit"
-              className="w-full flex items-center gap-2.5 text-left text-[13px] text-white/25 hover:text-red-400 transition-all duration-200 px-3 py-2 rounded-lg hover:bg-white/5"
+              className="w-full flex items-center gap-2.5 text-left text-[13px] text-white/60 hover:text-red-300 transition-all duration-200 px-3 py-2 rounded-lg hover:bg-white/5"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
               Sign out
@@ -77,7 +77,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <MobileNavLink href="/admin/calendar" icon="calendar" />
           <MobileNavLink href="/admin/settings" icon="settings" />
           <form action={logout} className="inline">
-            <button type="submit" className="p-2 text-white/30 hover:text-red-400 transition-colors">
+            <button type="submit" className="p-2 text-white/60 hover:text-red-300 transition-colors" aria-label="Sign out">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" /></svg>
             </button>
           </form>
@@ -101,7 +101,7 @@ function NavLink({ href, icon, children }: { href: string; icon: string; childre
   return (
     <Link
       href={href}
-      className="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium text-white/50 hover:text-white rounded-lg transition-all duration-200"
+      className="sidebar-nav-item flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium text-white/70 hover:text-white rounded-lg transition-all duration-200"
     >
       {icons[icon]}
       {children}
@@ -118,7 +118,7 @@ function MobileNavLink({ href, icon }: { href: string; icon: string }) {
   }
 
   return (
-    <Link href={href} className="p-2 text-white/40 hover:text-white transition-colors">
+    <Link href={href} className="p-2 text-white/70 hover:text-white transition-colors" aria-label={icon}>
       {icons[icon]}
     </Link>
   )

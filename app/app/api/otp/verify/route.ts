@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyOTP } from '@/lib/leadVerification'
 import { checkOtpRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/reportError'
 
 /**
  * POST /api/otp/verify
@@ -38,6 +39,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ verified })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Verification failed'
+    await reportError(err, {
+      severity: message.includes('incorrect') || message.includes('expired') || message.includes('already used') ? 'warning' : 'error',
+      area: 'otp',
+      operation: 'verify_route',
+      provider: 'twilio',
+    })
     return NextResponse.json({ error: message, verified: false }, { status: 400 })
   }
 }

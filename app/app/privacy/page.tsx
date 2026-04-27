@@ -8,15 +8,15 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12">
-      <div className="mx-auto max-w-2xl bg-white rounded-lg border border-gray-200 p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
+    <div className="min-h-screen bg-background px-4 py-12 text-foreground">
+      <div className="mx-auto max-w-2xl rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] p-6 shadow-sm sm:p-8">
+        <h1 className="text-2xl font-bold text-foreground mb-6">Privacy Policy</h1>
 
-        <p className="text-sm text-gray-400 mb-6">Last updated: February 2026</p>
+        <p className="text-sm text-warm-gray mb-6">Last updated: February 2026</p>
 
-        <div className="space-y-6 text-sm text-gray-700 leading-relaxed">
+        <div className="space-y-6 text-sm text-warm-gray leading-relaxed">
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">1. Who We Are</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">1. Who We Are</h2>
             <p>
               MCAR (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) operates an online vehicle
               valuation and acquisition service. We are the data controller for
@@ -25,7 +25,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">2. What We Collect</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">2. What We Collect</h2>
             <p>When you use our valuation tool, we may collect:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>Your name, email address, phone number, and postcode</li>
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">3. How We Use Your Data</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">3. How We Use Your Data</h2>
             <p>We use your data to:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>Provide you with a vehicle valuation</li>
@@ -50,7 +50,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">4. Legal Basis</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">4. Legal Basis</h2>
             <p>
               We process your data based on your consent (given when you submit
               the contact form) and our legitimate interest in providing accurate
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">5. Who We Share With</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">5. Who We Share With</h2>
             <p>We may share data with:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>DVLA and MOT History API (vehicle data lookups)</li>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">6. Data Retention</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">6. Data Retention</h2>
             <p>
               We retain lead data for up to 24 months for operational and
               calibration purposes. OTP session records are automatically purged
@@ -81,7 +81,7 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">7. Your Rights</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">7. Your Rights</h2>
             <p>Under UK GDPR, you have the right to:</p>
             <ul className="list-disc pl-5 mt-2 space-y-1">
               <li>Access the personal data we hold about you</li>
@@ -94,18 +94,18 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">8. Contact Us</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">8. Contact Us</h2>
             <p>
               To exercise any of your rights or ask questions about this policy,
               please email us at{' '}
-              <a href="mailto:privacy@mcar.co.uk" className="text-blue-600 hover:underline">
+              <a href="mailto:privacy@mcar.co.uk" className="font-medium text-gold-dark hover:underline dark:text-gold">
                 privacy@mcar.co.uk
               </a>.
             </p>
           </section>
 
           <section>
-            <h2 className="text-base font-semibold text-gray-900 mb-2">9. Changes</h2>
+            <h2 className="text-base font-semibold text-foreground mb-2">9. Changes</h2>
             <p>
               We may update this policy from time to time. We will post any
               changes on this page with an updated revision date.
@@ -113,10 +113,10 @@ export default function PrivacyPage() {
           </section>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="mt-8 pt-6 border-t border-[var(--card-border)]">
           <Link
             href="/offer"
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm font-medium text-gold-dark hover:underline dark:text-gold"
           >
             &larr; Back to valuation
           </Link>

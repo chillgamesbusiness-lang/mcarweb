@@ -45,7 +45,7 @@ export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {
               </div>
               <span
                 className={`mt-1.5 sm:mt-2 text-[9px] sm:text-[10px] font-bold tracking-wide uppercase ${
-                  isActive ? 'text-gold-dark' : isDone ? 'text-gold' : 'text-warm-gray/40'
+                  isActive ? 'text-gold-dark' : isDone ? 'text-gold' : 'text-warm-gray/70'
                 }`}
               >
                 {s.label}

@@ -1,25 +1,25 @@
+import Link from 'next/link'
+
 /**
  * Shared wrapper for the public offer funnel.
  * Provides: premium background, brand header, trust signals, consistent spacing.
  */
 export default function OfferShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen relative overflow-hidden bg-background">
+    <div className="min-h-screen relative overflow-x-hidden bg-background">
       {/* Gradient mesh background */}
-      <div className="absolute inset-0 gradient-hero" />
-      <div className="absolute top-20 right-[10%] w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] rounded-full bg-gold/[0.04] blur-[100px]" />
-      <div className="absolute bottom-20 left-[5%] w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] rounded-full bg-gold/[0.03] blur-[80px]" />
+      <div className="absolute inset-0 gradient-hero pointer-events-none" />
 
-      <div className="relative px-3 sm:px-4 py-6 sm:py-8 md:py-12">
+      <div className="relative px-3 sm:px-4 py-5 sm:py-8 md:py-12">
         <div className="w-full max-w-lg mx-auto">
           {/* Brand header */}
           <div className="text-center mb-6 sm:mb-8">
-            <a href="/" className="inline-flex items-center gap-2.5 group">
+            <Link href="/" className="inline-flex items-center gap-2.5 group">
               <div className="w-9 h-9 rounded-xl gradient-gold flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105">
                 <span className="text-[14px] font-extrabold text-white tracking-tight">M</span>
               </div>
               <span className="text-[16px] font-bold text-foreground tracking-tight group-hover:text-gold-dark transition-colors">MCar</span>
-            </a>
+            </Link>
           </div>
 
           {children}

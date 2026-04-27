@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS valuation_snapshots (
   market_value_used   integer NOT NULL,
   all_multipliers     jsonb NOT NULL,    -- AllMultipliers object
   region_used         text NOT NULL,
-  engine_version      text NOT NULL DEFAULT 'v1'
+  engine_version      text NOT NULL DEFAULT 'v1',
+  valuation_engine_version text NOT NULL DEFAULT 'pricingEngine.calculateValuation:v3.0'
 );
 
 CREATE INDEX IF NOT EXISTS idx_valuation_snapshots_lead_id

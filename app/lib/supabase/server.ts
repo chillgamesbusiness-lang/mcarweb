@@ -1,11 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { assertProductionEnv } from '@/lib/env'
 
 /**
  * Server-side Supabase client using the anon key.
  * Reads the user's session cookie — use for data access in Server Components and Route Handlers.
  */
 export async function createClient() {
+  assertProductionEnv('supabase-anon-client')
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anonKey) throw new Error('Supabase URL or anon key not configured')
@@ -40,6 +42,7 @@ export async function createClient() {
  * NEVER expose service role key to the client.
  */
 export function createServiceClient() {
+  assertProductionEnv('supabase-service-client')
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !serviceKey) throw new Error('Supabase URL or service role key not configured')

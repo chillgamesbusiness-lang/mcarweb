@@ -27,6 +27,7 @@ export default async function AdminCalendarPage() {
               {/* Date — prominent */}
               <span className="w-32 sm:w-40 text-xs sm:text-sm tabular-nums text-foreground shrink-0">
                 {new Date(appt.start_at).toLocaleString('en-GB', {
+                  timeZone: 'Europe/London',
                   dateStyle: 'medium',
                   timeStyle: 'short',
                 })}

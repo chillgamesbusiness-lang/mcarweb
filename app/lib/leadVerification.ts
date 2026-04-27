@@ -18,6 +18,8 @@
 import crypto from 'crypto'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { checkOtpRateLimit } from '@/lib/rateLimit'
+import { isOtpBypassAllowed } from '@/lib/env'
+import { reportError } from '@/lib/reportError'
 
 let _supabase: SupabaseClient | null = null
 function getSupabase(): SupabaseClient {
@@ -121,7 +123,7 @@ export async function sendOTP(
     throw new Error('Invalid UK mobile number')
   }
 
-  // ── Rate limit bypass whitelist (dev/test numbers) ───────────────────
+  // ── Rate limit bypass whitelist (explicit local/dev/test only) ───────
   const isWL = isWhitelistedPhone(cleanedPhone)
 
   // ── Rate limits: per-phone (3/day) + per-IP (10/day) ─────────────────
@@ -143,6 +145,15 @@ export async function sendOTP(
     }
   }
 
+  const accountSid = process.env.TWILIO_ACCOUNT_SID
+  const authToken = process.env.TWILIO_AUTH_TOKEN
+  const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID
+  const hasTwilio = Boolean(accountSid && authToken && verifyServiceSid)
+
+  if (!hasTwilio && !isOtpBypassAllowed()) {
+    throw new Error('Verification service not configured')
+  }
+
   // ── Generate session ID ──────────────────────────────────────────────
   const sessionId = crypto.randomUUID()
 
@@ -152,7 +163,7 @@ export async function sendOTP(
     .insert({
       id: sessionId,
       phone: cleanedPhone,
-      code_hash: 'twilio_verify', // Twilio Verify manages the actual code
+      code_hash: hasTwilio ? 'twilio_verify' : 'explicit_local_bypass',
       expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(), // 10 min
       attempts: 0,
       verified: false,
@@ -161,20 +172,19 @@ export async function sendOTP(
     })
 
   if (storeError) {
-    console.error('OTP store error:', storeError)
+    await reportError(storeError, {
+      severity: 'error',
+      area: 'otp',
+      operation: 'store_session',
+      provider: 'supabase',
+      metadata: { phone: cleanedPhone, ip },
+    })
     throw new Error('Failed to create verification session')
   }
 
   // ── Send SMS via Twilio Verify ───────────────────────────────────────
-  const accountSid = process.env.TWILIO_ACCOUNT_SID
-  const authToken = process.env.TWILIO_AUTH_TOKEN
-  const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID
-
-  if (!accountSid || !authToken || !verifyServiceSid) {
-    console.error('Twilio Verify credentials not configured (need TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_VERIFY_SERVICE_SID)')
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[DEV] OTP session created for ${cleanedPhone} — no Twilio configured, any 6-digit code accepted`)
-    }
+  if (!hasTwilio) {
+    console.warn('[otp] Explicit local bypass enabled; any 6-digit code will verify for this session')
     return { sessionId }
   }
 
@@ -196,12 +206,17 @@ export async function sendOTP(
 
     if (!res.ok) {
       const errBody = await res.text()
-      console.error('Twilio Verify send error:', errBody)
-      // Non-fatal: log and continue — session exists
+      throw new Error(`Twilio Verify send failed: ${errBody.slice(0, 250)}`)
     }
   } catch (err) {
-    console.error('Twilio Verify send error:', err)
-    // Non-fatal: session exists for manual follow-up
+    await reportError(err, {
+      severity: 'critical',
+      area: 'otp',
+      operation: 'send_code',
+      provider: 'twilio',
+      metadata: { phone: cleanedPhone, ip },
+    })
+    throw new Error('Could not send verification code. Please try again.')
   }
 
   return { sessionId }
@@ -215,7 +230,8 @@ export async function sendOTP(
  */
 export async function verifyOTP(
   sessionId: string,
-  userCode: string
+  userCode: string,
+  expectedPhone?: string
 ): Promise<boolean> {
   const { data: session, error } = await getSupabase()
     .from('otp_sessions')
@@ -227,10 +243,20 @@ export async function verifyOTP(
     throw new Error('Session expired. Please request a new code.')
   }
 
-  if (session.verified) return true
+  if (expectedPhone && session.phone !== cleanPhone(expectedPhone)) {
+    throw new Error('Verification session does not match this phone number.')
+  }
+
+  if (session.verified) {
+    throw new Error('Code already used. Please request a new code.')
+  }
 
   if (new Date() > new Date(session.expires_at)) {
     throw new Error('Code expired. Please request a new code.')
+  }
+
+  if ((session.attempts ?? 0) >= 5) {
+    throw new Error('Too many incorrect attempts. Please request a new code.')
   }
 
   // ── Twilio Verify Check ──────────────────────────────────────────────
@@ -239,8 +265,7 @@ export async function verifyOTP(
   const verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID
 
   if (!accountSid || !authToken || !verifyServiceSid) {
-    // Dev mode: accept any 6-digit code when Twilio is not configured
-    if (process.env.NODE_ENV !== 'production') {
+    if (isOtpBypassAllowed() && /^\d{6}$/.test(userCode.trim())) {
       await getSupabase()
         .from('otp_sessions')
         .update({ verified: true })
@@ -276,6 +301,11 @@ export async function verifyOTP(
       return true
     }
 
+    await getSupabase()
+      .from('otp_sessions')
+      .update({ attempts: (session.attempts ?? 0) + 1 })
+      .eq('id', sessionId)
+
     // Twilio error codes
     if (!res.ok) {
       const twilioCode = data?.code
@@ -296,6 +326,13 @@ export async function verifyOTP(
     )) {
       throw err
     }
+    await reportError(err, {
+      severity: 'error',
+      area: 'otp',
+      operation: 'verify_code',
+      provider: 'twilio',
+      metadata: { sessionId, expectedPhone: expectedPhone ? cleanPhone(expectedPhone) : undefined },
+    })
     throw new Error('Verification failed. Please try again.')
   }
 }
@@ -319,6 +356,7 @@ function getWhitelistedPhones(): string[] {
 }
 
 export function isWhitelistedPhone(phone: string): boolean {
+  if (!isOtpBypassAllowed()) return false
   const cleaned = cleanPhone(phone)
   return getWhitelistedPhones().includes(cleaned)
 }
