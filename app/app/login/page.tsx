@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <main className="min-h-screen bg-background lg:grid lg:grid-cols-[minmax(340px,42vw)_1fr]">
-      <div className="hidden lg:flex min-h-screen flex-col justify-between overflow-hidden bg-charcoal-deep p-10 xl:p-14 relative">
+      <div className="hidden lg:flex min-h-screen flex-col justify-between overflow-hidden bg-charcoal-deep dark:bg-surface-elevated p-10 xl:p-14 relative">
         <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)', backgroundSize: '44px 44px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
@@ -76,6 +76,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <div className="mb-5 rounded-xl bg-red-50 border border-red-200/50 p-4 text-sm text-red-700 flex items-center gap-2">
               <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
               No role assigned. Contact an administrator.
+            </div>
+          )}
+
+          {error === 'session_expired' && (
+            <div className="mb-5 rounded-xl bg-amber-50 border border-amber-200/50 p-4 text-sm text-amber-700 flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              Your session has expired. Please sign in again.
             </div>
           )}
 

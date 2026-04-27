@@ -27,7 +27,7 @@ export default async function InspectorLayout({ children }: { children: React.Re
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar — hidden on mobile, visible on lg+ */}
-      <aside className="hidden lg:flex w-56 bg-charcoal-deep flex-col shrink-0 relative">
+      <aside className="hidden lg:flex w-56 bg-charcoal-deep dark:bg-surface-elevated flex-col shrink-0 relative">
         <div className="h-1 gradient-gold" />
 
         <div className="px-5 pt-7 pb-6">

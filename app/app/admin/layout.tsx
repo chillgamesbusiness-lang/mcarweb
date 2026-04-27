@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen flex bg-background">
       {/* Sidebar — hidden on mobile, visible on lg+ */}
-      <aside className="hidden lg:flex w-56 bg-charcoal-deep flex-col shrink-0 relative">
+      <aside className="hidden lg:flex w-56 bg-charcoal-deep dark:bg-surface-elevated flex-col shrink-0 relative">
         {/* Gold gradient accent at top */}
         <div className="h-1 gradient-gold" />
 
