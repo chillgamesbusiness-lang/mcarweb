@@ -249,7 +249,7 @@ export default async function OfferBookPage({ searchParams }: BookPageProps) {
         <p className="mt-2 text-warm-gray text-sm">Choose how and when you would like to meet</p>
       </div>
 
-      {/* Offer summary — profit simulation centrepiece */}
+      {/* Offer summary */}
       {autoQuote && activeSnapshot.result_min > 0 ? (
         <div className="card-premium p-8 mb-6 text-center animate-slide-up">
           <p className="text-xs text-warm-gray uppercase tracking-widest mb-4 font-semibold">Your Estimated Valuation</p>

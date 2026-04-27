@@ -1,26 +1,50 @@
 export const metadata = { title: 'Settings' }
 
 export default function AdminSettingsPage() {
-  return (
-    <div className="p-4 sm:p-6 lg:p-10 max-w-xl">
-      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">Settings</h1>
-      <p className="text-sm text-warm-gray mb-8">System configuration</p>
+  const envStatus = [
+    { label: 'DVLA lookup', active: Boolean(process.env.DVLA_VES_API_KEY) },
+    { label: 'Turnstile bot protection', active: Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY) },
+    { label: 'Redis rate limits', active: Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) },
+    { label: 'SMS verification', active: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID) },
+    { label: 'Email notifications', active: Boolean(process.env.RESEND_API_KEY) },
+  ]
 
-      <div className="space-y-5">
+  return (
+    <div className="p-4 sm:p-6 lg:p-10 max-w-4xl">
+      <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">Settings</h1>
+      <p className="text-sm text-warm-gray mb-8">Operational configuration snapshot</p>
+
+      <div className="grid gap-5 lg:grid-cols-2">
         <SettingGroup title="Booking Rules">
           <Setting label="Available days" value="Monday – Saturday" />
           <Setting label="In-person duration" value="45 minutes" />
           <Setting label="Video duration" value="20 minutes" />
           <Setting label="Minimum notice" value="24 hours" />
-          <p className="text-[11px] text-warm-gray/50 mt-4">Editable settings form coming in a later session.</p>
         </SettingGroup>
 
-        <SettingGroup title="Email Templates">
+        <SettingGroup title="Staff Workflow">
+          <Setting label="Admin actions" value="Status, finance, booking, inspector, notes" />
+          <Setting label="Inspector queue" value="Assigned active leads" />
+          <Setting label="Outcome tracking" value="Won/lost with realised values" />
+          <Setting label="Audit mode" value="Append-only actions" />
+        </SettingGroup>
+
+        <SettingGroup title="Notifications">
           <Setting label="Appointment confirmation" value="Active" />
           <Setting label="Appointment reminder (24h)" value="Active" />
           <Setting label="Admin: new lead alert" value="Active" />
           <Setting label="Admin: inspection complete alert" value="Active" />
-          <p className="text-[11px] text-warm-gray/50 mt-4">Template editor coming in a later session.</p>
+        </SettingGroup>
+
+        <SettingGroup title="Integrations">
+          {envStatus.map((item) => (
+            <Setting
+              key={item.label}
+              label={item.label}
+              value={item.active ? 'Configured' : 'Needs attention'}
+              tone={item.active ? 'good' : 'warn'}
+            />
+          ))}
         </SettingGroup>
       </div>
     </div>
@@ -39,11 +63,17 @@ function SettingGroup({ title, children }: { title: string; children: React.Reac
   )
 }
 
-function Setting({ label, value }: { label: string; value: string }) {
+function Setting({ label, value, tone }: { label: string; value: string; tone?: 'good' | 'warn' }) {
+  const valueClass = tone === 'good'
+    ? 'text-green-700'
+    : tone === 'warn'
+      ? 'text-amber-700'
+      : 'text-foreground'
+
   return (
     <div className="flex items-baseline gap-4">
       <span className="w-48 text-sm text-warm-gray shrink-0">{label}</span>
-      <span className="text-sm text-foreground font-medium">{value}</span>
+      <span className={`text-sm font-medium ${valueClass}`}>{value}</span>
     </div>
   )
 }

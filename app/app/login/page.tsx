@@ -14,29 +14,36 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error } = await searchParams
 
   return (
-    <main className="min-h-screen flex">
-      {/* Left — premium dark brand panel with animated gradient */}
-      <div className="hidden md:flex w-2/5 gradient-dark flex-col justify-between p-12 relative overflow-hidden">
-        {/* Floating orbs */}
-        <div className="absolute top-1/4 -left-20 w-64 h-64 bg-gold/8 rounded-full blur-[100px] animate-float" />
-        <div className="absolute bottom-1/4 right-0 w-48 h-48 bg-gold/5 rounded-full blur-[80px] animate-float" style={{ animationDelay: '3s' }} />
-
+    <main className="min-h-screen bg-background lg:grid lg:grid-cols-[minmax(340px,42vw)_1fr]">
+      <div className="hidden lg:flex min-h-screen flex-col justify-between overflow-hidden bg-charcoal-deep p-10 xl:p-14 relative">
+        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)', backgroundSize: '44px 44px' }} />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
             <div className="w-11 h-11 rounded-xl gradient-gold flex items-center justify-center shadow-lg shadow-gold/20">
               <span className="text-white font-extrabold text-lg">M</span>
             </div>
+            <div>
+              <p className="text-lg font-extrabold tracking-tight text-white">MCar</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.25em] text-gold/80">Staff Desk</p>
+            </div>
           </div>
-          <h2 className="text-3xl font-extrabold tracking-tight text-white leading-snug">
-            Vehicle<br />Acquisition<br /><span className="gradient-gold-text">Platform</span>
+          <h2 className="max-w-sm text-4xl xl:text-5xl font-extrabold tracking-tight text-white leading-[1.05]">
+            Acquisition control, without the noise.
           </h2>
+          <div className="mt-10 max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/20">
+            {['Lead intake', 'Booking queue', 'Inspector review', 'Outcome tracking'].map((item, index) => (
+              <div key={item} className="flex items-center gap-3 border-b border-white/[0.07] py-3 first:pt-0 last:border-b-0 last:pb-0">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold/10 text-[11px] font-bold text-gold">{String(index + 1).padStart(2, '0')}</span>
+                <span className="text-sm font-medium text-white/75">{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <p className="text-[11px] text-white/55 relative z-10">Staff access only</p>
+        <p className="text-[11px] text-white/55 relative z-10">Secure staff access</p>
       </div>
 
-      {/* Right — premium form */}
-      <div className="flex-1 flex items-center justify-center bg-background px-6">
-        <div className="w-full max-w-sm">
+      <div className="flex min-h-screen items-center justify-center px-5 py-10 sm:px-6 lg:px-10">
+        <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="md:hidden flex items-center gap-3 mb-10">
             <div className="w-10 h-10 rounded-xl gradient-gold flex items-center justify-center shadow-lg shadow-gold/20">
@@ -45,8 +52,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <span className="text-xl font-extrabold text-foreground">MCar</span>
           </div>
 
-          <h1 className="text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">Sign in</h1>
-          <p className="text-sm text-warm-gray mb-8">Staff portal</p>
+          <div className="mb-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gold mb-3">Staff Portal</p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-[-0.02em] text-foreground mb-2">Welcome back</h1>
+            <p className="text-sm text-warm-gray">Sign in to manage leads, bookings, inspections, and outcomes.</p>
+          </div>
 
           {error === 'invalid_credentials' && (
             <div className="mb-5 rounded-xl bg-red-50 border border-red-200/50 p-4 text-sm text-red-700 flex items-center gap-2">
@@ -69,7 +79,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </div>
           )}
 
-          <form action={login} className="card-premium p-7 space-y-5">
+          <form action={login} className="card-premium p-6 sm:p-7 space-y-5 shadow-2xl shadow-black/5">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-2">
                 Email
@@ -107,6 +117,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               Sign in
             </SubmitButton>
           </form>
+          <p className="mt-5 text-center text-[11px] text-warm-gray/70">Access is restricted to active staff accounts.</p>
         </div>
       </div>
     </main>

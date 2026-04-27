@@ -3,7 +3,7 @@
  *
  * Covers:
  *   - Acquisition KPIs: offers generated, acceptance, manual review, blocked rates
- *   - Profit KPIs: predicted profit, realised profit, variance, guardrail triggers
+ *   - Profit KPIs: realised profit from completed deals
  *   - Risk KPIs: rollback blocked %, recon error %, avg recon % of trade
  *   - Shadow comparison summary
  */
@@ -33,10 +33,7 @@ export interface AcquisitionKPIs {
 }
 
 export interface ProfitKPIs {
-  avgPredictedProfitMid: number
   avgRealisedProfit: number | null
-  profitVariance: number | null
-  guardrailTriggerPct: number   // % of snapshots where profit guardrail triggered
   totalWonDeals: number
   totalRealisedDeals: number    // won + have actual_purchase_price
 }
@@ -136,7 +133,6 @@ export async function fetchDashboardKPIs(): Promise<DashboardKPIs> {
     { count: wonLeads },
     { count: totalOutcomed },
     { data: snapshots },
-    { data: wonDeals },
     { data: realisedDeals },
   ] = await Promise.all([
     sb.from('leads').select('*', { count: 'exact', head: true }),
@@ -151,11 +147,6 @@ export async function fetchDashboardKPIs(): Promise<DashboardKPIs> {
       .select('auto_quote, result_min, confidence_score, risk_flags, all_multipliers, profit_simulation')
       .order('created_at', { ascending: false })
       .limit(500),
-    // Won deals with final_offer
-    sb.from('leads')
-      .select('final_offer, estimated_min, estimated_max')
-      .eq('outcome', 'won')
-      .not('final_offer', 'is', null),
     // Realised deals (with actual purchase + resale)
     sb.from('leads')
       .select('actual_purchase_price, actual_resale_price, actual_recon_cost, estimated_min, estimated_max')
@@ -186,22 +177,8 @@ export async function fetchDashboardKPIs(): Promise<DashboardKPIs> {
     avgConfidence,
   }
 
-  // ── Profit KPIs ─────────────────────────────────────────────────────────
+  // ── Profit KPIs: realised data only ─────────────────────────────────────
 
-  // Predicted profit from snapshots
-  const profitSims = snaps
-    .map(s => s.profit_simulation as { expectedProfitMid: number; guardrailTriggered: boolean } | null)
-    .filter(Boolean)
-
-  const avgPredictedProfitMid = profitSims.length > 0
-    ? Math.round(profitSims.reduce((sum, p) => sum + safe(p!.expectedProfitMid), 0) / profitSims.length)
-    : 0
-
-  const guardrailTriggerPct = profitSims.length > 0
-    ? Math.round((profitSims.filter(p => p!.guardrailTriggered).length / profitSims.length) * 100)
-    : 0
-
-  // Realised profit from actual data
   const realisedData = (realisedDeals || []).filter(d =>
     d.actual_purchase_price && d.actual_resale_price
   )
@@ -210,17 +187,8 @@ export async function fetchDashboardKPIs(): Promise<DashboardKPIs> {
         sum + (d.actual_resale_price - d.actual_purchase_price - safe(d.actual_recon_cost)), 0) / realisedData.length)
     : null
 
-  // Profit variance (predicted vs realised)
-  let profitVariance: number | null = null
-  if (avgRealisedProfit !== null && avgPredictedProfitMid > 0) {
-    profitVariance = Math.round(((avgRealisedProfit - avgPredictedProfitMid) / avgPredictedProfitMid) * 100)
-  }
-
   const profit: ProfitKPIs = {
-    avgPredictedProfitMid,
     avgRealisedProfit,
-    profitVariance,
-    guardrailTriggerPct,
     totalWonDeals: safe(wonLeads),
     totalRealisedDeals: realisedData.length,
   }
@@ -257,10 +225,6 @@ export async function fetchDashboardKPIs(): Promise<DashboardKPIs> {
     ? Math.round((reconEstimates.reduce((sum, r) => sum + (r.recon / r.trade) * 100, 0) / reconEstimates.length) * 10) / 10
     : 0
 
-  // Recon error % (predicted vs actual for realised deals)
-  const reconComparisons = (realisedDeals || []).filter(d =>
-    d.actual_recon_cost && d.actual_recon_cost > 0
-  )
   // We'd need to join with snapshots for this, simplified: null for now
   const reconErrorPct: number | null = null
 

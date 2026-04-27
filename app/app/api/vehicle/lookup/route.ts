@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       || request.headers.get('x-real-ip')
       || 'unknown'
 
-    const rl = await checkRateLimit(`vehicle-lookup:${ip}`)
+    const rl = await checkRateLimit(`vehicle-lookup:${ip}`, { failOpenOnError: true })
     if (!rl.allowed) {
       return NextResponse.json(
         { error: 'Too many requests. Please wait a few minutes and try again.' },

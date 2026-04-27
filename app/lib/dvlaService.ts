@@ -26,7 +26,7 @@ function sleep(ms: number): Promise<void> {
 
 async function throttle(): Promise<void> {
   const maxPerSecond = Math.max(1, Number(process.env.DVLA_GLOBAL_RPS ?? '1') || 1)
-  const limit = await checkCustomRateLimit('dvla-ves-global', maxPerSecond, 1, 'mcar:dvla')
+  const limit = await checkCustomRateLimit('dvla-ves-global', maxPerSecond, 1, 'mcar:dvla', { failOpenOnError: true })
   if (!limit.allowed) {
     await reportError(new Error('DVLA global throttle reached'), {
       severity: 'warning',

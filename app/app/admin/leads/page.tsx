@@ -58,7 +58,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   // Search filter — search across reg, seller_name, seller_email
   // Sanitise to prevent PostgREST filter injection (strip commas, dots, parens, operators)
   if (q) {
-    const safeQ = q.replace(/[,\.()%*]/g, '').slice(0, 100)
+    const safeQ = q.replace(/[\\,\.()%*]/g, '').slice(0, 100)
     if (safeQ.length > 0) {
       query = query.or(`reg.ilike.%${safeQ}%,seller_name.ilike.%${safeQ}%,seller_email.ilike.%${safeQ}%`)
     }

@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { isValidStatusTransition, VALID_STATUS_TRANSITIONS } from '@/lib/types'
-import type { LeadStatus } from '@/lib/types'
+import type { AppointmentStatus, LeadStatus } from '@/lib/types'
 import OutcomeForm from './OutcomeForm'
 import { SubmitButton } from '@/app/components/SubmitButton'
 import { recordTransaction } from '@/lib/calibrationStore'
@@ -12,27 +12,15 @@ interface LeadDetailPageProps {
   params: Promise<{ id: string }>
 }
 
-// Multiplier display names for the breakdown table
-const MULTIPLIER_LABELS: Record<string, string> = {
-  tradeBase: 'Trade Base (£)',
-  ageMultiplier: 'Age',
-  mileageMultiplier: 'Mileage',
-  motMultiplier: 'MOT Risk',
-  fuelMultiplier: 'Fuel Type',
-  conditionMultiplier: 'Condition',
-  regionMultiplier: 'Region',
-  ulezMultiplier: 'ULEZ',
-  mileageConsistencyMultiplier: 'Mileage Consistency',
-  volatilityMultiplier: 'Volatility',
-  keeperMultiplier: 'Keeper History',
-  sornMultiplier: 'SORN',
-  reconMultiplier: 'Recon Impact',
-  reconEstimate: 'Recon Estimate (£)',
-  marketConfidenceMultiplier: 'Market Confidence',
-  inputTrustMultiplier: 'Input Trust',
-  liquidityBuffer: 'Liquidity Buffer',
-  combinedAdjustment: 'Combined Adj.',
-  rawValue: 'Raw Value (£)',
+const APPOINTMENT_STATUS_LABELS: Record<AppointmentStatus, string> = {
+  booked: 'Booked',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'No-show',
+}
+
+function formatStatus(status: string): string {
+  return status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
 export default async function AdminLeadDetailPage({ params }: LeadDetailPageProps) {
@@ -79,10 +67,6 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     inspectionPhotoUrls = (data ?? []).map((item) => item.signedUrl).filter(Boolean) as string[]
   }
 
-  // Parse snapshot multipliers
-  const multipliers = snapshot?.all_multipliers as Record<string, number> | null
-  const riskFlags = snapshot?.risk_flags as string[] | null
-  const adminExplanation = (snapshot as Record<string, unknown>)?.admin_explanation as { rule: string; severity: string; description: string; impact: string }[] | null
   const profitSim = (snapshot as Record<string, unknown>)?.profit_simulation as {
     estimatedRetail: number; sellCostPct: number; reconEstimate: number;
     expectedProfitMin: number; expectedProfitMid: number; expectedProfitMax: number;
@@ -268,12 +252,13 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
 
     const { data: currentLead } = await svc
       .from('leads')
-      .select('assigned_inspector_id')
+      .select('assigned_inspector_id, status')
       .eq('id', leadId)
       .single()
 
     const prevInspector = currentLead?.assigned_inspector_id ?? null
     const newInspector = inspectorId || null
+    const currentStatus = (currentLead?.status ?? 'new') as LeadStatus
 
     if (prevInspector === newInspector) {
       redirect(`/admin/leads/${leadId}`)
@@ -290,7 +275,10 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       actorUserId: caller.id,
       actorKind: 'admin',
       oldValue: { assigned_inspector_id: prevInspector },
-      newValue: { assigned_inspector_id: newInspector },
+      newValue: {
+        assigned_inspector_id: newInspector,
+        inspector_queue_visible: Boolean(newInspector && !['won', 'lost', 'expired'].includes(currentStatus)),
+      },
     }, { area: 'admin_leads', blocking: true })
 
     redirect(`/admin/leads/${leadId}`)
@@ -402,6 +390,90 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     redirect(`/admin/leads/${leadId}`)
   }
 
+  // ── Appointment status server action ─────────────────────────────────
+  async function submitAppointmentStatus(formData: FormData) {
+    'use server'
+    const authClient = await createClient()
+    const { data: { user: caller } } = await authClient.auth.getUser()
+    if (!caller) redirect('/login')
+    const { data: callerProfile } = await createServiceClient().from('users').select('role').eq('id', caller.id).single()
+    if (callerProfile?.role !== 'admin') redirect('/login')
+
+    const leadId = formData.get('leadId') as string
+    const appointmentId = formData.get('appointmentId') as string
+    const newStatus = formData.get('status') as AppointmentStatus
+
+    if (!leadId || !appointmentId || !['booked', 'completed', 'cancelled', 'no_show'].includes(newStatus)) return
+
+    const svc = createServiceClient()
+    const [appointmentResult, leadResult] = await Promise.all([
+      svc.from('appointments').select('status').eq('id', appointmentId).eq('lead_id', leadId).single(),
+      svc.from('leads').select('status').eq('id', leadId).single(),
+    ])
+
+    const prevAppointmentStatus = appointmentResult.data?.status as AppointmentStatus | undefined
+    const prevLeadStatus = (leadResult.data?.status ?? 'new') as LeadStatus
+
+    if (!prevAppointmentStatus || prevAppointmentStatus === newStatus) {
+      redirect(`/admin/leads/${leadId}`)
+    }
+
+    let nextLeadStatus: LeadStatus | null = null
+    if (newStatus === 'cancelled' && prevLeadStatus === 'appointment_booked') nextLeadStatus = 'contacted'
+    if (newStatus === 'no_show' && prevLeadStatus === 'appointment_booked') nextLeadStatus = 'no_response'
+
+    await svc.from('appointments').update({ status: newStatus }).eq('id', appointmentId).eq('lead_id', leadId)
+    if (nextLeadStatus) {
+      await svc.from('leads').update({ status: nextLeadStatus }).eq('id', leadId)
+    }
+
+    await writeAuditLog(svc, {
+      leadId,
+      action: 'status_change',
+      actorUserId: caller.id,
+      actorKind: 'admin',
+      oldValue: { appointment_status: prevAppointmentStatus, lead_status: prevLeadStatus },
+      newValue: { appointment_status: newStatus, lead_status: nextLeadStatus ?? prevLeadStatus },
+    }, { area: 'admin_leads', blocking: true })
+
+    redirect(`/admin/leads/${leadId}`)
+  }
+
+  // ── Delete lead server action ─────────────────────────────────────────
+  async function submitDeleteLead(formData: FormData) {
+    'use server'
+    const authClient = await createClient()
+    const { data: { user: caller } } = await authClient.auth.getUser()
+    if (!caller) redirect('/login')
+    const { data: callerProfile } = await createServiceClient().from('users').select('role').eq('id', caller.id).single()
+    if (callerProfile?.role !== 'admin') redirect('/login')
+
+    const leadId = formData.get('leadId') as string
+    const confirm = ((formData.get('confirm') as string) ?? '').trim()
+    if (!leadId || confirm !== 'DELETE') return
+
+    const svc = createServiceClient()
+    const [{ data: targetLead }, { data: targetInspections }] = await Promise.all([
+      svc.from('leads').select('pending_photo_urls').eq('id', leadId).maybeSingle(),
+      svc.from('inspections').select('photo_urls').eq('lead_id', leadId),
+    ])
+
+    const photoPaths = new Set<string>()
+    ;((targetLead as Record<string, unknown> | null)?.pending_photo_urls as string[] | undefined)?.forEach((path) => photoPaths.add(path))
+    ;(targetInspections ?? []).forEach((inspection) => {
+      ((inspection as Record<string, unknown>).photo_urls as string[] | undefined)?.forEach((path) => photoPaths.add(path))
+    })
+
+    if (photoPaths.size > 0) {
+      await svc.storage.from('inspection-photos').remove([...photoPaths])
+    }
+
+    const { error: deleteError } = await svc.from('leads').delete().eq('id', leadId)
+    if (deleteError) throw new Error('Failed to delete client record. Please try again.')
+
+    redirect('/admin/leads')
+  }
+
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto">
       {/* ── Header — dossier style: reg as hero, metadata inline ─── */}
@@ -440,8 +512,8 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
             Seller
           </p>
           <dl className="space-y-2">
-            <DL label="Email" value={lead.seller_email} />
-            <DL label="Phone" value={lead.seller_phone} />
+            <DL label="Email" value={<a href={`mailto:${lead.seller_email}`} className="text-gold hover:underline">{lead.seller_email}</a>} />
+            <DL label="Phone" value={<a href={`tel:${lead.seller_phone}`} className="text-gold hover:underline">{lead.seller_phone}</a>} />
             <DL label="Postcode" value={lead.seller_postcode} />
           </dl>
         </div>
@@ -501,106 +573,14 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
               <DL label="Snapshot" value={new Date(snapshot.created_at).toLocaleString('en-GB')} />
             </div>
 
-            {/* ── Profit Simulation V4 (Resale Evidence Engine) ─────────── */}
-            {profitSimV4 ? (
-              <div className="mt-5">
-                <span className="text-xs text-warm-gray block mb-2">Profit Simulation v4</span>
-
-                <div className={`rounded-xl p-4 sm:p-5 ${
-                  profitSimV4.profit?.mid >= 300 ? 'bg-green-50 ring-1 ring-green-200' :
-                  profitSimV4.profit?.mid >= 0 ? 'bg-amber-50 ring-1 ring-amber-200' :
-                  'bg-red-50 ring-1 ring-red-200'
-                }`}>
-                  {/* Big profit number */}
-                  <div className="text-center mb-4">
-                    <p className="text-xs text-warm-gray mb-0.5">Projected Profit (Mid)</p>
-                    <p className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
-                      profitSimV4.profit?.mid >= 300 ? 'text-green-700' :
-                      profitSimV4.profit?.mid >= 0 ? 'text-amber-700' : 'text-red-700'
-                    }`}>
-                      £{profitSimV4.profit?.mid?.toLocaleString()}
-                    </p>
-                  </div>
-
-                  {/* 4 compact stats — responsive grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center mb-3">
-                    <div>
-                      <p className="text-[10px] text-warm-gray">Est. Resale</p>
-                      <p className="text-sm font-semibold text-foreground">£{profitSimV4.resale?.mid?.toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-warm-gray">Profit Range</p>
-                      <p className="text-xs font-medium text-foreground/70">
-                        £{profitSimV4.profit?.low?.toLocaleString()} – £{profitSimV4.profit?.high?.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-warm-gray">Margin</p>
-                      <p className={`text-sm font-bold ${
-                        profitSimV4.marginPctMid >= 10 ? 'text-green-700' :
-                        profitSimV4.marginPctMid >= 5 ? 'text-amber-700' : 'text-red-700'
-                      }`}>{profitSimV4.marginPctMid}%</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-warm-gray">Confidence</p>
-                      <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        profitSimV4.confidence === 'high' ? 'bg-green-100 text-green-800' :
-                        profitSimV4.confidence === 'medium' ? 'bg-amber-100 text-amber-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>{profitSimV4.confidence}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-[10px] text-warm-gray italic text-center">
-                    {profitSimV4.compactNote}
-                  </p>
-
-                  {profitSimV4.guardrailTriggered && (
-                    <p className="mt-2 text-xs text-red-700 font-medium text-center">
-                      <svg className="inline w-3.5 h-3.5 mr-0.5 -mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
-                      {profitSimV4.guardrailReason}
-                    </p>
-                  )}
-                </div>
+            {(profitSimV4 || profitSim) && (
+              <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-amber-700 block mb-2">Profit model archived</span>
+                <p className="text-sm leading-relaxed text-amber-900">
+                  Projected profit outputs are hidden until enough realised purchase, recon, and resale outcomes exist. Use the valuation range, inspection findings, and recorded outcomes for decisions.
+                </p>
               </div>
-            ) : profitSim ? (
-              /* ── Fallback: v3 Profit Simulation ─────────────────────────── */
-              <div className="mt-5">
-                <span className="text-xs text-warm-gray block mb-2">Profit Simulation (v3)</span>
-                <div className={`rounded-xl p-4 sm:p-5 ${
-                  profitSim.profitRiskBand === 'green' ? 'bg-green-50 ring-1 ring-green-200' :
-                  profitSim.profitRiskBand === 'amber' ? 'bg-amber-50 ring-1 ring-amber-200' :
-                  'bg-red-50 ring-1 ring-red-200'
-                }`}>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-                    <div className="text-center">
-                      <p className="text-xs text-warm-gray">Profit (Min)</p>
-                      <p className={`text-sm font-bold ${profitSim.expectedProfitMin < 0 ? 'text-red-700' : 'text-green-700'}`}>
-                        £{profitSim.expectedProfitMin?.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-warm-gray">Profit (Mid)</p>
-                      <p className={`text-lg font-bold ${profitSim.expectedProfitMid < 0 ? 'text-red-700' : 'text-green-700'}`}>
-                        £{profitSim.expectedProfitMid?.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-warm-gray">Profit (Max)</p>
-                      <p className={`text-sm font-bold ${profitSim.expectedProfitMax < 0 ? 'text-red-700' : 'text-green-700'}`}>
-                        £{profitSim.expectedProfitMax?.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  {profitSim.guardrailTriggered && (
-                    <p className="mt-2 text-xs text-red-700 font-medium">
-                      <svg className="inline w-3.5 h-3.5 mr-0.5 -mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-8.6 14.86A1 1 0 002.56 20h18.88a1 1 0 00.87-1.28l-8.6-14.86a1 1 0 00-1.72 0z" /></svg>
-                      Guardrail: {profitSim.guardrailReason}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : null}
+            )}
           </>
         ) : (
           <p className="text-sm text-warm-gray">No valuation snapshot recorded.</p>
@@ -697,11 +677,12 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                 <option key={insp.id} value={insp.id}>{insp.name}</option>
               ))}
             </select>
+            <p className="mt-2 text-[11px] leading-snug text-warm-gray/70">Assigned non-terminal leads appear in the inspector queue.</p>
             <SubmitButton
-              loadingText="…"
+              loadingText="Forwarding…"
               className="mt-3 w-full rounded-lg gradient-gold px-3 py-2 text-xs font-bold text-white shadow-sm hover:shadow-md transition-all"
             >
-              Assign
+              Forward
             </SubmitButton>
           </form>
 
@@ -750,7 +731,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
                   <option value="" disabled>Select…</option>
                   {allowedTransitions.map((s) => (
                     <option key={s} value={s}>
-                      {s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                      {formatStatus(s)}
                     </option>
                   ))}
                 </select>
@@ -773,10 +754,42 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
           Appointment
         </p>
         {appointment ? (
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 text-sm">
-            <div><span className="text-warm-gray">Type</span> <span className="ml-2 text-foreground capitalize">{appointment.type.replace('_', '-')}</span></div>
-            <div><span className="text-warm-gray">When</span> <span className="ml-2 text-foreground">{new Date(appointment.start_at).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</span></div>
-            <div><span className="text-warm-gray">Status</span> <span className="ml-2 text-foreground capitalize">{appointment.status}</span></div>
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-8 text-sm">
+              <div><span className="text-warm-gray">Type</span> <span className="ml-2 text-foreground capitalize">{appointment.type.replace('_', '-')}</span></div>
+              <div><span className="text-warm-gray">When</span> <span className="ml-2 text-foreground">{new Date(appointment.start_at).toLocaleString('en-GB', { timeZone: 'Europe/London' })}</span></div>
+              <div><span className="text-warm-gray">Status</span> <span className="ml-2 text-foreground">{APPOINTMENT_STATUS_LABELS[appointment.status as AppointmentStatus]}</span></div>
+            </div>
+            {appointment.status === 'booked' && (
+              <form action={submitAppointmentStatus} className="flex flex-wrap gap-2 border-t border-[var(--card-border)] pt-4">
+                <input type="hidden" name="leadId" value={lead.id} />
+                <input type="hidden" name="appointmentId" value={appointment.id} />
+                <SubmitButton
+                  name="status"
+                  value="cancelled"
+                  loadingText="Cancelling…"
+                  className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition-all hover:bg-red-100"
+                >
+                  Cancel Booking
+                </SubmitButton>
+                <SubmitButton
+                  name="status"
+                  value="completed"
+                  loadingText="Updating…"
+                  className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-bold text-green-700 transition-all hover:bg-green-100"
+                >
+                  Mark Completed
+                </SubmitButton>
+                <SubmitButton
+                  name="status"
+                  value="no_show"
+                  loadingText="Updating…"
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 transition-all hover:bg-amber-100"
+                >
+                  No-show
+                </SubmitButton>
+              </form>
+            )}
           </div>
         ) : (
           <p className="text-sm text-warm-gray/60">No appointment booked.</p>
@@ -878,6 +891,34 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
         )}
       </div>
 
+      {/* ── Danger Zone ───────────────────────────────────── */}
+      <div className="card-premium p-5 sm:p-7 mb-6 sm:mb-8 border-red-200/70">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-red-500 mb-4 flex items-center gap-2">
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zM10.29 3.86L1.82 18a1.5 1.5 0 001.29 2.25h17.78A1.5 1.5 0 0022.18 18L13.71 3.86a1.5 1.5 0 00-2.42 0z" /></svg>
+          Danger Zone
+        </p>
+        <form action={submitDeleteLead} className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end max-w-2xl">
+          <input type="hidden" name="leadId" value={lead.id} />
+          <div>
+            <label htmlFor="confirm-delete" className="block text-sm font-semibold text-foreground mb-1.5">Delete client record</label>
+            <p className="text-xs text-warm-gray mb-2">This permanently removes the lead, booking, notes, inspection record, and related photos. Type DELETE to confirm.</p>
+            <input
+              id="confirm-delete"
+              name="confirm"
+              pattern="DELETE"
+              placeholder="DELETE"
+              className="w-full rounded-xl border border-red-200 bg-red-50/60 px-4 py-3 text-sm font-bold uppercase tracking-wider text-red-700 placeholder:text-red-300 focus:border-red-400 focus:outline-none focus:ring-2 focus:ring-red-200"
+            />
+          </div>
+          <SubmitButton
+            loadingText="Deleting…"
+            className="rounded-xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition-all hover:bg-red-700 disabled:opacity-60"
+          >
+            Delete Client
+          </SubmitButton>
+        </form>
+      </div>
+
       {/* ── Audit Log card ───────────────────────────────────── */}
       <div className="card-premium p-5 sm:p-7">
         <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-warm-gray mb-4 flex items-center gap-2">
@@ -903,7 +944,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
   )
 }
 
-function DL({ label, value }: { label: string; value: string }) {
+function DL({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-baseline gap-3">
       <dt className="text-sm text-warm-gray w-24 sm:w-28 shrink-0">{label}</dt>

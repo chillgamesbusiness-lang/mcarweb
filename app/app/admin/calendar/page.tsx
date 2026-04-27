@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export const metadata = { title: 'Calendar' }
@@ -8,7 +9,7 @@ export default async function AdminCalendarPage() {
   const { data: appointments } = await svc
     .from('appointments')
     .select('*, leads(seller_name, reg)')
-    .in('status', ['booked', 'completed'])
+    .in('status', ['booked', 'completed', 'cancelled', 'no_show'])
     .order('start_at', { ascending: true })
     .limit(50)
 
@@ -22,8 +23,16 @@ export default async function AdminCalendarPage() {
         <div className="divide-y divide-warm-border/50">
         {appointments?.map((appt) => {
           const lead = appt.leads as { seller_name: string; reg: string } | null
+          const statusClass = appt.status === 'completed'
+            ? 'text-green-600'
+            : appt.status === 'cancelled'
+              ? 'text-red-500'
+              : appt.status === 'no_show'
+                ? 'text-amber-600'
+                : 'text-warm-gray'
+
           return (
-            <div key={appt.id} className="group flex items-center gap-3 sm:gap-6 py-3 sm:py-4 px-3 sm:px-6 hover:bg-gold/[0.03] transition-all duration-200">
+            <Link key={appt.id} href={appt.lead_id ? `/admin/leads/${appt.lead_id}` : '/admin/calendar'} className="group flex items-center gap-3 sm:gap-6 py-3 sm:py-4 px-3 sm:px-6 hover:bg-gold/[0.03] transition-all duration-200">
               {/* Date — prominent */}
               <span className="w-32 sm:w-40 text-xs sm:text-sm tabular-nums text-foreground shrink-0">
                 {new Date(appt.start_at).toLocaleString('en-GB', {
@@ -45,12 +54,10 @@ export default async function AdminCalendarPage() {
               </div>
 
               {/* Status */}
-              <span className={`text-xs font-semibold capitalize shrink-0 ${
-                appt.status === 'completed' ? 'text-green-600' : 'text-warm-gray'
-              }`}>
-                {appt.status}
+              <span className={`text-xs font-semibold capitalize shrink-0 ${statusClass}`}>
+                {appt.status.replace('_', ' ')}
               </span>
-            </div>
+            </Link>
           )
         })}
 
@@ -62,7 +69,7 @@ export default async function AdminCalendarPage() {
         </div>
       </div>
 
-      <p className="mt-8 text-[11px] text-warm-gray/50">Full calendar widget coming in a later session.</p>
+      <p className="mt-8 text-[11px] text-warm-gray/50">Showing the latest 50 appointments. Open a row to manage the booking.</p>
     </div>
   )
 }

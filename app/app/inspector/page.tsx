@@ -10,13 +10,13 @@ export default async function InspectorIndexPage() {
 
   if (!user) return null
 
-  // Leads assigned to this inspector that are in inspection-relevant stages
+  // Any assigned non-terminal lead should be visible to the inspector immediately.
   const svc = createServiceClient()
   const { data: leads, error } = await svc
     .from('leads')
     .select('id, reg, make, model, seller_name, seller_phone, status, appointments(start_at, type)')
     .eq('assigned_inspector_id', user.id)
-    .in('status', ['appointment_booked', 'inspected'])
+    .in('status', ['new', 'verified', 'contacted', 'appointment_booked', 'inspected', 'offer_made', 'no_response'])
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -27,7 +27,7 @@ export default async function InspectorIndexPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-10">
       <h1 className="text-2xl sm:text-3xl font-extrabold tracking-[-0.02em] text-foreground mb-1">My Inspections</h1>
-      <p className="text-sm text-warm-gray mb-8">Assigned vehicles awaiting or completed inspection</p>
+      <p className="text-sm text-warm-gray mb-8">Assigned vehicles awaiting review or completed inspection</p>
 
       <div className="card-premium overflow-hidden">
         <div className="divide-y divide-warm-border/50">

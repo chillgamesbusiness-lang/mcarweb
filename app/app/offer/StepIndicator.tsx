@@ -2,14 +2,14 @@
 
 /**
  * 3-step progress indicator for the offer funnel.
- * Steps: Vehicle → Your Details → Valuation
+ * Steps: Vehicle → Your Details → Booking
  * Premium design with gradient accents & animations.
  */
 
 const STEPS = [
   { label: 'Vehicle', step: 1 },
   { label: 'Your Details', step: 2 },
-  { label: 'Valuation', step: 3 },
+  { label: 'Booking', step: 3 },
 ] as const
 
 export default function StepIndicator({ current }: { current: 1 | 2 | 3 }) {

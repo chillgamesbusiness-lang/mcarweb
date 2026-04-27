@@ -63,11 +63,27 @@ export interface RateLimitResult {
   resetMs: number
 }
 
+interface RateLimitOptions {
+  failOpenOnError?: boolean
+}
+
+function shouldFailOpen(options?: RateLimitOptions): boolean {
+  return options?.failOpenOnError === true
+}
+
+function shouldThrowRateLimitError(options?: RateLimitOptions): boolean {
+  return isStrictProductionEnv() && !shouldFailOpen(options)
+}
+
+function rateLimitSeverity(options?: RateLimitOptions): 'critical' | 'warning' {
+  return shouldThrowRateLimitError(options) ? 'critical' : 'warning'
+}
+
 /**
  * Check rate limit for a given identifier (e.g. IP address).
  * Returns { allowed: true } when Upstash is not configured outside strict production.
  */
-export async function checkRateLimit(identifier: string): Promise<RateLimitResult> {
+export async function checkRateLimit(identifier: string, options?: RateLimitOptions): Promise<RateLimitResult> {
   const rl = getRatelimit()
   if (!rl) {
     return { allowed: true, remaining: 999, resetMs: 0 }
@@ -82,13 +98,13 @@ export async function checkRateLimit(identifier: string): Promise<RateLimitResul
     }
   } catch (err) {
     await reportError(err, {
-      severity: isStrictProductionEnv() ? 'critical' : 'warning',
+      severity: rateLimitSeverity(options),
       area: 'rate_limit',
       operation: 'generic_limit',
       provider: 'upstash',
-      metadata: { identifier },
+      metadata: { identifier, failOpen: shouldFailOpen(options) },
     })
-    if (isStrictProductionEnv()) throw err
+    if (shouldThrowRateLimitError(options)) throw err
     return { allowed: true, remaining: 999, resetMs: 0 }
   }
 }
@@ -155,7 +171,8 @@ export async function checkCustomRateLimit(
   key: string,
   max: number,
   windowSec: number,
-  prefix: string
+  prefix: string,
+  options?: RateLimitOptions
 ): Promise<RateLimitResult> {
   const r = getRedisClient()
   if (!r) return { allowed: true, remaining: 999, resetMs: 0 }
@@ -177,13 +194,13 @@ export async function checkCustomRateLimit(
     return { allowed: success, remaining, resetMs: reset }
   } catch (err) {
     await reportError(err, {
-      severity: isStrictProductionEnv() ? 'critical' : 'warning',
+      severity: rateLimitSeverity(options),
       area: 'rate_limit',
       operation: 'custom_limit',
       provider: 'upstash',
-      metadata: { key, max, windowSec, prefix },
+      metadata: { key, max, windowSec, prefix, failOpen: shouldFailOpen(options) },
     })
-    if (isStrictProductionEnv()) throw err
+    if (shouldThrowRateLimitError(options)) throw err
     return { allowed: true, remaining: 999, resetMs: 0 }
   }
 }

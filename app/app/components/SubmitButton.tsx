@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom'
 
-interface SubmitButtonProps {
+interface SubmitButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'disabled' | 'type'> {
   children: React.ReactNode
   /** Text shown while the form is pending. Defaults to children with a spinner. */
   loadingText?: string
@@ -23,11 +23,13 @@ export function SubmitButton({
   loadingText,
   className = '',
   disabled = false,
+  ...buttonProps
 }: SubmitButtonProps) {
   const { pending } = useFormStatus()
 
   return (
     <button
+      {...buttonProps}
       type="submit"
       disabled={pending || disabled}
       aria-disabled={pending || disabled}

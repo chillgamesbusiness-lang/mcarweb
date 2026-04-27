@@ -42,9 +42,10 @@ function StatusDot({ status }: { status: Signal }) {
 export default function DashboardClient(props: DashboardProps) {
   const { acquisition, profit, weeklySummary, quickStats } = props
 
-  const healthyProfit = profit.avgPredictedProfitMid > 200
+  const healthyProfit = profit.avgRealisedProfit !== null && profit.avgRealisedProfit > 0
   const goodAcceptance = acquisition.acceptanceRate >= 15
-  const overallStatus: Signal = healthyProfit && goodAcceptance ? 'green' : healthyProfit || goodAcceptance ? 'amber' : 'red'
+  const hasRealisedData = profit.totalRealisedDeals > 0
+  const overallStatus: Signal = goodAcceptance && (!hasRealisedData || healthyProfit) ? 'green' : goodAcceptance || healthyProfit ? 'amber' : 'red'
 
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto">
@@ -69,27 +70,31 @@ export default function DashboardClient(props: DashboardProps) {
         ))}
       </div>
 
-      {/* ── Two-column asymmetric: profit + offers ───────────────── */}
+      {/* ── Two-column asymmetric: actual results + offers ───────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 sm:gap-6 mb-8 sm:mb-10">
-        {/* Left — profit card, large & dominant */}
+        {/* Left — realised results card, large & dominant */}
         <div className="lg:col-span-3 card-premium p-5 sm:p-7">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-8 h-8 rounded-xl gradient-gold flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-gray">Profit</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-gray">Actual Results</p>
           </div>
           <div className="mb-6">
-            <p className="text-3xl sm:text-5xl font-extrabold tracking-tight gradient-gold-text leading-none">
-              {profit.avgPredictedProfitMid >= 0 ? '£' : '−£'}{Math.abs(profit.avgPredictedProfitMid).toLocaleString()}
-            </p>
-            <p className="text-sm text-warm-gray mt-2">avg predicted per deal</p>
+            {profit.avgRealisedProfit !== null ? (
+              <p className="text-3xl sm:text-5xl font-extrabold tracking-tight gradient-gold-text leading-none">
+                {profit.avgRealisedProfit >= 0 ? '£' : '-£'}{Math.abs(profit.avgRealisedProfit).toLocaleString()}
+              </p>
+            ) : (
+              <p className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-none">No data yet</p>
+            )}
+            <p className="text-sm text-warm-gray mt-2">avg realised profit from completed deals only</p>
           </div>
 
           <div className="space-y-3 border-t border-warm-border/50 pt-5">
-            <DataRow label="Avg realised profit" value={profit.avgRealisedProfit !== null ? `£${profit.avgRealisedProfit.toLocaleString()}` : '—'} />
             <DataRow label="Deals won" value={profit.totalWonDeals} />
             <DataRow label="Deals completed" value={profit.totalRealisedDeals} />
+            <DataRow label="Predicted profit metric" value="Archived" />
           </div>
         </div>
 
