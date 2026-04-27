@@ -160,7 +160,8 @@ export async function checkOtpRateLimit(
       provider: 'upstash',
       metadata: { key, max, windowSec },
     })
-    if (isStrictProductionEnv()) throw err
+    // Fail-open: a Redis hiccup must not block OTP entirely.
+    // Twilio Verify enforces its own rate limits server-side as a second layer.
     return { allowed: true, remaining: 999, resetMs: 0 }
   }
 }

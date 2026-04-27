@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import TurnstileWidget from '@/app/components/TurnstileWidget'
 
@@ -25,6 +25,30 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
   const [turnstileResetSignal, setTurnstileResetSignal] = useState(0)
   const hasTurnstile = !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
   const checkboxClass = 'mt-0.5 size-4 shrink-0 rounded border-warm-border accent-gold focus:ring-gold'
+
+  // Auto-skip OTP for numbers verified in the last 30 days
+  useEffect(() => {
+    const cleaned = phone.replace(/[\s\-()]/g, '')
+    if (!/^07\d{9}$/.test(cleaned)) return
+    let cancelled = false
+    fetch('/api/otp/check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    })
+      .then((r) => r.json())
+      .then((data: { verified: boolean; sessionId: string | null }) => {
+        if (cancelled) return
+        if (data.verified && data.sessionId) {
+          setOtpSessionId(data.sessionId)
+          setOtpVerified(true)
+          setOtpMessage('Phone already verified — no code needed.')
+          setOtpError('')
+        }
+      })
+      .catch(() => { /* silent — user can still send a code manually */ })
+    return () => { cancelled = true }
+  }, [phone])
 
   function resetTurnstile() {
     setTurnstileToken(null)
@@ -146,6 +170,7 @@ function ContactFormInner({ submitContact }: ContactFormProps) {
             setOtpMessage('')
             setOtpError('')
             setOtpVerified(false)
+            // useEffect will re-check once the phone is a valid UK mobile
           }}
           className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)]"
         />

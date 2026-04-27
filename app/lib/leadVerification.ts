@@ -206,7 +206,7 @@ export async function sendOTP(
 
     if (!res.ok) {
       const errBody = await res.text()
-      throw new Error(`Twilio Verify send failed: ${errBody.slice(0, 250)}`)
+      throw new Error(`Twilio Verify send failed (${res.status}): ${errBody.slice(0, 250)}`)
     }
   } catch (err) {
     await reportError(err, {
