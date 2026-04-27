@@ -1,8 +1,5 @@
 import type { NextConfig } from "next";
 import { execSync } from "child_process";
-import { assertProductionEnv } from "./lib/env";
-
-assertProductionEnv('next-config')
 
 // Capture git commit hash at build time for reproducibility
 let gitCommitHash = 'unknown';
