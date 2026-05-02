@@ -2,6 +2,35 @@
 
 Date: 2026-04-27
 
+## 2026-05-01 Live Production QA Addendum
+
+- Final production browser proof now passes end to end on `https://mcarweb.vercel.app`: contact auto-verification -> lead creation -> valuation snapshot -> booking -> `/offer/done`. Supabase proof confirmed the lead, snapshot, appointment, and audit actions before the controlled PII-bearing proof rows were cleaned.
+- Pulled Vercel production env into ignored local proof file and ran `npx tsx --env-file .env.vercel.production.local scripts/check-prod-env.ts`: pass, with optional Resend warnings only.
+- Resend is no longer V1 release-blocking. Booking confirmation and admin new-lead emails degrade when Resend is absent; lead/booking persistence must not depend on email delivery.
+- Production browser QA on `https://mcarweb.vercel.app` proved landing -> offer -> Turnstile success -> DVLA/MOT lookup -> signed token -> details -> contact form for `AB12CDE`.
+- Production browser QA also proved invalid registration safe error and blocked/invalid phone safe OTP-send error.
+- Real public OTP SMS send and server-side verify now pass with a controlled phone. The public-funnel schema patch is applied and `scripts/check-public-schema.ts` passes against production.
+- Production admin browser QA used a controlled temporary QA record to verify dashboard, leads list, lead detail, note add, finance update, appointment completed, calendar visibility, inspector queue, PNG photo upload, full inspection submit, admin inspection handback, and audit log entries.
+- Temporary browser QA data was cleaned up. Older `admin_audit_script` lead artifacts were also removed; audit-linked QA/dev profile rows were deauthorized rather than deleted to preserve append-only audit-log integrity.
+- `admin@dev.local` was accepted by production before remediation. The known dev password has now been rotated/deauthorized and returns invalid credentials. The inactive-profile login rejection is now deployed in the latest production build.
+- Latest hardening and macro-upgrade build deployed to `https://mcarweb.vercel.app` on 2026-05-01. Final live smoke passed for `/`, `/offer`, `/login`, `/privacy`, `/sitemap.xml`, and required security headers.
+- Staff hygiene check after cleanup/deploy found `activeQaOrDevProfiles: 0` for known QA/dev email patterns.
+- Admin Settings notification status was corrected locally so missing Resend does not show email-dependent notifications as fully active.
+
+See `audit-artifacts/mcarweb-prehandoff/end-to-end-scenario-audit.md` for the updated scenario matrix.
+
+## 2026-04-30 End-to-End Addendum
+
+- `npm run verify:admin-inspector` now passes against the connected Supabase database, including inspector recommendation/photo handback, lead `inspected` status update, audit logging, and audited lead deletion.
+- Browser QA confirmed `/` registration entry routes to `/offer?reg=AB12CDE`.
+- Earlier local browser QA was blocked at `/offer` because Cloudflare Turnstile returned `110200` on localhost/127.0.0.1. The production hostname now succeeds through Turnstile and lookup.
+- The old local `.env.local` gate result is superseded by the pulled Vercel production proof env. `RESEND_API_KEY` and `RESEND_FROM_ADDRESS` are optional for V1.
+- Superseded: full public happy-path proof, landing -> lookup -> details -> contact/OTP -> valuation -> booking -> done, now passes against the production alias.
+- Final-offer customer notification is documented as out of scope for V1; after inspection, admin staff record the recommended final offer and contact the customer manually.
+- Superseded: Vercel production deployment has now been completed for the latest hardening/macro-upgrade build.
+
+See `audit-artifacts/mcarweb-prehandoff/end-to-end-scenario-audit.md` for the full scenario matrix.
+
 ## Passed Locally
 
 - `npm run handoff:slots`: 8 passed, 0 failed.
@@ -50,7 +79,7 @@ Remaining UX evidence gap: Safari, Firefox, Edge, real device testing, authentic
 
 ## Release-Blocking Environment Gate
 
-`npm run handoff:env` failed as expected in this local shell. Missing required production env vars:
+Earlier `npm run handoff:env` failed as expected in an unsynced local shell. Missing required production env vars were:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -64,10 +93,8 @@ Remaining UX evidence gap: Safari, Firefox, Edge, real device testing, authentic
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_VERIFY_SERVICE_SID`
 - `DVLA_VES_API_KEY`
-- `RESEND_API_KEY`
-- `RESEND_FROM_ADDRESS`
 
-This is a handoff blocker until configured in the production host.
+This local-only result is superseded for production by the pulled Vercel proof env, which passes the required gate. Resend remains optional/degraded for V1.
 
 ## Skipped Or Blocked Evidence
 

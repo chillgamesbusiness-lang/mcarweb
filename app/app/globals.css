@@ -10,15 +10,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #FAFAF8;
+  --background: #F6F7F8;
   --foreground: #111111;
   --surface: #FFFFFF;
-  --surface-warm: #F7F5F0;
+  --surface-warm: #F2F4F5;
   --surface-elevated: #FFFFFF;
   --card-bg: #FFFFFF;
-  --card-border: rgba(229, 224, 218, 0.6);
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 8px 24px rgba(0,0,0,0.04), 0 20px 48px rgba(0,0,0,0.02);
-  --card-shadow-hover: 0 1px 3px rgba(0,0,0,0.02), 0 12px 32px rgba(0,0,0,0.06), 0 24px 56px rgba(0,0,0,0.03);
+  --card-border: rgba(15, 23, 42, 0.11);
+  --card-shadow: 0 1px 2px rgba(15,23,42,0.05);
+  --card-shadow-hover: 0 1px 3px rgba(15,23,42,0.08);
   --input-bg: #FFFFFF;
   --glass-bg: rgba(255, 255, 255, 0.7);
   --glass-card-bg: rgba(255, 255, 255, 0.6);
@@ -28,16 +28,16 @@
 }
 
 .dark {
-  --background: #0B0B0F;
-  --foreground: #E8E6E3;
-  --surface: #141418;
-  --surface-warm: #1A1A1F;
-  --surface-elevated: #1E1E24;
-  --card-bg: #141418;
-  --card-border: rgba(255, 255, 255, 0.06);
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3), 0 20px 48px rgba(0,0,0,0.15);
-  --card-shadow-hover: 0 1px 3px rgba(0,0,0,0.2), 0 12px 32px rgba(0,0,0,0.4), 0 24px 56px rgba(0,0,0,0.2);
-  --input-bg: #1A1A1F;
+  --background: #0F1115;
+  --foreground: #ECEFF3;
+  --surface: #151820;
+  --surface-warm: #1B1F28;
+  --surface-elevated: #202530;
+  --card-bg: #151820;
+  --card-border: rgba(226, 232, 240, 0.14);
+  --card-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  --card-shadow-hover: 0 1px 3px rgba(0,0,0,0.35);
+  --input-bg: #10141B;
   --glass-bg: rgba(20, 20, 24, 0.8);
   --glass-card-bg: rgba(20, 20, 24, 0.6);
   --glass-card-border: rgba(255, 255, 255, 0.06);
@@ -47,16 +47,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
-    --background: #0B0B0F;
-    --foreground: #E8E6E3;
-    --surface: #141418;
-    --surface-warm: #1A1A1F;
-    --surface-elevated: #1E1E24;
-    --card-bg: #141418;
-    --card-border: rgba(255, 255, 255, 0.06);
-    --card-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3), 0 20px 48px rgba(0,0,0,0.15);
-    --card-shadow-hover: 0 1px 3px rgba(0,0,0,0.2), 0 12px 32px rgba(0,0,0,0.4), 0 24px 56px rgba(0,0,0,0.2);
-    --input-bg: #1A1A1F;
+    --background: #0F1115;
+    --foreground: #ECEFF3;
+    --surface: #151820;
+    --surface-warm: #1B1F28;
+    --surface-elevated: #202530;
+    --card-bg: #151820;
+    --card-border: rgba(226, 232, 240, 0.14);
+    --card-shadow: 0 1px 2px rgba(0,0,0,0.25);
+    --card-shadow-hover: 0 1px 3px rgba(0,0,0,0.35);
+    --input-bg: #10141B;
     --glass-bg: rgba(20, 20, 24, 0.8);
     --glass-card-bg: rgba(20, 20, 24, 0.6);
     --glass-card-border: rgba(255, 255, 255, 0.06);
@@ -228,14 +228,13 @@ html {
 /* ── Gradient utilities ──────────────────────────────────────────────── */
 
 .gradient-gold {
-  background: linear-gradient(135deg, #C4963C 0%, #D4A94E 50%, #B8882E 100%);
+  background: #9B7832;
 }
 
 .gradient-gold-text {
-  background: linear-gradient(135deg, #C4963C 0%, #D4A94E 50%, #8B6914 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #9B7832;
+  background: none;
+  -webkit-text-fill-color: currentColor;
 }
 
 .gradient-dark {
@@ -261,14 +260,13 @@ html {
 .card-premium {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
-  border-radius: 20px;
+  border-radius: 8px;
   box-shadow: var(--card-shadow);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .card-premium:hover {
   box-shadow: var(--card-shadow-hover);
-  transform: translateY(-2px);
 }
 
 .card-gradient-border {
@@ -326,7 +324,7 @@ html {
   width: 3px;
   height: 60%;
   border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, #C4963C, #D4A94E);
+  background: #9B7832;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 

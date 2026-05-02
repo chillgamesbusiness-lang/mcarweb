@@ -16,7 +16,6 @@ export default async function InspectorIndexPage() {
     .from('leads')
     .select('id, reg, make, model, seller_name, seller_phone, status, appointments(start_at, type)')
     .eq('assigned_inspector_id', user.id)
-    .in('status', ['new', 'verified', 'contacted', 'appointment_booked', 'inspected', 'offer_made', 'no_response'])
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -30,8 +29,8 @@ export default async function InspectorIndexPage() {
       <p className="text-sm text-warm-gray mb-8">Assigned vehicles awaiting review or completed inspection</p>
 
       <div className="card-premium overflow-hidden">
-        <div className="divide-y divide-warm-border/50">
-        {leads?.map((lead) => {
+        <div className="divide-y divide-[var(--card-border)]">
+        {leads?.filter((lead) => !['won', 'lost', 'expired'].includes(lead.status)).map((lead) => {
           const appt = Array.isArray(lead.appointments)
             ? lead.appointments[0]
             : lead.appointments
@@ -40,7 +39,7 @@ export default async function InspectorIndexPage() {
             <Link
               key={lead.id}
               href={`/inspector/${lead.id}`}
-              className="group flex items-center gap-3 sm:gap-6 py-3 sm:py-4 px-3 sm:px-6 hover:bg-gold/[0.03] transition-all duration-200"
+              className="group flex items-center gap-3 px-3 py-3 transition-colors hover:bg-[var(--surface-warm)] sm:gap-6 sm:px-6 sm:py-4"
             >
               {/* Reg — bold anchor */}
               <span className="w-20 sm:w-24 text-xs sm:text-sm font-bold font-mono text-foreground tracking-wide shrink-0">
@@ -51,7 +50,7 @@ export default async function InspectorIndexPage() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-foreground truncate font-medium">
                   {lead.make} {lead.model}
-                  <span className="text-warm-gray ml-2 font-normal">— {lead.seller_name}</span>
+                  <span className="text-warm-gray ml-2 font-normal">- {lead.seller_name}</span>
                 </p>
                 {appt && (
                   <p className="text-xs text-warm-gray/60 mt-0.5">
@@ -66,18 +65,18 @@ export default async function InspectorIndexPage() {
 
               {/* Status */}
               <span
-                className={`text-xs font-semibold rounded-full px-3 py-1.5 shrink-0 ${
+                className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${
                   lead.status === 'inspected'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-purple-100 text-purple-700'
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-200'
+                    : 'border-[var(--card-border)] bg-[var(--surface-warm)] text-foreground'
                 }`}
               >
                 {lead.status === 'inspected' ? 'Submitted' : 'Pending'}
               </span>
 
               {/* Arrow */}
-              <span className="text-warm-gray/20 group-hover:text-gold transition-colors duration-200 shrink-0 font-medium">
-                {lead.status === 'inspected' ? 'View →' : 'Start →'}
+              <span className="shrink-0 font-medium text-warm-gray transition-colors group-hover:text-foreground">
+                {lead.status === 'inspected' ? 'View >' : 'Start >'}
               </span>
             </Link>
           )

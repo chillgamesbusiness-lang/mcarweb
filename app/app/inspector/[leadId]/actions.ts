@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { writeAuditLog } from '@/lib/auditLog'
+import { assertAuditLogReady, writeAuditLog } from '@/lib/auditLog'
 import { createRequestId, reportError } from '@/lib/reportError'
 
 export async function submitInspection(formData: FormData) {
@@ -96,6 +96,7 @@ export async function submitInspection(formData: FormData) {
   // 4. Get pending photos from lead
   const pendingPhotos: string[] = (lead as Record<string, unknown>).pending_photo_urls as string[] ?? []
   const previousStatus = lead.status
+  await assertAuditLogReady(serviceClient)
 
   // 5. Insert or update inspection
   let dbError

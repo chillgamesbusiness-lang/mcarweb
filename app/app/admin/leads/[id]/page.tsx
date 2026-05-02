@@ -6,7 +6,8 @@ import OutcomeForm from './OutcomeForm'
 import { SubmitButton } from '@/app/components/SubmitButton'
 import { recordTransaction } from '@/lib/calibrationStore'
 import { validateUuid } from '@/lib/inputHardening'
-import { writeAuditLog } from '@/lib/auditLog'
+import { assertAuditLogReady, writeAuditLog } from '@/lib/auditLog'
+import { deleteLeadById } from '@/lib/adminDbMutations'
 
 interface LeadDetailPageProps {
   params: Promise<{ id: string }>
@@ -97,6 +98,7 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (!outcome || !['won', 'lost'].includes(outcome)) return
 
     const svc = createServiceClient()
+    await assertAuditLogReady(svc)
 
     // Fetch current lead status for transition validation
     const { data: currentLead } = await svc
@@ -157,7 +159,16 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       updateData.reason_if_lost = reason
     }
 
-    await svc.from('leads').update(updateData).eq('id', leadId)
+    const { data: updatedLead, error: updateError } = await svc
+      .from('leads')
+      .update(updateData)
+      .eq('id', leadId)
+      .select('id, status')
+      .maybeSingle()
+
+    if (updateError || !updatedLead) {
+      throw new Error(updateError?.message ?? 'Failed to record outcome. Please try again.')
+    }
 
     // ── Record calibration transaction if purchase price available ──────
     if (outcome === 'won' && updateData.actual_purchase_price) {
@@ -215,12 +226,15 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (!leadId || !body || body.length < 1 || body.length > 5000) return
 
     const svc = createServiceClient()
+    await assertAuditLogReady(svc)
 
-    await svc.from('notes').insert({
+    const { error: insertError } = await svc.from('notes').insert({
       lead_id: leadId,
       author_user_id: caller.id,
       body,
     })
+
+    if (insertError) throw new Error(`Failed to add note: ${insertError.message}`)
 
     await writeAuditLog(svc, {
       leadId,
@@ -249,25 +263,60 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (!leadId) return
 
     const svc = createServiceClient()
+    await assertAuditLogReady(svc)
 
-    const { data: currentLead } = await svc
+    const leadIdCheck = validateUuid(leadId)
+    if (!leadIdCheck.valid) throw new Error('Invalid lead ID')
+
+    const newInspector = inspectorId || null
+    if (newInspector) {
+      const inspectorIdCheck = validateUuid(newInspector)
+      if (!inspectorIdCheck.valid) throw new Error('Invalid inspector ID')
+
+      const { data: inspector, error: inspectorError } = await svc
+        .from('users')
+        .select('id')
+        .eq('id', inspectorIdCheck.uuid)
+        .eq('role', 'inspector')
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (inspectorError || !inspector) {
+        throw new Error('Inspector was not found or is inactive.')
+      }
+    }
+
+    const { data: currentLead, error: currentLeadError } = await svc
       .from('leads')
       .select('assigned_inspector_id, status')
       .eq('id', leadId)
-      .single()
+      .maybeSingle()
+
+    if (currentLeadError || !currentLead) {
+      throw new Error(currentLeadError?.message ?? 'Lead was not found.')
+    }
 
     const prevInspector = currentLead?.assigned_inspector_id ?? null
-    const newInspector = inspectorId || null
     const currentStatus = (currentLead?.status ?? 'new') as LeadStatus
 
     if (prevInspector === newInspector) {
       redirect(`/admin/leads/${leadId}`)
     }
 
-    await svc
+    const { data: updatedLead, error: assignmentError } = await svc
       .from('leads')
       .update({ assigned_inspector_id: newInspector })
       .eq('id', leadId)
+      .select('id, assigned_inspector_id')
+      .maybeSingle()
+
+    if (assignmentError || !updatedLead) {
+      throw new Error(assignmentError?.message ?? 'Failed to forward lead to inspector.')
+    }
+
+    if (((updatedLead as { assigned_inspector_id: string | null }).assigned_inspector_id ?? null) !== newInspector) {
+      throw new Error('Database did not confirm inspector assignment.')
+    }
 
     await writeAuditLog(svc, {
       leadId,
@@ -300,12 +349,17 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (!leadId || !newFinanceStatus || !['not_checked', 'clear', 'finance_found'].includes(newFinanceStatus)) return
 
     const svc = createServiceClient()
+    await assertAuditLogReady(svc)
 
-    const { data: currentLead } = await svc
+    const { data: currentLead, error: currentLeadError } = await svc
       .from('leads')
       .select('finance_status')
       .eq('id', leadId)
-      .single()
+      .maybeSingle()
+
+    if (currentLeadError || !currentLead) {
+      throw new Error(currentLeadError?.message ?? 'Lead was not found.')
+    }
 
     const prevStatus = currentLead?.finance_status ?? 'not_checked'
 
@@ -313,10 +367,16 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       redirect(`/admin/leads/${leadId}`)
     }
 
-    await svc
+    const { data: updatedLead, error: updateError } = await svc
       .from('leads')
       .update({ finance_status: newFinanceStatus })
       .eq('id', leadId)
+      .select('id, finance_status')
+      .maybeSingle()
+
+    if (updateError || !updatedLead) {
+      throw new Error(updateError?.message ?? 'Failed to update finance status.')
+    }
 
     await writeAuditLog(svc, {
       leadId,
@@ -344,12 +404,17 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (!leadId || !newStatus) return
 
     const svc = createServiceClient()
+    await assertAuditLogReady(svc)
 
-    const { data: currentLead } = await svc
+    const { data: currentLead, error: currentLeadError } = await svc
       .from('leads')
       .select('status')
       .eq('id', leadId)
-      .single()
+      .maybeSingle()
+
+    if (currentLeadError || !currentLead) {
+      throw new Error(currentLeadError?.message ?? 'Lead was not found.')
+    }
 
     const currentStatus = (currentLead?.status ?? 'new') as LeadStatus
 
@@ -373,10 +438,16 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
       }, { area: 'admin_leads', blocking: true })
     }
 
-    await svc
+    const { data: updatedLead, error: updateError } = await svc
       .from('leads')
       .update({ status: newStatus })
       .eq('id', leadId)
+      .select('id, status')
+      .maybeSingle()
+
+    if (updateError || !updatedLead) {
+      throw new Error(updateError?.message ?? 'Failed to update lead status.')
+    }
 
     await writeAuditLog(svc, {
       leadId,
@@ -406,10 +477,19 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (!leadId || !appointmentId || !['booked', 'completed', 'cancelled', 'no_show'].includes(newStatus)) return
 
     const svc = createServiceClient()
+    await assertAuditLogReady(svc)
     const [appointmentResult, leadResult] = await Promise.all([
-      svc.from('appointments').select('status').eq('id', appointmentId).eq('lead_id', leadId).single(),
-      svc.from('leads').select('status').eq('id', leadId).single(),
+      svc.from('appointments').select('status').eq('id', appointmentId).eq('lead_id', leadId).maybeSingle(),
+      svc.from('leads').select('status').eq('id', leadId).maybeSingle(),
     ])
+
+    if (appointmentResult.error || !appointmentResult.data) {
+      throw new Error(appointmentResult.error?.message ?? 'Appointment was not found.')
+    }
+
+    if (leadResult.error || !leadResult.data) {
+      throw new Error(leadResult.error?.message ?? 'Lead was not found.')
+    }
 
     const prevAppointmentStatus = appointmentResult.data?.status as AppointmentStatus | undefined
     const prevLeadStatus = (leadResult.data?.status ?? 'new') as LeadStatus
@@ -422,9 +502,21 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (newStatus === 'cancelled' && prevLeadStatus === 'appointment_booked') nextLeadStatus = 'contacted'
     if (newStatus === 'no_show' && prevLeadStatus === 'appointment_booked') nextLeadStatus = 'no_response'
 
-    await svc.from('appointments').update({ status: newStatus }).eq('id', appointmentId).eq('lead_id', leadId)
+    const { data: updatedAppointment, error: appointmentUpdateError } = await svc
+      .from('appointments')
+      .update({ status: newStatus })
+      .eq('id', appointmentId)
+      .eq('lead_id', leadId)
+      .select('id, status')
+      .maybeSingle()
+
+    if (appointmentUpdateError || !updatedAppointment) {
+      throw new Error(appointmentUpdateError?.message ?? 'Failed to update appointment status.')
+    }
+
     if (nextLeadStatus) {
-      await svc.from('leads').update({ status: nextLeadStatus }).eq('id', leadId)
+      const { error: leadUpdateError } = await svc.from('leads').update({ status: nextLeadStatus }).eq('id', leadId)
+      if (leadUpdateError) throw new Error(`Failed to update lead status: ${leadUpdateError.message}`)
     }
 
     await writeAuditLog(svc, {
@@ -453,23 +545,10 @@ export default async function AdminLeadDetailPage({ params }: LeadDetailPageProp
     if (!leadId || confirm !== 'DELETE') return
 
     const svc = createServiceClient()
-    const [{ data: targetLead }, { data: targetInspections }] = await Promise.all([
-      svc.from('leads').select('pending_photo_urls').eq('id', leadId).maybeSingle(),
-      svc.from('inspections').select('photo_urls').eq('lead_id', leadId),
-    ])
-
-    const photoPaths = new Set<string>()
-    ;((targetLead as Record<string, unknown> | null)?.pending_photo_urls as string[] | undefined)?.forEach((path) => photoPaths.add(path))
-    ;(targetInspections ?? []).forEach((inspection) => {
-      ((inspection as Record<string, unknown>).photo_urls as string[] | undefined)?.forEach((path) => photoPaths.add(path))
-    })
-
-    if (photoPaths.size > 0) {
-      await svc.storage.from('inspection-photos').remove([...photoPaths])
+    const result = await deleteLeadById(svc, leadId, { userId: caller.id })
+    if (result.failure || !result.affectedId) {
+      throw new Error(result.failure?.message ?? 'Failed to delete client record. Please try again.')
     }
-
-    const { error: deleteError } = await svc.from('leads').delete().eq('id', leadId)
-    if (deleteError) throw new Error('Failed to delete client record. Please try again.')
 
     redirect('/admin/leads')
   }

@@ -1,36 +1,11 @@
 import Link from 'next/link'
 import { createServiceClient } from '@/lib/supabase/server'
-import type { Lead } from '@/lib/types'
+import LeadBulkTable, { type InspectorOption, type LeadRow } from './LeadBulkTable'
+import { STATUS_LABELS } from './leadPresentation'
 
 export const metadata = { title: 'Leads' }
 
 const PAGE_SIZE = 25
-
-const STATUS_LABELS: Record<Lead['status'], string> = {
-  new: 'New',
-  verified: 'Verified',
-  contacted: 'Contacted',
-  appointment_booked: 'Appt Booked',
-  inspected: 'Inspected',
-  offer_made: 'Offer Made',
-  won: 'Won',
-  lost: 'Lost',
-  no_response: 'No Response',
-  expired: 'Expired',
-}
-
-const STATUS_COLOURS: Record<Lead['status'], string> = {
-  new: 'bg-blue-100 text-blue-700',
-  verified: 'bg-cyan-100 text-cyan-700',
-  contacted: 'bg-yellow-100 text-yellow-700',
-  appointment_booked: 'bg-purple-100 text-purple-700',
-  inspected: 'bg-orange-100 text-orange-700',
-  offer_made: 'bg-teal-100 text-teal-700',
-  won: 'bg-green-100 text-green-700',
-  lost: 'bg-gray-100 text-gray-500',
-  no_response: 'bg-slate-100 text-slate-500',
-  expired: 'bg-amber-100 text-amber-600',
-}
 
 interface LeadsPageProps {
   searchParams: Promise<{ page?: string; q?: string; status?: string }>
@@ -47,7 +22,7 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   // Build query
   let query = supabase
     .from('leads')
-    .select('id, created_at, seller_name, seller_email, reg, make, model, status, finance_status', { count: 'exact' })
+    .select('id, created_at, seller_name, seller_email, reg, make, model, status, finance_status, assigned_inspector_id', { count: 'exact' })
     .order('created_at', { ascending: false })
 
   // Status filter
@@ -69,11 +44,19 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
   const to = from + PAGE_SIZE - 1
   query = query.range(from, to)
 
-  const { data: leads, error, count } = await query
+  const [{ data: leads, error, count }, { data: inspectors, error: inspectorsError }] = await Promise.all([
+    query,
+    supabase.from('users').select('id, name, email').eq('role', 'inspector').eq('is_active', true).order('name', { ascending: true }),
+  ])
 
   if (error) {
     console.error('[admin/leads] Query error:', error)
     return <div className="p-8 text-red-600">Error loading leads. Please try refreshing the page.</div>
+  }
+
+  if (inspectorsError) {
+    console.error('[admin/leads] Inspectors query error:', inspectorsError)
+    return <div className="p-8 text-red-600">Error loading inspectors. Please try refreshing the page.</div>
   }
 
   const totalCount = count ?? 0
@@ -136,60 +119,12 @@ export default async function AdminLeadsPage({ searchParams }: LeadsPageProps) {
         )}
       </form>
 
-      {/* Lead rows — premium card container */}
-      <div className="card-premium overflow-hidden">
-        <div className="divide-y divide-warm-border/50">
-        {leads?.map((lead) => (
-          <Link
-            key={lead.id}
-            href={`/admin/leads/${lead.id}`}
-            className="group flex items-center gap-3 sm:gap-6 py-3 sm:py-4 px-3 sm:px-6 hover:bg-gold/[0.03] transition-all duration-200"
-          >
-            {/* Reg — monospace, bold, anchors the row */}
-            <span className="w-20 sm:w-24 text-xs sm:text-sm font-bold font-mono text-foreground tracking-wide shrink-0">
-              {lead.reg}
-            </span>
-
-            {/* Seller + vehicle */}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-foreground truncate font-medium">
-                {lead.seller_name}
-                <span className="text-warm-gray ml-2 font-normal">
-                  {lead.make} {lead.model}
-                </span>
-              </p>
-              <p className="text-xs text-warm-gray/60 mt-0.5">{lead.seller_email}</p>
-            </div>
-
-            {/* Status badge */}
-            <span
-              className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold shrink-0 ${STATUS_COLOURS[lead.status as Lead['status']]}`}
-            >
-              {STATUS_LABELS[lead.status as Lead['status']]}
-            </span>
-
-            {/* Finance */}
-            <span className="text-xs text-warm-gray capitalize w-20 text-right shrink-0 hidden md:block">
-              {(lead.finance_status ?? 'not_checked').replace(/_/g, ' ')}
-            </span>
-
-            {/* Date */}
-            <span className="text-xs text-warm-gray/60 w-20 text-right shrink-0 tabular-nums hidden sm:block">
-              {new Date(lead.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-            </span>
-
-            {/* Arrow */}
-            <span className="text-warm-gray/20 group-hover:text-gold transition-colors duration-200 shrink-0">→</span>
-          </Link>
-        ))}
-
-        {(!leads || leads.length === 0) && (
-          <p className="py-16 text-center text-warm-gray text-sm">
-            {q || statusFilter ? 'No leads match your search.' : 'No leads yet.'}
-          </p>
-        )}
-        </div>
-      </div>
+      <LeadBulkTable
+        key={`${page}:${q}:${statusFilter}`}
+        leads={(leads ?? []) as LeadRow[]}
+        inspectors={(inspectors ?? []) as InspectorOption[]}
+        emptyMessage={q || statusFilter ? 'No leads match your search.' : 'No leads yet.'}
+      />
 
       {/* Pagination — minimal */}
       {totalPages > 1 && (

@@ -11,7 +11,17 @@
     "handoff:slots": "tsx scripts/test-booking-slots.ts",
     "handoff:tokens": "tsx scripts/test-token-replay.ts",
     "handoff:statuses": "tsx scripts/test-admin-statuses.ts",
+    "handoff:public-guards": "tsx scripts/test-public-provider-guards.ts",
+    "handoff:public-schema": "tsx scripts/check-public-schema.ts",
+    "handoff:live": "tsx scripts/check-live-deployment.ts",
     "handoff:smoke": "tsx scripts/e2e-handoff-smoke.ts",
+    "test:bulk-selection": "tsx scripts/test-bulk-selection.ts",
+    "test:admin-mutations": "tsx scripts/test-admin-mutations.ts",
+    "verify:admin-inspector": "tsx --env-file .env.local scripts/verify-admin-inspector-flows.ts",
+    "release:verify": "npm run handoff:public-guards && npm run test:bulk-selection && npm run test:admin-mutations && npm run handoff:slots && npm run handoff:tokens && npm run handoff:statuses && npm run lint && tsc --noEmit && npm run build",
+    "qa:browser-seed": "tsx scripts/browserQaSeed.ts create",
+    "qa:browser-cleanup": "tsx scripts/browserQaSeed.ts cleanup",
+    "qa:cleanup-artifacts": "tsx scripts/cleanupQaArtifacts.ts",
     "seed:dev-users": "tsx --env-file .env.local scripts/seed-dev-users.ts"
   },
   "dependencies": {

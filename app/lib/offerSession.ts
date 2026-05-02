@@ -9,6 +9,7 @@
  */
 
 import { createHmac, randomUUID, timingSafeEqual } from 'crypto'
+import { isStrictProductionEnv } from '@/lib/env'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -85,16 +86,19 @@ function getSecret(): string {
   const secret = process.env.OFFER_SESSION_SECRET?.trim()
   if (secret && secret.length >= 32) return secret
 
+  if (isStrictProductionEnv()) {
+    throw new Error('OFFER_SESSION_SECRET must be explicitly configured with at least 32 characters in production')
+  }
+
   // Fallback: derive a deterministic secret from the Supabase service role key
-  // (always available in production). This ensures token signing works even if
-  // OFFER_SESSION_SECRET is not explicitly configured.
+  // for local/non-strict environments where an explicit handoff secret is absent.
   const fallback = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
   if (fallback && fallback.length >= 32) {
     return fallback.slice(0, 64)
   }
 
   throw new Error(
-    'OFFER_SESSION_SECRET must be at least 32 characters (or SUPABASE_SERVICE_ROLE_KEY must be set as fallback)'
+    'OFFER_SESSION_SECRET must be at least 32 characters'
   )
 }
 

@@ -1,12 +1,34 @@
 export const metadata = { title: 'Settings' }
 
+type SettingTone = 'good' | 'warn'
+type SettingItem = { label: string; value: string; tone?: SettingTone }
+
+function integrationStatus(label: string, configured: boolean, missingValue = 'Needs attention'): SettingItem {
+  return {
+    label,
+    value: configured ? 'Configured' : missingValue,
+    tone: configured ? 'good' : 'warn',
+  }
+}
+
 export default function AdminSettingsPage() {
+  const emailConfigured = Boolean(process.env.RESEND_API_KEY)
+  const emailStatus = emailConfigured ? 'Active' : 'Degraded'
+  const emailTone: SettingTone = emailConfigured ? 'good' : 'warn'
+  const otpProofDeferred = process.env.MCAR_PUBLIC_OTP_PROOF_DEFERRED === 'true'
+  const buildHash = process.env.NEXT_PUBLIC_GIT_COMMIT_HASH ?? 'unknown'
+  const runtimeStatus = [
+    { label: 'Build', value: buildHash },
+    { label: 'Vercel env', value: process.env.VERCEL_ENV ?? 'local' },
+    { label: 'Node env', value: process.env.NODE_ENV ?? 'unknown' },
+    { label: 'OTP proof', value: otpProofDeferred ? 'Deferred' : 'Required', tone: otpProofDeferred ? 'warn' : 'good' as SettingTone },
+  ]
   const envStatus = [
-    { label: 'DVLA lookup', active: Boolean(process.env.DVLA_VES_API_KEY) },
-    { label: 'Turnstile bot protection', active: Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY) },
-    { label: 'Redis rate limits', active: Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) },
-    { label: 'SMS verification', active: Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID) },
-    { label: 'Email notifications', active: Boolean(process.env.RESEND_API_KEY) },
+    integrationStatus('DVLA lookup', Boolean(process.env.DVLA_VES_API_KEY)),
+    integrationStatus('Turnstile bot protection', Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY)),
+    integrationStatus('Redis rate limits', Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN)),
+    integrationStatus('SMS verification', Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_VERIFY_SERVICE_SID)),
+    integrationStatus('Email notifications', emailConfigured, 'Optional'),
   ]
 
   return (
@@ -30,10 +52,10 @@ export default function AdminSettingsPage() {
         </SettingGroup>
 
         <SettingGroup title="Notifications">
-          <Setting label="Appointment confirmation" value="Active" />
-          <Setting label="Appointment reminder (24h)" value="Active" />
-          <Setting label="Admin: new lead alert" value="Active" />
-          <Setting label="Admin: inspection complete alert" value="Active" />
+          <Setting label="Appointment confirmation" value={emailStatus} tone={emailTone} />
+          <Setting label="Appointment reminder (24h)" value="Not active" tone="warn" />
+          <Setting label="Admin: new lead alert" value={emailStatus} tone={emailTone} />
+          <Setting label="Admin: inspection complete alert" value="Not active" tone="warn" />
         </SettingGroup>
 
         <SettingGroup title="Integrations">
@@ -41,10 +63,19 @@ export default function AdminSettingsPage() {
             <Setting
               key={item.label}
               label={item.label}
-              value={item.active ? 'Configured' : 'Needs attention'}
-              tone={item.active ? 'good' : 'warn'}
+              value={item.value}
+              tone={item.tone}
             />
           ))}
+        </SettingGroup>
+
+        <SettingGroup title="Release Gate">
+          {runtimeStatus.map((item) => (
+            <Setting key={item.label} label={item.label} value={item.value} tone={item.tone} />
+          ))}
+          <Setting label="Public lookup" value="Browser-proven" tone="good" />
+          <Setting label="Public booking" value="Needs OTP proof" tone="warn" />
+          <Setting label="Dev credentials" value="Must stay disabled" tone="warn" />
         </SettingGroup>
       </div>
     </div>
@@ -63,7 +94,7 @@ function SettingGroup({ title, children }: { title: string; children: React.Reac
   )
 }
 
-function Setting({ label, value, tone }: { label: string; value: string; tone?: 'good' | 'warn' }) {
+function Setting({ label, value, tone }: { label: string; value: string; tone?: SettingTone }) {
   const valueClass = tone === 'good'
     ? 'text-green-700'
     : tone === 'warn'

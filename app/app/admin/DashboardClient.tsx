@@ -46,6 +46,12 @@ export default function DashboardClient(props: DashboardProps) {
   const goodAcceptance = acquisition.acceptanceRate >= 15
   const hasRealisedData = profit.totalRealisedDeals > 0
   const overallStatus: Signal = goodAcceptance && (!hasRealisedData || healthyProfit) ? 'green' : goodAcceptance || healthyProfit ? 'amber' : 'red'
+  const attentionCount = weeklySummary.manualReviewCount + weeklySummary.liabilityBlocks + weeklySummary.exposureCapTriggers
+  const ownerStats = [
+    ...quickStats,
+    { label: 'Awaiting review', value: attentionCount },
+    { label: 'Deals won', value: profit.totalWonDeals },
+  ]
 
   return (
     <div className="p-4 sm:p-6 lg:p-10 max-w-6xl mx-auto">
@@ -60,9 +66,9 @@ export default function DashboardClient(props: DashboardProps) {
         </div>
       </div>
 
-      {/* ── Hero KPI cards ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-8 sm:mb-10">
-        {quickStats.map((s, i) => (
+      {/* ── Owner summary cards ─────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5 mb-8 sm:mb-10">
+        {ownerStats.map((s, i) => (
           <div key={s.label} className="card-premium p-5 sm:p-6 animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
             <p className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">{s.value}</p>
             <p className="text-xs uppercase tracking-widest text-warm-gray mt-2 font-semibold">{s.label}</p>
@@ -70,15 +76,14 @@ export default function DashboardClient(props: DashboardProps) {
         ))}
       </div>
 
-      {/* ── Two-column asymmetric: actual results + offers ───────────────── */}
+      {/* ── Simple trading summary ───────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 sm:gap-6 mb-8 sm:mb-10">
-        {/* Left — realised results card, large & dominant */}
         <div className="lg:col-span-3 card-premium p-5 sm:p-7">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-8 h-8 rounded-xl gradient-gold flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-gray">Actual Results</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-warm-gray">Profit</p>
           </div>
           <div className="mb-6">
             {profit.avgRealisedProfit !== null ? (
@@ -88,17 +93,16 @@ export default function DashboardClient(props: DashboardProps) {
             ) : (
               <p className="text-3xl sm:text-5xl font-extrabold tracking-tight text-foreground leading-none">No data yet</p>
             )}
-            <p className="text-sm text-warm-gray mt-2">avg realised profit from completed deals only</p>
+            <p className="text-sm text-warm-gray mt-2">average realised profit from completed deals</p>
           </div>
 
           <div className="space-y-3 border-t border-warm-border/50 pt-5">
             <DataRow label="Deals won" value={profit.totalWonDeals} />
             <DataRow label="Deals completed" value={profit.totalRealisedDeals} />
-            <DataRow label="Predicted profit metric" value="Archived" />
+            <DataRow label="This week" value={`${weeklySummary.offersGenerated} offers`} />
           </div>
         </div>
 
-        {/* Right — offers card, compact */}
         <div className="lg:col-span-2 card-premium p-5 sm:p-7">
           <div className="flex items-center gap-2.5 mb-5">
             <div className="w-8 h-8 rounded-xl bg-accent-blue/10 flex items-center justify-center">
@@ -118,7 +122,7 @@ export default function DashboardClient(props: DashboardProps) {
             )}
             <DataRow label="Total all-time" value={acquisition.totalOffers} />
             <DataRow
-              label="Acceptance rate"
+              label="Accepted"
               value={`${acquisition.acceptanceRate}%`}
               highlight={signalAbove(acquisition.acceptanceRate, 30, 15)}
             />
@@ -126,7 +130,6 @@ export default function DashboardClient(props: DashboardProps) {
         </div>
       </div>
 
-      {/* ── Weekly summary — premium card ────────────────────── */}
       <div className="card-premium p-5 sm:p-7 max-w-2xl">
         <div className="flex items-center gap-2.5 mb-4">
           <div className="w-8 h-8 rounded-xl bg-accent-emerald/10 flex items-center justify-center">

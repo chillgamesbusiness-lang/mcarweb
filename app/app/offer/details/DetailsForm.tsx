@@ -34,6 +34,10 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           type="number"
           min={0}
           max={500000}
+          step={1}
+          inputMode="numeric"
+          autoComplete="off"
+          enterKeyHint="next"
           required
           defaultValue={defaultMileage ?? undefined}
           placeholder="e.g. 45000"
@@ -56,6 +60,7 @@ export default function DetailsForm({ submitDetails, defaultMileage }: DetailsFo
           name="condition"
           required
           defaultValue=""
+          autoComplete="off"
           className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] appearance-none"
         >
           <option value="" disabled>Select condition</option>

@@ -465,7 +465,7 @@ export interface Note {
 
 export interface AuditLogEntry {
   id: string
-  lead_id: string
+  lead_id: string | null
   action:
     | 'status_change'
     | 'finance_change'
@@ -476,7 +476,13 @@ export interface AuditLogEntry {
     | 'outcome_recorded'
     | 'valuation_snapshot'
     | 'calibration_recorded'
-  actor_user_id: string
+    | 'coefficient_activated'
+    | 'coefficient_rolled_back'
+    | 'booking_created'
+    | 'lead_created'
+    | 'lead_deleted'
+  actor_user_id: string | null
+  actor_kind: 'system' | 'public_user' | 'admin' | 'inspector'
   old_value: Record<string, unknown> | null
   new_value: Record<string, unknown> | null
   created_at: string

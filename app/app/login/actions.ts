@@ -31,8 +31,13 @@ export async function login(formData: FormData) {
 
     const supabase = await createClient()
 
-    const email = formData.get('email') as string
-    const password = formData.get('password') as string
+    const email = ((formData.get('email') as string | null) ?? '').trim().toLowerCase()
+    const passwordEntry = formData.get('password')
+    const password = typeof passwordEntry === 'string' ? passwordEntry : ''
+
+    if (!email || !password) {
+      redirect('/login?error=invalid_credentials')
+    }
 
     const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password })
 
@@ -44,9 +49,14 @@ export async function login(formData: FormData) {
     const svc = createServiceClient()
     const { data: profile } = await svc
       .from('users')
-      .select('role')
+      .select('role, is_active')
       .eq('id', signInData.user.id)
       .single()
+
+    if (!profile?.is_active || !['admin', 'inspector'].includes(profile.role)) {
+      await supabase.auth.signOut()
+      redirect('/login?error=no_role')
+    }
 
     revalidatePath('/', 'layout')
     redirect(profile?.role === 'admin' ? '/admin' : '/inspector')

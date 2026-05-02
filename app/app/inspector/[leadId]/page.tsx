@@ -61,7 +61,7 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
       </p>
 
       {isSubmitted && (
-        <div className="mb-6 rounded-xl bg-green-50 border border-green-200 p-4 text-sm text-green-700">
+        <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-400/10 dark:text-emerald-100">
           Inspection submitted on{' '}
           {new Date(existingInspection!.submitted_at!).toLocaleString('en-GB')}. This form is read-only.
         </div>
@@ -137,7 +137,7 @@ export default async function InspectorLeadPage({ params }: InspectorLeadPagePro
         {!isSubmitted && (
           <SubmitButton
             loadingText="Submitting…"
-            className="rounded-xl gradient-gold px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-gold/15 hover:shadow-lg hover:shadow-gold/25 transition-all disabled:opacity-60"
+            className="rounded-lg gradient-gold px-6 py-2.5 text-sm font-bold text-white transition-colors disabled:opacity-60"
           >
             Submit Inspection
           </SubmitButton>

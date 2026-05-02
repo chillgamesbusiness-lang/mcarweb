@@ -16,6 +16,11 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // HSTS — tell browsers to only ever use HTTPS (2 years)
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  { key: 'X-DNS-Prefetch-Control', value: 'on' },
+  { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
+  { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+  { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
+  { key: 'Origin-Agent-Cluster', value: '?1' },
   // Disable browser features the app doesn't use (camera allowed for self — inspector photo capture)
   { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=(), payment=()' },
   // Content Security Policy
@@ -34,6 +39,9 @@ const securityHeaders = [
       `connect-src 'self' https://*.supabase.co https://challenges.cloudflare.com https://*.vercel-insights.com https://va.vercel-scripts.com`,
       `frame-src https://challenges.cloudflare.com`,
       `font-src 'self'`,
+      `worker-src 'self' blob:`,
+      `media-src 'self' blob: data:`,
+      `manifest-src 'self'`,
       `object-src 'none'`,
       `base-uri 'self'`,
       `form-action 'self'`,

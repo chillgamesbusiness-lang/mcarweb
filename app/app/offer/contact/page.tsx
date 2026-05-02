@@ -96,7 +96,7 @@ export default async function OfferContactPage({ searchParams }: ContactPageProp
       redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent(errors.join('. '))}`)
     }
 
-    if (!otpSessionId || !otpCode) {
+    if (!otpSessionId) {
       redirect(`/offer/contact?token=${encodeURIComponent(token!)}&error=${encodeURIComponent('Please verify your phone number before continuing.')}`)
     }
 

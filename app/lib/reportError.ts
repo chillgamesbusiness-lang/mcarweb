@@ -22,6 +22,19 @@ function normaliseError(error: unknown): { name: string; message: string; stack?
     }
   }
 
+  if (error && typeof error === 'object') {
+    const candidate = error as Record<string, unknown>
+    const message = [candidate.message, candidate.details, candidate.hint]
+      .filter((part): part is string => typeof part === 'string' && part.length > 0)
+      .join(' | ')
+    const code = typeof candidate.code === 'string' ? ` (${candidate.code})` : ''
+
+    return {
+      name: typeof candidate.name === 'string' ? candidate.name : 'ObjectError',
+      message: message ? `${message}${code}` : JSON.stringify(sanitise(candidate)),
+    }
+  }
+
   return { name: 'NonError', message: String(error) }
 }
 

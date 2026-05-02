@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
 import { generateAvailableSlots } from '@/lib/bookingSlots'
 
@@ -27,11 +27,20 @@ function BookFormInner({ submitBooking }: BookFormProps) {
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
   const slots = generateAvailableSlots()
+  const submitIdInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const fallback = `booking-${Date.now()}-${Math.random().toString(16).slice(2)}`
+    if (submitIdInputRef.current) {
+      submitIdInputRef.current.value = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : fallback
+    }
+  }, [])
 
   return (
     <form action={submitBooking} className="card-premium p-7 sm:p-8 space-y-5 animate-slide-up">
+      <input ref={submitIdInputRef} type="hidden" name="submitId" />
       {error && (
-        <div className="rounded-xl bg-red-50 border border-red-200/50 p-4 text-sm text-red-700 flex items-center gap-2">
+        <div role="alert" aria-live="polite" className="rounded-xl bg-red-50 border border-red-200/50 p-4 text-sm text-red-700 flex items-center gap-2">
           <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
           {error}
         </div>
@@ -46,6 +55,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
           name="type"
           required
           defaultValue=""
+          autoComplete="off"
           className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] appearance-none"
         >
           <option value="" disabled>Choose type</option>
@@ -63,6 +73,7 @@ function BookFormInner({ submitBooking }: BookFormProps) {
           name="slot"
           required
           defaultValue=""
+          autoComplete="off"
           className="w-full rounded-xl border border-warm-border px-4 py-3.5 text-sm text-foreground input-premium focus:outline-none bg-[var(--input-bg)] appearance-none"
         >
           <option value="" disabled>Choose a slot</option>

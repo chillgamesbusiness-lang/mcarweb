@@ -4,6 +4,14 @@
  * Usage:
  *   npx tsx scripts/seed-dev-users.ts
  *
+ * Defaults:
+ *   admin@mcar.dev / mcaradmin2026!
+ *   inspector@mcar.dev / mcarinspect2026!
+ *
+ * Optional overrides:
+ *   DEV_ADMIN_EMAIL, DEV_ADMIN_PASSWORD
+ *   DEV_INSPECTOR_EMAIL, DEV_INSPECTOR_PASSWORD
+ *
  * Requires .env.local (or environment) to have:
  *   NEXT_PUBLIC_SUPABASE_URL
  *   SUPABASE_SERVICE_ROLE_KEY
@@ -34,46 +42,81 @@ interface DevUser {
 
 const DEV_USERS: DevUser[] = [
   {
-    email: 'admin@dev.local',
-    password: 'devAdmin123!',
+    email: process.env.DEV_ADMIN_EMAIL ?? 'admin@mcar.dev',
+    password: process.env.DEV_ADMIN_PASSWORD ?? 'mcaradmin2026!',
     name: 'Dev Admin',
     role: 'admin',
   },
   {
-    email: 'inspector@dev.local',
-    password: 'devInspector123!',
+    email: process.env.DEV_INSPECTOR_EMAIL ?? 'inspector@mcar.dev',
+    password: process.env.DEV_INSPECTOR_PASSWORD ?? 'mcarinspect2026!',
     name: 'Dev Inspector',
     role: 'inspector',
   },
 ]
 
+async function findAuthUserByEmail(email: string) {
+  const targetEmail = email.toLowerCase()
+  let page = 1
+
+  while (true) {
+    const { data, error } = await sb.auth.admin.listUsers({ page, perPage: 1000 })
+    if (error) throw error
+
+    const existing = data.users.find((user) => user.email?.toLowerCase() === targetEmail)
+    if (existing) return existing
+    if (data.users.length < 1000) return null
+
+    page += 1
+  }
+}
+
 async function seedUser(user: DevUser) {
-  // 1. Create (or retrieve) the auth user
-  const { data: created, error: createErr } =
-    await sb.auth.admin.createUser({
+  if (user.password.length < 6) {
+    throw new Error(`Password for ${user.email} must be at least 6 characters`)
+  }
+
+  // 1. Create or repair the auth user.
+  const existingAuthUser = await findAuthUserByEmail(user.email)
+  let userId = existingAuthUser?.id
+
+  if (userId) {
+    const { error: updateErr } = await sb.auth.admin.updateUserById(userId, {
+      password: user.password,
+      email_confirm: true,
+      user_metadata: { name: user.name },
+      ban_duration: 'none',
+    })
+    if (updateErr) throw updateErr
+    console.log(`  ✅ Auth user updated/reactivated: ${user.email} (${userId})`)
+  } else {
+    const { data: created, error: createErr } = await sb.auth.admin.createUser({
       email: user.email,
       password: user.password,
       email_confirm: true,
       user_metadata: { name: user.name },
     })
 
-  let userId: string
+    if (createErr) throw createErr
+    if (!created.user) throw new Error(`Auth user was not returned for ${user.email}`)
 
-  if (createErr) {
-    if (createErr.message.includes('already been registered')) {
-      // User exists — look up their id
-      const { data: list, error: listErr } = await sb.auth.admin.listUsers()
-      if (listErr) throw listErr
-      const existing = list.users.find((u) => u.email === user.email)
-      if (!existing) throw new Error(`Cannot find existing user: ${user.email}`)
-      userId = existing.id
-      console.log(`  ⚠️  Auth user already exists — skipping create (${user.email})`)
-    } else {
-      throw createErr
-    }
-  } else {
     userId = created.user.id
     console.log(`  ✅ Auth user created: ${user.email} (${userId})`)
+  }
+
+  // Guard against old deactivated profile rows with the same email but a deleted auth user.
+  const { data: existingProfile, error: profileLookupErr } = await sb
+    .from('users')
+    .select('id')
+    .eq('email', user.email)
+    .maybeSingle()
+
+  if (profileLookupErr) throw profileLookupErr
+  if (existingProfile?.id && existingProfile.id !== userId) {
+    throw new Error(
+      `public.users already has ${user.email} attached to a different auth id. ` +
+      'Use a different DEV_*_EMAIL value or reconcile that profile manually.'
+    )
   }
 
   // 2. Upsert the public.users row

@@ -5,6 +5,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { logout } from '@/app/login/actions'
 
 export const metadata: Metadata = {
+  title: 'My Inspections',
   robots: { index: false, follow: false },
 }
 

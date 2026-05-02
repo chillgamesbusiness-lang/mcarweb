@@ -13,6 +13,17 @@ export interface AuditLogInput {
   requestId?: string | null
 }
 
+export async function assertAuditLogReady(client: SupabaseClient): Promise<void> {
+  const { error } = await client
+    .from('audit_log')
+    .select('actor_kind')
+    .limit(1)
+
+  if (error) {
+    throw new Error(`Audit log schema is not ready: ${error.message}`)
+  }
+}
+
 export async function writeAuditLog(
   client: SupabaseClient,
   input: AuditLogInput,

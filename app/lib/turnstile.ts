@@ -15,7 +15,7 @@ export interface TurnstileVerificationResult {
   errorCodes?: string[]
 }
 
-export async function verifyTurnstileDetailed(token: string | null): Promise<TurnstileVerificationResult> {
+export async function verifyTurnstileDetailed(token: unknown): Promise<TurnstileVerificationResult> {
   const secret = process.env.TURNSTILE_SECRET_KEY
 
   if (!secret) {
@@ -31,7 +31,8 @@ export async function verifyTurnstileDetailed(token: string | null): Promise<Tur
     return { success: true }
   }
 
-  if (!token) return { success: false, reason: 'missing-token' }
+  const responseToken = typeof token === 'string' ? token.trim() : ''
+  if (!responseToken) return { success: false, reason: 'missing-token' }
 
   try {
     const res = await fetch(VERIFY_URL, {
@@ -39,7 +40,7 @@ export async function verifyTurnstileDetailed(token: string | null): Promise<Tur
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         secret,
-        response: token,
+        response: responseToken,
       }),
     })
 
@@ -62,7 +63,7 @@ export async function verifyTurnstileDetailed(token: string | null): Promise<Tur
   }
 }
 
-export async function verifyTurnstile(token: string | null): Promise<boolean> {
+export async function verifyTurnstile(token: unknown): Promise<boolean> {
   const result = await verifyTurnstileDetailed(token)
   return result.success
 }
